@@ -16,15 +16,16 @@ find_package(SDL3_image CONFIG REQUIRED)
 
 
 # --- Engine Library ---
-file(GLOB_RECURSE Engine_SOURCES CONFIGURE_DEPENDS
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/engine/*.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/engine/*.h"
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/engine/*.hpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/engine/*.inl"
-	)
+file(GLOB_RECURSE Engine_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/engine/*.cpp")
 
-add_library(Engine STATIC ${Engine_SOURCES})
-target_include_directories(Engine PUBLIC src/engine)
+file(GLOB_RECURSE Engine_HEADERS
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/engine/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/engine/*.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/engine/*.inl"
+)
+
+add_library(Engine STATIC ${Engine_SOURCES} ${Engine_HEADERS})
+target_include_directories(Engine PUBLIC include)
 
 # Automatically links to specified libs
 target_link_libraries(Engine PRIVATE
@@ -34,16 +35,17 @@ target_link_libraries(Engine PRIVATE
 )
 
 # --- Game ---
-file(GLOB_RECURSE Game_SOURCES CONFIGURE_DEPENDS
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/game/*.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/game/*.h"
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/game/*.hpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/src/game/*.inl"
+file(GLOB_RECURSE Game_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/game/*.cpp")
+
+file (GLOB_RECURSE Game_HEADERS
+	"${CMAKE_CURRENT_SOURCE_DIR}/include/game/*.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/include/game/*.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/include/game/*.inl"
 )
 
 add_executable(Game ${Game_SOURCES})
 
-target_sources(Game PRIVATE ${Game_SOURCES})
+target_sources(Game PRIVATE ${Game_SOURCES} ${Game_HEADERS})
 
 target_include_directories(Game PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -77,8 +79,15 @@ endif()
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Game)
 
 # Filters
+# Engine
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src/engine" PREFIX "Engine" FILES ${Engine_SOURCES})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/include/engine" PREFIX "Engine\\Include"
+    FILES ${Engine_HEADERS})  # only headers here
+
+# Game
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src/game" PREFIX "Game" FILES ${Game_SOURCES})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/include/game" PREFIX "Game\\Include"
+    FILES ${Game_HEADERS})    # only headers here (Do i need to create same separation of 'File' as engine?
 
 
 # Enable solution folders
