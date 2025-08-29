@@ -1,16 +1,18 @@
 #include "engine/window/window.h"
+#include "engine/window/window_config.h"
 #include <SDL3/SDL_video.h>
 #include <iostream>
 
 namespace cursed_engine
 {
 	Window::Window()
+		: m_window{ nullptr }
 	{
 	}
 
-	void Window::init()
+	void Window::init(const WindowConfig& config)
 	{
-		m_window = SDL_CreateWindow("The Cursed Pirate", 1200, 800, SDL_WINDOW_RESIZABLE);
+		m_window = SDL_CreateWindow(config.title.c_str(), config.width, config.height, SDL_WINDOW_RESIZABLE);
 
 		if (!m_window)
 		{
