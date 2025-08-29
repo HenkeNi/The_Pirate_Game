@@ -16,6 +16,8 @@ namespace cursed_engine
 		void run();
 
 	private:
+		void loadMedia();
+
 		struct Impl;
 		std::unique_ptr<Impl> m_impl;
 	};
