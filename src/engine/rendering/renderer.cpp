@@ -1,6 +1,8 @@
-#include "engine/renderer/renderer.h"
+#include "engine/rendering/renderer.h"
+#include "engine/rendering/texture.h"
 #include "engine/window/window.h"
 #include <SDL3/SDL_render.h>
+#include <SDL3/SDL.h>
 #include <iostream>
 
 namespace cursed_engine
@@ -16,7 +18,7 @@ namespace cursed_engine
 
 		if (!m_renderer)
 		{
-			std::cerr << "Error creating renderer!\n";
+			SDL_Log("SDL could not create renderer!", SDL_GetError());
 			return false;
 		}
 
@@ -30,11 +32,18 @@ namespace cursed_engine
 
 	void Renderer::clearScreen()
 	{
+		SDL_SetRenderDrawColor(m_renderer, 125, 125, 125, 255);
 		SDL_RenderClear(m_renderer);
 	}
 
 	void Renderer::present()
 	{
 		SDL_RenderPresent(m_renderer);
+	}
+
+	void Renderer::renderTexture(float x, float y, Texture& texture)
+	{
+		SDL_FRect dstRect{ x, y, (float)texture.getWidth(), (float)texture.getHeight() };
+		SDL_RenderTexture(m_renderer, texture.getTexture(), nullptr, &dstRect);
 	}
 }
