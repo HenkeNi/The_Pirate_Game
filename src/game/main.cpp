@@ -9,6 +9,12 @@
 // TODO: fix precompiled header
 // TODO; use snake_case for classes instead? and functions?
 
+// rapidjson
+// scene graph?
+
+// Render batched tiles?
+
+
 int main()
 {
 	Game game;
@@ -17,7 +23,7 @@ int main()
 	if (!engine.init())
 	{
 		std::cerr << "Failed to initialize game!";
-		return -1;
+		return 1;
 	}
 
 	engine.run();
