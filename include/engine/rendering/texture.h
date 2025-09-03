@@ -4,15 +4,18 @@ struct SDL_Texture;
 
 namespace cursed_engine
 {
+	// Consider using NonCopyable instead?
+
 	class Texture
 	{
 	public:
 		Texture(SDL_Texture* texture = nullptr);
-		Texture(const Texture& other);
-		Texture(Texture&& other) noexcept;
 		~Texture();
 
-		Texture& operator=(const Texture& other);
+		Texture(const Texture&) = delete;
+		Texture(Texture&& other) noexcept;
+
+		Texture& operator=(const Texture& other) = delete;
 		Texture& operator=(Texture&& other) noexcept;
 
 		void init(SDL_Texture* texture);

@@ -11,46 +11,28 @@ namespace cursed_engine
 				SDL_Log("SDL_GetTextureSize failed: %s", SDL_GetError());
 			}
 		}
-
-		Texture::Texture(const Texture& other)
-		{
-			m_texture = other.m_texture;
-
-			m_width = other.m_width;
-			m_height = other.m_height;
-
-			//other.m_texture = nullptr;
-			//other.m_width = other.m_height = 0;
-		}
-
-		Texture::Texture(Texture&& other) noexcept
-		{
-			// default??
-
-			m_texture = other.m_texture;
-			m_width = other.m_width;
-			m_height = other.m_height;
-		}
-
 	Texture::~Texture()
 	{
-		//destroy();
+		destroy();
 	}
 
-	Texture& Texture::operator=(const Texture& other)
+	Texture::Texture(Texture&& other) noexcept
+		: m_texture{ other.m_texture }, m_width{ other.m_width }, m_height{ other.m_height }
 	{
-		m_texture = other.m_texture;
-		m_width = other.m_width;
-		m_height = other.m_height;
-
-		return *this;
+		other.m_texture = nullptr;
 	}
+
 
 	Texture& Texture::operator=(Texture&& other) noexcept
 	{
-		m_texture = other.m_texture;
-		m_width = other.m_width;
-		m_height = other.m_height;
+		if (this != &other)
+		{
+			m_texture = other.m_texture;
+			m_width = other.m_width;
+			m_height = other.m_height;
+
+			other.m_texture = nullptr;
+		}
 
 		return *this;
 	}
