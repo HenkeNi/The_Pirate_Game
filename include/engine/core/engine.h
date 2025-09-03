@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/subsystems/subsystem_registry.h"
+#include <memory>
 
 namespace cursed_engine
 {

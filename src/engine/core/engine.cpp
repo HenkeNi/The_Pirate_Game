@@ -1,12 +1,14 @@
 #include "engine/core/engine.h"
 #include "engine/core/application.h"
-#include "engine/renderer/renderer.h"
+#include "engine/rendering/renderer.h"
 #include "engine/window/window.h"
 #include "engine/window/window_config.h"
 
 #include <assert.h>
 #include <iostream>
 #include <SDL3/SDL.h>
+
+#include "engine/resources/texture_loader.h" // TODO; remove later
 
 namespace cursed_engine
 {
@@ -17,8 +19,11 @@ namespace cursed_engine
 		{
 		}
 
+		// TODO; or store sdl subsystems raw here?
+
 		Renderer renderer;
 		Window window;
+		// input!
 		//SubsystemRegistry SubsystemRegistry;
 		Application& application;
 	};
@@ -38,7 +43,7 @@ namespace cursed_engine
 
 		if (!SDL_Init(SDL_INIT_AUDIO | SDL_INIT_GAMEPAD | SDL_INIT_VIDEO))
 		{
-			std::cerr << "Failed to initialize SDL\n";
+			SDL_Log("SDL could not initialize! SDL error: %s\n", SDL_GetError());
 			return false;
 		}
 
@@ -47,7 +52,7 @@ namespace cursed_engine
 
 		if (!m_impl)
 		{
-			std::cerr << "Error: Impl not initialized!\n";
+			SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "m_impl was nullptr!");
 			return false;
 		}
 
