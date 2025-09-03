@@ -16,10 +16,7 @@ namespace cursed_engine
 
 		if (!m_window)
 		{
-			const char* error = SDL_GetError();
-			std::cerr << error << "\n";
-
-			// SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not create window: %s\n", SDL_GetError());
+			//SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not create window: %s\n", SDL_GetError());
 		}
 	}
 
@@ -28,8 +25,8 @@ namespace cursed_engine
 		SDL_DestroyWindow(m_window);
 	}
 
-	SDL_Window* Window::getWindow()
+	SDL_Surface* Window::getSurface()
 	{
-		return m_window;
+		return SDL_GetWindowSurface(m_window);
 	}
 }

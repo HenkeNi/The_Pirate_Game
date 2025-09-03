@@ -3,6 +3,7 @@
 #include "engine/window/window_config.h"
 
 typedef struct SDL_Window SDL_Window;
+struct SDL_Surface;
 
 namespace cursed_engine
 {
@@ -18,7 +19,9 @@ namespace cursed_engine
 		
 		//void applyConfig();
 
-		SDL_Window* getWindow(); // rename, or dont use?
+		SDL_Surface* getSurface(); // Remove? just use returned window?
+
+		[[nodiscard]] inline SDL_Window* getWindow() { return m_window; } // rename, or dont use?
 
 	private:
 		//WindowConfig m_config;
