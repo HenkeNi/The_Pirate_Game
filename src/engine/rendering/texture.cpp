@@ -23,9 +23,13 @@ namespace cursed_engine
 			//other.m_width = other.m_height = 0;
 		}
 
-		Texture::Texture(Texture&& texture)
+		Texture::Texture(Texture&& other) noexcept
 		{
 			// default??
+
+			m_texture = other.m_texture;
+			m_width = other.m_width;
+			m_height = other.m_height;
 		}
 
 	Texture::~Texture()
@@ -42,9 +46,11 @@ namespace cursed_engine
 		return *this;
 	}
 
-	Texture& Texture::operator=(Texture&& other)
+	Texture& Texture::operator=(Texture&& other) noexcept
 	{
-		// TODO: insert return statement here
+		m_texture = other.m_texture;
+		m_width = other.m_width;
+		m_height = other.m_height;
 
 		return *this;
 	}

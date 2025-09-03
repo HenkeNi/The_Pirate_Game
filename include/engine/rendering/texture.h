@@ -9,11 +9,11 @@ namespace cursed_engine
 	public:
 		Texture(SDL_Texture* texture = nullptr);
 		Texture(const Texture& other);
-		Texture(Texture&& texture);
+		Texture(Texture&& other) noexcept;
 		~Texture();
 
 		Texture& operator=(const Texture& other);
-		Texture& operator=(Texture&& other);
+		Texture& operator=(Texture&& other) noexcept;
 
 		void init(SDL_Texture* texture);
 		void destroy(); // or rename; "release"?
