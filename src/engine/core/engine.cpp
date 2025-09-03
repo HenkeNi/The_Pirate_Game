@@ -78,9 +78,16 @@ namespace cursed_engine
 	{
 		bool running = true;
 
+		// Test
+		TextureLoader textureLoader;
+		auto texture = textureLoader.loadTexture(m_impl->renderer, "../assets/textures/test3.bmp");
+
+		//
+
 		while (running)
 		{
 			SDL_Event event;
+			//SDL_zero(event);
 
 			while (SDL_PollEvent(&event))
 			{
@@ -89,7 +96,16 @@ namespace cursed_engine
 					running = false;
 				}
 
+				if (event.type == SDL_EVENT_KEY_DOWN)
+				{
+					if (event.key.key == SDLK_W)
+						std::cout << "UP";
+				}
+
 				m_impl->renderer.clearScreen();
+
+				m_impl->renderer.renderTexture(10, 10, texture.value());
+				m_impl->renderer.present();
 			}
 		}
 
