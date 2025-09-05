@@ -2,18 +2,18 @@
 #include <engine/core/engine.h>
 #include <iostream>
 
+// TODO; step 1 - input
 
-// Temp?
-//#include <engine/subsystems/subsystem_registry.h>
+// Own logging system, or SDL_Log? or lib?
 
 // TODO: fix precompiled header
-// TODO; use snake_case for classes instead? and functions?
+// TODO; naming convention: use snake_case for classes instead? and functions? lowercase for struct members?
+// TODO; calc fps!
+
 
 // rapidjson
-// scene graph?
-
+// put scenes in a graph? should ui be its own scene? (easy to pop if not wanting it)
 // Render batched tiles?
-
 
 int main()
 {
