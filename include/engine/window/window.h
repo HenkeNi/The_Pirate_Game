@@ -16,12 +16,17 @@ namespace cursed_engine
 
 		void init(const WindowConfig& config);
 		void shutdown();
-		
+
+		// "update" function that accepts config, or is that init?
+
 		//void applyConfig();
 
 		SDL_Surface* getSurface(); // Remove? just use returned window?
 
 		[[nodiscard]] inline SDL_Window* getWindow() { return m_window; } // rename, or dont use?
+
+		//void setTitle(const char* title);
+		void setTitle(const std::string& title);
 
 	private:
 		//WindowConfig m_config;
