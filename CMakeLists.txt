@@ -34,6 +34,11 @@ target_link_libraries(Engine PRIVATE
 	SDL3_image::SDL3_image
 )
 
+# Add precompiled header
+target_precompile_headers(Engine PRIVATE 
+    "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/include/engine/pch.h>"
+)
+
 # --- Game ---
 file(GLOB_RECURSE Game_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/game/*.cpp")
 
