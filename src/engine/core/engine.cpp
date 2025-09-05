@@ -3,9 +3,11 @@
 #include "engine/rendering/renderer.h"
 #include "engine/window/window.h"
 #include "engine/window/window_config.h"
+#include "engine/utils/frame_timer.h"
+#include "engine/input/input_handler.h"
 
-#include <assert.h>
-#include <iostream>
+//#include <assert.h>
+//#include <iostream>
 #include <SDL3/SDL.h>
 
 #include "engine/resources/texture_loader.h" // TODO; remove later
@@ -23,8 +25,14 @@ namespace cursed_engine
 
 		Renderer renderer;
 		Window window;
-		// input!
-		//SubsystemRegistry SubsystemRegistry;
+		// Event? or make static?
+		// Physics?
+		// Audio
+		// ResourceHolder(s) texture, audio, shaders?
+		// Task system
+		// SceneManager/scene graph? or keep in game?
+		InputHandler inputHandler;
+		FrameTimer timer;
 		Application& application;
 	};
 
@@ -59,11 +67,6 @@ namespace cursed_engine
 		m_impl->window.init(wConfig);
 		m_impl->renderer.init(m_impl->window);
 
-		//auto& [registry, app] = *m_impl;
-		//registry.emplace<Window>();
-		//registry.emplace<Renderer>();
-		// TODO; init subsystems
-
 		m_impl->application.init();
 				
 		return true;
@@ -81,34 +84,53 @@ namespace cursed_engine
 		// Test
 		TextureLoader textureLoader;
 		auto texture = textureLoader.loadTexture(m_impl->renderer, "../assets/textures/test3.bmp");
-
 		//
 
 		while (running)
 		{
+			Uint64 start = SDL_GetPerformanceCounter();
+
+			auto& timer = m_impl->timer;
+			timer.tick();
+
+			double deltaTime = timer.getDeltaTime();
+
+
+
 			SDL_Event event;
 			//SDL_zero(event);
 
 			while (SDL_PollEvent(&event))
 			{
-				if (event.type == SDL_EVENT_QUIT)
+				if (event.type == SDL_EVENT_QUIT) // create engine function checkIfShouldQuit?
 				{
 					running = false;
 				}
 
-				if (event.type == SDL_EVENT_KEY_DOWN)
-				{
-					if (event.key.key == SDLK_W)
-						std::cout << "UP";
-				}
-
-				m_impl->renderer.clearScreen();
-
-				m_impl->renderer.renderTexture(10, 10, texture.value());
-				m_impl->renderer.present();
+				m_impl->inputHandler.processInput(&event);
 			}
-		}
 
+			m_impl->renderer.clearScreen();
+
+			int counter = 0;
+			for (int i = 0; i < 128; ++i)
+			{
+				for (int j = 0; j < 172; ++j)
+				{
+					++counter;
+					m_impl->renderer.renderTexture(i * 10, j * 10, texture.value());
+				}
+			}
+
+			m_impl->renderer.present();
+
+
+			Uint64 end = SDL_GetPerformanceCounter();
+			float elapsed = (end - start) / (float)SDL_GetPerformanceFrequency();
+			float fps = 1.f / elapsed;
+
+			m_impl->window.setTitle("The Cursed Pirate - Fps: " + std::to_string((int)fps));
+		}
 	}
 
 	void Engine::loadMedia()
