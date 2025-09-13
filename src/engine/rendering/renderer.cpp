@@ -1,6 +1,7 @@
 #include "engine/rendering/renderer.h"
 #include "engine/rendering/texture.h"
 #include "engine/window/window.h"
+#include "engine/core/logger.h"
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL.h>
 #include <iostream>
@@ -18,7 +19,7 @@ namespace cursed_engine
 
 		if (!m_renderer)
 		{
-			SDL_Log("SDL could not create renderer!", SDL_GetError());
+			SDL_Log("SDL could not create renderer!", SDL_GetError()); // TODO; replace with Logger::LogError
 			return false;
 		}
 
@@ -43,7 +44,8 @@ namespace cursed_engine
 
 	void Renderer::renderTexture(float x, float y, Texture& texture)
 	{
-		SDL_FRect dstRect{ x, y, (float)texture.getWidth(), (float)texture.getHeight() };
+		SDL_FRect dstRect{ x, y, 25.f, 25.f };
+		//SDL_FRect dstRect{ x, y, (float)texture.getWidth(), (float)texture.getHeight() };
 		SDL_RenderTexture(m_renderer, texture.getTexture(), nullptr, &dstRect);
 	}
 }
