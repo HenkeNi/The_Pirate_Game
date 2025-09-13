@@ -65,8 +65,8 @@ namespace cursed_engine
 		m_impl->inputHandler.init(inputCfg);
 
 		m_impl->renderer.init(m_impl->window);
-		m_impl->application.init();
-				
+		m_impl->application.onCreated();
+
 		return true;
 	}
 
