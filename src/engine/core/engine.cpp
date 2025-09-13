@@ -1,37 +1,37 @@
 #include "engine/core/engine.h"
+#include "engine/core/logger.h"
 #include "engine/core/application.h"
 #include "engine/rendering/renderer.h"
+#include "engine/resources/resource_manager.h"
 #include "engine/window/window.h"
 #include "engine/window/window_config.h"
 #include "engine/utils/frame_timer.h"
 #include "engine/input/input_handler.h"
-
-//#include <assert.h>
-//#include <iostream>
 #include <SDL3/SDL.h>
 
-#include "engine/resources/texture_loader.h" // TODO; remove later
+//#include "engine/resources/texture_loader.h" // TODO; remove later
+#include "engine/input/input_config.h"
 
 namespace cursed_engine
 {
 	struct Engine::Impl
 	{
 		Impl(Application& app)
-			: application{ app }
+			: application{ app }, resourceManager{ renderer }
 		{
 		}
 
-		// TODO; or store sdl subsystems raw here?
-
-		Renderer renderer;
+		InputHandler inputHandler;
 		Window window;
+		Renderer renderer;
+		ResourceManager resourceManager;
+		
 		// Event? or make static?
 		// Physics?
 		// Audio
-		// ResourceHolder(s) texture, audio, shaders?
 		// Task system
+		// World/ECS?
 		// SceneManager/scene graph? or keep in game?
-		InputHandler inputHandler;
 		FrameTimer timer;
 		Application& application;
 	};
@@ -47,26 +47,24 @@ namespace cursed_engine
 
 	bool Engine::init()
 	{
-		assert(m_impl && "Failed to allocate memory for m_impl");
-
 		if (!SDL_Init(SDL_INIT_AUDIO | SDL_INIT_GAMEPAD | SDL_INIT_VIDEO))
 		{
-			SDL_Log("SDL could not initialize! SDL error: %s\n", SDL_GetError());
+			Logger::logError(std::format("SDL couldn't be be initialized! Error: {}", SDL_GetError()).c_str());
 			return false;
 		}
-
+		
 		// store in registry? or engine config class?
-		WindowConfig wConfig{ "The Cursed Pirate", 1280, 720, false, true };
+		WindowConfig windowCfg{ "The Cursed Pirate", 1280, 720, false, true };
+		m_impl->window.init(windowCfg);
 
-		if (!m_impl)
-		{
-			SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "m_impl was nullptr!");
-			return false;
-		}
+		InputConfig inputCfg;
+		inputCfg.keyBindings.insert({ (SDL_Scancode)26, Action::MoveUp });
+		inputCfg.keyBindings.insert({ (SDL_Scancode)4, Action::MoveLeft });
+		inputCfg.keyBindings.insert({ (SDL_Scancode)22, Action::MoveDown });
+		inputCfg.keyBindings.insert({ (SDL_Scancode)7, Action::MoveRight });
+		m_impl->inputHandler.init(inputCfg);
 
-		m_impl->window.init(wConfig);
 		m_impl->renderer.init(m_impl->window);
-
 		m_impl->application.init();
 				
 		return true;
@@ -82,8 +80,8 @@ namespace cursed_engine
 		bool running = true;
 
 		// Test
-		TextureLoader textureLoader;
-		auto texture = textureLoader.loadTexture(m_impl->renderer, "../assets/textures/test3.bmp");
+		auto handle = m_impl->resourceManager.getTexture("../assets/textures/test3.bmp");
+		auto* texture = m_impl->resourceManager.resolve(handle);
 		//
 
 		while (running)
@@ -95,8 +93,6 @@ namespace cursed_engine
 
 			double deltaTime = timer.getDeltaTime();
 
-
-
 			SDL_Event event;
 			//SDL_zero(event);
 
@@ -107,8 +103,10 @@ namespace cursed_engine
 					running = false;
 				}
 
-				m_impl->inputHandler.processInput(&event);
+				m_impl->inputHandler.processInput(event);
 			}
+
+			m_impl->inputHandler.update(); // HERE?
 
 			m_impl->renderer.clearScreen();
 
@@ -118,7 +116,7 @@ namespace cursed_engine
 				for (int j = 0; j < 172; ++j)
 				{
 					++counter;
-					m_impl->renderer.renderTexture(i * 10, j * 10, texture.value());
+					m_impl->renderer.renderTexture(i * 10, j * 10, *texture);
 				}
 			}
 
@@ -129,7 +127,7 @@ namespace cursed_engine
 			float elapsed = (end - start) / (float)SDL_GetPerformanceFrequency();
 			float fps = 1.f / elapsed;
 
-			m_impl->window.setTitle("The Cursed Pirate - Fps: " + std::to_string((int)fps));
+			m_impl->window.setTitle(std::format("The Cursed Pirate - Fps: {}", (int)fps).c_str());
 		}
 	}
 
