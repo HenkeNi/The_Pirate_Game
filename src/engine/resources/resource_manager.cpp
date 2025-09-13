@@ -1,4 +1,3 @@
-#include "C:/Dev/Projects/The_Pirate_Game/build/CMakeFiles/Engine.dir/Debug/cmake_pch.hxx"
 #include "engine/resources/resource_manager.h"
 #include "engine/resources/resource_cache.hpp"
 #include "engine/resources/texture_loader.h"

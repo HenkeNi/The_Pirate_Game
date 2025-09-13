@@ -1,5 +1,4 @@
 #pragma once
-#include "../subsystems/subsystem.h"
 #include "engine/window/window_config.h"
 
 typedef struct SDL_Window SDL_Window;
@@ -9,7 +8,7 @@ namespace cursed_engine
 {
 	struct WindowConfig;
 
-	class Window : public Subsystem
+	class Window
 	{
 	public:
 		Window();

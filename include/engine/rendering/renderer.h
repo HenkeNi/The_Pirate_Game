@@ -1,5 +1,4 @@
 #pragma once
-#include "../subsystems/subsystem.h"
 
 typedef struct SDL_Renderer SDL_Renderer;
 
