@@ -17,7 +17,6 @@ namespace cursed_engine
 		}
 	};
 
-	// HERE?
 	struct TextureTag {};
 	struct AudioTag {};
 
