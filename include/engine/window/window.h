@@ -25,8 +25,8 @@ namespace cursed_engine
 
 		[[nodiscard]] inline SDL_Window* getWindow() { return m_window; } // rename, or dont use?
 
-		//void setTitle(const char* title);
-		void setTitle(const std::string& title);
+		void setTitle(const char* title);
+		void setIcon(SDL_Surface* surface);
 
 	private:
 		//WindowConfig m_config;

@@ -30,8 +30,12 @@ namespace cursed_engine
 		return SDL_GetWindowSurface(m_window);
 	}
 
-	void Window::setTitle(const std::string& title)
+	void Window::setTitle(const char* title)
 	{
-		SDL_SetWindowTitle(m_window, title.c_str());
+		SDL_SetWindowTitle(m_window, title);
+	}
+	void Window::setIcon(SDL_Surface* surface)
+	{
+		SDL_SetWindowIcon(m_window, surface);
 	}
 }
