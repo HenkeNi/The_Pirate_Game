@@ -2,13 +2,11 @@
 #include <engine/core/engine.h>
 #include <iostream>
 
-// TODO; step 1 - input
-
-// Own logging system, or SDL_Log? or lib?
+// audio... physics...
+// config... (either each subsystem stores its own, or a EngineConfig class)?
 
 // TODO: fix precompiled header
 // TODO; naming convention: use snake_case for classes instead? and functions? lowercase for struct members?
-// TODO; calc fps!
 
 
 // rapidjson
