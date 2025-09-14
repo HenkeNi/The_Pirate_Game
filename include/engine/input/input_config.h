@@ -5,6 +5,7 @@
 
 namespace cursed_engine
 {
+	// shouldnt know about actions??
 	// TODO; forward declare SDL_Scancode?
 
 	struct InputConfig
