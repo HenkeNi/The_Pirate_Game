@@ -7,7 +7,7 @@ namespace cursed_engine
 	class Window;
 	class Texture;
 
-	class Renderer //: public Subsystem
+	class Renderer
 	{
 	public:
 		Renderer();
