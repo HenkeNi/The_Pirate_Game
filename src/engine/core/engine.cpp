@@ -9,8 +9,8 @@
 #include "engine/input/input_handler.h"
 #include <SDL3/SDL.h>
 
-//#include "engine/resources/texture_loader.h" // TODO; remove later
-#include "engine/input/input_config.h"
+
+#include "engine/input/input_config.h" // remove later...
 
 namespace cursed_engine
 {
@@ -24,16 +24,16 @@ namespace cursed_engine
 		InputHandler inputHandler;
 		Window window;
 		Renderer renderer;
-		ResourceManager resourceManager;
-		
+		ResourceManager resourceManager;		
+		FrameTimer timer;
+		Application& application;
+
 		// Event? or make static?
 		// Physics?
 		// Audio
 		// Task system
 		// World/ECS?
 		// SceneManager/scene graph? or keep in game?
-		FrameTimer timer;
-		Application& application;
 	};
 
 	Engine::Engine(Application& app)
@@ -136,13 +136,3 @@ namespace cursed_engine
 
 	}
 }
-
-
-
-//struct EngineTest::Pimpl
-//{
-//	class Renderer* m_renderer;
-//	class Window* m_window;
-//
-//
-//};
