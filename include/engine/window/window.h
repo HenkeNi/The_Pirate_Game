@@ -4,6 +4,8 @@
 typedef struct SDL_Window SDL_Window;
 struct SDL_Surface;
 
+union SDL_Event;
+
 namespace cursed_engine
 {
 	struct WindowConfig;
@@ -11,24 +13,45 @@ namespace cursed_engine
 	class Window
 	{
 	public:
+		// ==================== Lifecycle ====================
 		Window();
+		~Window();
 
-		void init(const WindowConfig& config);
-		void shutdown();
+		void init(WindowConfig config);	// or rename: applyConfig();
 
-		// "update" function that accepts config, or is that init?
+		void shutdown(); // or destroy?
 
-		//void applyConfig();
+		// ==================== Event Handling ====================
+		void processEvent(const SDL_Event& event);
 
-		SDL_Surface* getSurface(); // Remove? just use returned window?
+		// ==================== Operations ====================
+		inline void toggleFullscreen() { setFullscreen(!m_isFullscreen); }
 
-		[[nodiscard]] inline SDL_Window* getWindow() { return m_window; } // rename, or dont use?
+		void setFullscreen(bool enable);
 
 		void setTitle(const char* title);
+
 		void setIcon(SDL_Surface* surface);
 
+		// ==================== Queries ====================
+		[[nodiscard]] inline SDL_Window* getHandle() const noexcept { return m_window; }
+
+		[[nodiscard]] inline int getWidth() const { return m_width; }
+
+		[[nodiscard]] inline int getHeight() const { return m_height; }
+
+		[[nodiscard]] inline float getAspectRatio() const { return (float)m_width / (float)m_height; }
+
+		[[nodiscard]] inline bool isFullscreen() const noexcept { return m_isFullscreen; }
+
 	private:
-		//WindowConfig m_config;
+		// ==================== Interal Helpers ====================
+		void resize(int width, int height);
+
+		WindowConfig m_config;
 		SDL_Window* m_window;
+		int m_width; // store as vec2 later?
+		int m_height;
+		bool m_isFullscreen;
 	};
 }
