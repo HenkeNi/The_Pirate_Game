@@ -15,11 +15,11 @@ namespace cursed_engine
 
 	bool Renderer::init(Window& window)
 	{
-		m_renderer = SDL_CreateRenderer(window.getWindow(), nullptr);
+		m_renderer = SDL_CreateRenderer(window.getHandle(), nullptr);
 
 		if (!m_renderer)
 		{
-			SDL_Log("SDL could not create renderer!", SDL_GetError()); // TODO; replace with Logger::LogError
+			Logger::logError(std::string("Failed to create renderer: ") + SDL_GetError());
 			return false;
 		}
 
@@ -42,10 +42,26 @@ namespace cursed_engine
 		SDL_RenderPresent(m_renderer);
 	}
 
+	void Renderer::renderTexture(FVec2 pos, Texture& texture)
+	{
+		renderTexture(pos.x, pos.y, texture);
+	}
+
 	void Renderer::renderTexture(float x, float y, Texture& texture)
 	{
 		SDL_FRect dstRect{ x, y, 25.f, 25.f };
 		//SDL_FRect dstRect{ x, y, (float)texture.getWidth(), (float)texture.getHeight() };
 		SDL_RenderTexture(m_renderer, texture.getTexture(), nullptr, &dstRect);
+	}
+
+	void Renderer::renderLine(FVec2 start, FVec2 end)
+	{
+		renderLine(start.x, start.y, end.x, end.y);
+	}
+
+	void Renderer::renderLine(float startX, float startY, float endX, float endY)
+	{
+		SDL_SetRenderDrawColor(m_renderer, 127, 49, 32, SDL_ALPHA_OPAQUE); // TODO; reset color before rendering textures
+		SDL_RenderLine(m_renderer, startX, startY, endX, endY);
 	}
 }
