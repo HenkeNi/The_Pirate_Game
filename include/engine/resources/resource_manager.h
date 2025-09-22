@@ -1,14 +1,18 @@
 #pragma once
 #include "resource_handle.h" // Needed?
+
 #include <filesystem> // put in pch
+#include <memory>
 
 namespace cursed_engine
 {
 	class Renderer;
 	class Texture;
-	// TODO; store handle in components
 
+	// USE CASE; store handle in components
+	// TODO; add normalize path?
 	// Rename: AssetHandler? AssetManager? ResourceStore?
+
 	class ResourceManager
 	{
 	public:
@@ -25,11 +29,8 @@ namespace cursed_engine
 
 		[[nodiscard]] Texture* resolve(TextureHandle handle);
 
-
 	private:
 		struct Impl;
 		std::unique_ptr<Impl> m_impl;
-
-		Renderer& m_renderer;
 	};
 }

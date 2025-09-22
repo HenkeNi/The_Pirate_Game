@@ -1,43 +1,46 @@
 #include "engine/resources/resource_manager.h"
 #include "engine/resources/resource_cache.hpp"
 #include "engine/resources/texture_loader.h"
+#include "engine/rendering/texture.h"
 
 namespace cursed_engine
 {
-    //class Audio;
-
     struct ResourceManager::Impl
     {        
-        // Caches
-        ResourceCache<Texture, TextureTag> m_textureCache;
-        // ResourceCache<Audio> m_audioCache;
+        Impl(Renderer& rdr )
+            : renderer{ rdr }
+        {
+        }
 
-        // Path to handles
-        std::unordered_map<std::string, ResourceHandle<TextureTag>> m_pathToTextureHandle;
+        ResourceCache<Texture, TextureTag> textureCache;
+        // ResourceCache<Audio> audioCache;
 
-        // Loaders
-        TextureLoader m_textureLoader;
+        std::unordered_map<std::string, ResourceHandle<TextureTag>> pathToTextureHandle;
 
+        TextureLoader textureLoader;
+
+        Renderer& renderer;
+
+        mutable std::mutex textureMutex;
     };
 
     ResourceManager::ResourceManager(Renderer& renderer)
-        : m_impl{ std::make_unique<ResourceManager::Impl>() }, m_renderer{ renderer }
+        : m_impl{ std::make_unique<ResourceManager::Impl>(renderer) }
     {
     }
 
-    ResourceManager::~ResourceManager()
-    {
-    }
+    ResourceManager::~ResourceManager() = default;
 
     TextureHandle ResourceManager::getTexture(const std::filesystem::path& path)
     {
-        // TODO; mutex here or in cache?? 
+        std::lock_guard<std::mutex> lock(m_impl->textureMutex);
+
         //std::string normalizedPath = NormalizePath(path);
 
-        auto& textureCache = m_impl->m_textureCache;
-        auto& textureLoader = m_impl->m_textureLoader;
+        auto& textureCache = m_impl->textureCache;
+        auto& textureLoader = m_impl->textureLoader;
 
-        auto& pathToTextureHandle = m_impl->m_pathToTextureHandle;
+        auto& pathToTextureHandle = m_impl->pathToTextureHandle;
         
         if (auto it = pathToTextureHandle.find(path.string()); it != pathToTextureHandle.end())
         {
@@ -47,7 +50,7 @@ namespace cursed_engine
                 pathToTextureHandle.erase(path.string());
         }
 
-        auto texture = textureLoader.loadTexture(m_renderer, path);
+        auto texture = textureLoader.load(m_impl->renderer, path);
         auto handle = textureCache.insert(std::move(texture));
             
         pathToTextureHandle.insert({ path.string(), handle });            
@@ -56,9 +59,11 @@ namespace cursed_engine
 
     Texture* ResourceManager::resolve(TextureHandle handle)
     {
+        std::lock_guard<std::mutex> lock(m_impl->textureMutex);
+
         // TODO: check if handle is valid? - or leave that soley to cache?
 
-        auto& textureCache = m_impl->m_textureCache;
+        auto& textureCache = m_impl->textureCache;
         return textureCache.tryGet(handle);
     }
 }

@@ -7,6 +7,9 @@
 
 namespace cursed_engine
 {
+	// TODO; increase ref count?
+	// [Consider] removing mutex (keep only in resource manager)
+
 	template <typename Res, typename Tag>
 	class ResourceCache
 	{
@@ -97,6 +100,7 @@ namespace cursed_engine
 	template <typename Res, typename Tag>
 	bool ResourceCache<Res, Tag>::isValidHandle(ResourceHandle<Tag> handle) const noexcept
 	{
+		// mutex here (checking slots)
 		return isValidIndex(handle.index) && (m_slots[handle.index].version == handle.version);
 
 		return false;
