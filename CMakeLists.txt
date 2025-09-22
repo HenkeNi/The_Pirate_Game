@@ -13,6 +13,8 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 find_package(SDL3 CONFIG REQUIRED)
 find_package(SDL3_ttf CONFIG REQUIRED)
 find_package(SDL3_image CONFIG REQUIRED)
+find_package(box2d CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 
 
 # --- Engine Library ---
@@ -32,6 +34,8 @@ target_link_libraries(Engine PRIVATE
 	SDL3::SDL3
 	SDL3_ttf::SDL3_ttf
 	SDL3_image::SDL3_image
+	box2d::box2d
+	nlohmann_json::nlohmann_json
 )
 
 # Add precompiled header
