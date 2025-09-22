@@ -4,6 +4,10 @@
 
 union SDL_Event;
 
+
+// [CONSIDER] able to call isActionPressed(Action)? -> or should input handler not know about actions?
+// How to store registered keys? -> and save/update config
+
 namespace cursed_engine
 {
 	enum class InputState
