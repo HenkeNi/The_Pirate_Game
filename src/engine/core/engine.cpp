@@ -7,6 +7,8 @@
 #include "engine/window/window_config.h"
 #include "engine/utils/frame_timer.h"
 #include "engine/input/input_handler.h"
+#include "engine/scenes/scene_stack.h"
+#include "engine/events/event_bus.h"
 #include <SDL3/SDL.h>
 
 
@@ -22,10 +24,12 @@ namespace cursed_engine
 		}
 
 		InputHandler inputHandler;
+		FrameTimer timer;
+		ResourceManager resourceManager;		
 		Window window;
 		Renderer renderer;
-		ResourceManager resourceManager;		
-		FrameTimer timer;
+		SceneStack sceneStack;
+		EventBus eventBus;
 		Application& application;
 
 		// Event? or make static?
@@ -56,6 +60,7 @@ namespace cursed_engine
 		// store in registry? or engine config class?
 		WindowConfig windowCfg{ "The Cursed Pirate", 1280, 720, false, true };
 		m_impl->window.init(windowCfg);
+		m_impl->window.setIcon("../assets/textures/test3.bmp");
 
 		InputConfig inputCfg;
 		inputCfg.keyBindings.insert({ (SDL_Scancode)26, Action::MoveUp });
@@ -65,13 +70,16 @@ namespace cursed_engine
 		m_impl->inputHandler.init(inputCfg);
 
 		m_impl->renderer.init(m_impl->window);
-		m_impl->application.onCreated();
+		m_impl->application.onCreated({ m_impl->inputHandler, m_impl->window, m_impl->renderer });
 
 		return true;
 	}
 
 	void Engine::shutdown()
 	{
+		m_impl->window.shutdown();
+		//m_impl->inputHandler
+		m_impl->sceneStack.clear();
 		SDL_Quit();
 	}
 
@@ -91,22 +99,24 @@ namespace cursed_engine
 			auto& timer = m_impl->timer;
 			timer.tick();
 
-			double deltaTime = timer.getDeltaTime();
-
 			SDL_Event event;
-			//SDL_zero(event);
-
 			while (SDL_PollEvent(&event))
 			{
-				if (event.type == SDL_EVENT_QUIT) // create engine function checkIfShouldQuit?
+				if (event.type == SDL_EVENT_QUIT)
 				{
 					running = false;
 				}
 
 				m_impl->inputHandler.processInput(event);
+				m_impl->window.processEvent(event);
 			}
 
-			m_impl->inputHandler.update(); // HERE?
+			double deltaTime = timer.getDeltaTime();
+
+			m_impl->inputHandler.update();
+			m_impl->sceneStack.update(deltaTime);
+
+			m_impl->eventBus.process();
 
 			m_impl->renderer.clearScreen();
 
@@ -120,13 +130,16 @@ namespace cursed_engine
 				}
 			}
 
+			m_impl->renderer.renderLine(0, 0, 100, 100);
 			m_impl->renderer.present();
+
+			
 
 
 			Uint64 end = SDL_GetPerformanceCounter();
 			float elapsed = (end - start) / (float)SDL_GetPerformanceFrequency();
 			float fps = 1.f / elapsed;
-
+			// timer.getFPS();
 			m_impl->window.setTitle(std::format("The Cursed Pirate - Fps: {}", (int)fps).c_str());
 		}
 	}
