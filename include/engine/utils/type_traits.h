@@ -9,13 +9,17 @@ concept Integral = std::is_integral_v<T>;
 template <typename T>
 concept FloatingPoint = std::is_floating_point_v<T>;
 
-// Integral or floating point (can be any number type)
-//template <typename T>
-//concept Numeric = std::is_integral_v<T> || std::floating_point<T>;
+// Numeric (ex: int, short, float, double)
+template <typename T>
+concept Numeric = std::is_arithmetic_v<T>;
 
 // Signed
 template <typename T>
 concept Signed = std::is_signed_v<T>;
+
+// Signed numeric
+template <typename T>
+concept SignedNumeric = Numeric<T> && Signed<T>;
 
 // Unsigned
 template <typename T>
