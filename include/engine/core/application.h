@@ -3,6 +3,16 @@
 
 namespace cursed_engine
 {
+	struct EngineSystems 
+	{
+		class InputHandler& inputHandler;
+		class Window& window;
+		class Renderer& renderer;
+		// event system;
+		// audio audio;
+		// frame timer?
+	};
+
 	class Application : private NonCopyable
 	{
 	public:
@@ -12,8 +22,9 @@ namespace cursed_engine
 		Application(Application&&) = delete;
 		Application& operator=(Application&&) = delete;
 
-		virtual void onUpdate() {};
-		virtual void onCreated() {};
+		virtual void onUpdate(float deltaTime) = 0;
+
+		virtual void onCreated(const EngineSystems& systems) {};
 		virtual void onDestroyed() {};
 	};
 }
