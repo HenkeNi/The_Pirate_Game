@@ -1,16 +1,13 @@
 #pragma once
 #include <engine/core/application.h>
 
+using cursed_engine::EngineSystems;
+
 class Game : public cursed_engine::Application
 {
 public:
 	Game() = default;
 
-	void onCreated() override;
-
-	//bool Initialize();
-	//void Shutdown();
-
-	//void Run();
-
+	void onUpdate(float deltaTime) override;
+	void onCreated(const EngineSystems& systems) override;
 };
