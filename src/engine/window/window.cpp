@@ -7,7 +7,7 @@
 namespace cursed_engine
 {
 	Window::Window()
-		: m_window{ nullptr }, m_isFullscreen{ false }, m_width{ 0 }, m_height{ 0 }
+		: m_window{ nullptr }, m_width{ 0 }, m_height{ 0 }, m_isFullscreen{ false }, m_shouldClose{ false }
 	{
 	}
 
@@ -31,6 +31,8 @@ namespace cursed_engine
 		{
 			m_width = m_config.width;
 			m_height = m_config.height;
+
+			m_shouldClose = false;
 		}
 	}
 
@@ -45,7 +47,7 @@ namespace cursed_engine
 		switch (event.type)
 		{
 		case SDL_EVENT_WINDOW_RESIZED:
-			resize(event.window.data1, event.window.data2);
+			handleResize(event.window.data1, event.window.data2);
 			break;
 
 		case SDL_EVENT_WINDOW_MINIMIZED:
@@ -54,6 +56,7 @@ namespace cursed_engine
 			break;
 
 		case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+			m_shouldClose = true;
 			break;
 		}
 	}
@@ -74,9 +77,24 @@ namespace cursed_engine
 		SDL_SetWindowIcon(m_window, surface);
 	}
 
-	void Window::resize(int width, int height)
+	void Window::setIcon(const std::filesystem::path& path)
+	{
+		auto* surface = SDL_LoadBMP(path.string().c_str());
+		if (!surface)
+		{
+			Logger::logError("Failed to load icon: " + path.string());
+			return;
+		}
+
+		SDL_SetWindowIcon(m_window, surface);
+		SDL_DestroySurface(surface);
+	}
+
+	void Window::handleResize(int width, int height)
 	{
 		m_width = width;
 		m_height = height;
+
+		// send event?
 	}
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "engine/window/window_config.h"
+#include <filesystem>
 
 typedef struct SDL_Window SDL_Window;
 struct SDL_Surface;
@@ -23,16 +24,7 @@ namespace cursed_engine
 
 		// ==================== Event Handling ====================
 		void processEvent(const SDL_Event& event);
-
-		// ==================== Operations ====================
-		inline void toggleFullscreen() { setFullscreen(!m_isFullscreen); }
-
-		void setFullscreen(bool enable);
-
-		void setTitle(const char* title);
-
-		void setIcon(SDL_Surface* surface);
-
+		
 		// ==================== Queries ====================
 		[[nodiscard]] inline SDL_Window* getHandle() const noexcept { return m_window; }
 
@@ -44,14 +36,28 @@ namespace cursed_engine
 
 		[[nodiscard]] inline bool isFullscreen() const noexcept { return m_isFullscreen; }
 
+		[[nodiscard]] inline bool shouldClose() const noexcept { return m_shouldClose; }
+
+		// ==================== Operations ====================
+		inline void toggleFullscreen() { setFullscreen(!m_isFullscreen); }
+
+		void setFullscreen(bool enable);
+
+		void setTitle(const char* title);
+
+		void setIcon(SDL_Surface* surface);
+
+		void setIcon(const std::filesystem::path& path);
+
 	private:
 		// ==================== Interal Helpers ====================
-		void resize(int width, int height);
+		void handleResize(int width, int height);
 
 		WindowConfig m_config;
 		SDL_Window* m_window;
 		int m_width; // store as vec2 later?
 		int m_height;
 		bool m_isFullscreen;
+		bool m_shouldClose;
 	};
 }
