@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/window/window_config.h"
+#include "engine/math/vec2.h"
 #include <filesystem>
 
 typedef struct SDL_Window SDL_Window;
@@ -18,7 +18,7 @@ namespace cursed_engine
 		Window();
 		~Window();
 
-		void init(WindowConfig config);	// or rename: applyConfig();
+		void init(const WindowConfig& config);	// or rename: applyConfig();
 
 		void shutdown(); // or destroy?
 
@@ -28,11 +28,11 @@ namespace cursed_engine
 		// ==================== Queries ====================
 		[[nodiscard]] inline SDL_Window* getHandle() const noexcept { return m_window; }
 
-		[[nodiscard]] inline int getWidth() const { return m_width; }
+		[[nodiscard]] inline int getWidth() const noexcept { return m_size.x; }
 
-		[[nodiscard]] inline int getHeight() const { return m_height; }
+		[[nodiscard]] inline int getHeight() const noexcept { return m_size.y; }
 
-		[[nodiscard]] inline float getAspectRatio() const { return (float)m_width / (float)m_height; }
+		[[nodiscard]] inline float getAspectRatio() const { return (float)m_size.x / (float)m_size.y; }
 
 		[[nodiscard]] inline bool isFullscreen() const noexcept { return m_isFullscreen; }
 
@@ -53,10 +53,8 @@ namespace cursed_engine
 		// ==================== Interal Helpers ====================
 		void handleResize(int width, int height);
 
-		WindowConfig m_config;
 		SDL_Window* m_window;
-		int m_width; // store as vec2 later?
-		int m_height;
+		IVec2 m_size;
 		bool m_isFullscreen;
 		bool m_shouldClose;
 	};

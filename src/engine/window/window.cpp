@@ -1,5 +1,5 @@
 #include "engine/window/window.h"
-#include "engine/window/window_config.h"
+#include "engine/config/config_types.h"
 #include "engine/core/logger.h"
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_events.h>
@@ -7,7 +7,7 @@
 namespace cursed_engine
 {
 	Window::Window()
-		: m_window{ nullptr }, m_width{ 0 }, m_height{ 0 }, m_isFullscreen{ false }, m_shouldClose{ false }
+		: m_window{ nullptr }, m_size{ 0, 0 }, m_isFullscreen{ false }, m_shouldClose{ false }
 	{
 	}
 
@@ -17,11 +17,9 @@ namespace cursed_engine
 			shutdown();
 	}
 
-	void Window::init(WindowConfig config)
+	void Window::init(const WindowConfig& config)
 	{
-		m_config = std::move(config);
-
-		m_window = SDL_CreateWindow(m_config.title.c_str(), m_config.width, m_config.height, SDL_WINDOW_RESIZABLE);
+		m_window = SDL_CreateWindow(config.title.c_str(), config.width, config.height, SDL_WINDOW_RESIZABLE);
 
 		if (!m_window)
 		{
@@ -29,8 +27,8 @@ namespace cursed_engine
 		}
 		else
 		{
-			m_width = m_config.width;
-			m_height = m_config.height;
+			m_size.x = config.width;
+			m_size.y = config.height;
 
 			m_shouldClose = false;
 		}
@@ -92,8 +90,8 @@ namespace cursed_engine
 
 	void Window::handleResize(int width, int height)
 	{
-		m_width = width;
-		m_height = height;
+		m_size.x = width;
+		m_size.y = height;
 
 		// send event?
 	}
