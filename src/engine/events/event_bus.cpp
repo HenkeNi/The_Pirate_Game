@@ -3,7 +3,7 @@
 
 namespace cursed_engine
 {
-	void EventBus::process()
+	void EventBus::dispatchAll()
 	{
 		while (!m_eventQueue.empty())
 		{

@@ -7,9 +7,6 @@
 
 namespace cursed_engine
 {
-	//struct Event;
-
-	// EventDispatcher or EventBus?
 	class EventBus
 	{
 	public:
@@ -22,7 +19,10 @@ namespace cursed_engine
 		template <typename Event>
 		void publish(Event&& event);
 
-		void process();
+		template <typename Event>
+		void publishInstantly(Event&& event);
+
+		void dispatchAll();
 
 	private:
 		template <typename Event>
@@ -31,11 +31,11 @@ namespace cursed_engine
 		struct QueuedEvent
 		{
 			std::type_index type;
-			std::any data; // or union
+			std::any data;
 		};
 
 		std::queue<QueuedEvent> m_eventQueue;
-		std::unordered_map<std::type_index, std::vector<std::function<void(const void*)>>> m_listeners;
+		std::unordered_map<std::type_index, std::vector<std::function<void(std::any)>>> m_listeners;
 	};
 
 #pragma region Methods
@@ -43,7 +43,7 @@ namespace cursed_engine
 	template <typename Event>
 	void EventBus::subscribe(Callback<Event> callback)
 	{
-		auto& vec = m_listeners[std::type_index(typeid(Event))];
+		auto& vec = m_listeners[getTypeIndex<Event>()];
 
 		vec.push_back([cb = std::move(callback)](const std::any& e) 
 			{
@@ -55,6 +55,17 @@ namespace cursed_engine
 	void EventBus::publish(Event&& event)
 	{
 		m_eventQueue.push(getTypeIndex<Event>(), std::forward<Event>(event));
+	}
+
+	template <typename Event>
+	void EventBus::publishInstantly(Event&& event)
+	{
+		auto& vec = m_listeners[getTypeIndex<Event>()];
+
+		std::for_each(vec.begin(), vec.end(), [](auto& callback)
+			{
+				callback(event);
+			});
 
 	}
 
