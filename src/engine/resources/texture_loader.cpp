@@ -2,15 +2,16 @@
 #include "engine/resources/texture_loader.h"
 #include "engine/rendering/texture.h"
 #include "engine/rendering/renderer.h"
+#include "engine/core/logger.h"
 #include <SDL3_image/SDL_image.h>
 
 namespace cursed_engine
 {
-	std::unique_ptr<Texture> TextureLoader::load(Renderer& renderer, const std::filesystem::path& path)
+	std::unique_ptr<Texture> TextureLoader::load(Renderer& renderer, const std::filesystem::path& path) const
 	{
 		if (!std::filesystem::exists(path))
 		{
-			SDL_Log("Couldn't load Texture: invalid path");
+			Logger::logError("Failed to load texture, invalid path: " + path.string());
 			return nullptr;
 		}
 
@@ -18,7 +19,7 @@ namespace cursed_engine
 
  		if (!surface)
 		{
-			SDL_Log("Unable to load image %s!, SDL Error: %s", path.string().c_str(), SDL_GetError());
+			Logger::logError("Unable to load image, path: " + path.string() + ", error: " + SDL_GetError());
 			return nullptr;
 		}
 
@@ -26,7 +27,7 @@ namespace cursed_engine
 
 		if (!texture)
 		{
-			SDL_Log("Unable to create texture from surface: %s", SDL_GetError());
+			Logger::logError("Unable to create texture from surface, path: " + path.string() + ", error: " + SDL_GetError());
 			return nullptr;
 		}
 
