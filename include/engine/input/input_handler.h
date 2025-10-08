@@ -1,6 +1,6 @@
 #pragma once
-#include "input_config.h"
 #include <array>
+#include <SDL3/SDL.h>
 
 union SDL_Event;
 
@@ -10,6 +10,8 @@ union SDL_Event;
 
 namespace cursed_engine
 {
+	struct InputConfig;
+
 	enum class InputState
 	{
 		Pressed,
@@ -85,7 +87,7 @@ namespace cursed_engine
 
 		// registered key mappings? (config?)
 		//std::array<eKeyState, SDL_NUM_SCANCODES> m_keyStates; // store key state?
-		InputConfig m_config;
+
 		std::unordered_map<SDL_Scancode, InputInfo> m_keyInfo; // scan code(s) or key codes?
 		MouseState m_mouseState;
 	};

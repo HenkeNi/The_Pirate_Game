@@ -1,17 +1,16 @@
 #include "engine/input/input_handler.h"
+#include "engine/config/config_types.h"
+#include "engine/core/logger.h"
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <functional>
 #include <string>
-#include "engine/core/logger.h"
 
 namespace cursed_engine
 {
 	void InputHandler::init(const InputConfig& config)
 	{
-		m_config = config;
-
-		std::for_each(m_config.keyBindings.begin(), m_config.keyBindings.end(),
+		std::for_each(config.keyBindings.begin(), config.keyBindings.end(),
 			[&](const auto& pair) { m_keyInfo[pair.first] = InputInfo{ InputState::None, false, false }; });
 	}
 
@@ -104,10 +103,11 @@ namespace cursed_engine
 
 	void InputHandler::processKeyEvent(const SDL_Event& event, bool isPressed)
 	{
-		if (auto it = m_config.keyBindings.find(event.key.scancode); it != m_config.keyBindings.end())
+		// TODO;!!
+		/*if (auto it = m_config.keyBindings.find(event.key.scancode); it != m_config.keyBindings.end())
 		{
 			m_keyInfo[it->first].isDown = isPressed;
-		}
+		}*/
 	}
 
 	void InputHandler::processMouseButtonEvent(const SDL_Event& event, bool isPressed)
