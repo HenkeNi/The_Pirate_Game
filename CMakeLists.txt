@@ -9,12 +9,20 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
+find_path(RAPIDJSON_INCLUDE_DIRS 
+    NAMES rapidjson/rapidjson.h
+    PATHS ${CMAKE_CURRENT_LIST_DIR}/../vcpkg/installed/${VCPKG_TARGET_TRIPLET}/include
+)
+
+if (NOT RAPIDJSON_INCLUDE_DIRS)
+	message(FATAL_ERROR "RapidJSON not found!")
+endif()
+
 # vcpkg dependencies	
 find_package(SDL3 CONFIG REQUIRED)
 find_package(SDL3_ttf CONFIG REQUIRED)
 find_package(SDL3_image CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
-find_package(nlohmann_json CONFIG REQUIRED)
 
 
 # --- Engine Library ---
@@ -29,13 +37,17 @@ file(GLOB_RECURSE Engine_HEADERS
 add_library(Engine STATIC ${Engine_SOURCES} ${Engine_HEADERS})
 target_include_directories(Engine PUBLIC include)
 
+target_include_directories(Engine PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${RAPIDJSON_INCLUDE_DIRS}
+)
+
 # Automatically links to specified libs
 target_link_libraries(Engine PRIVATE
 	SDL3::SDL3
 	SDL3_ttf::SDL3_ttf
 	SDL3_image::SDL3_image
 	box2d::box2d
-	nlohmann_json::nlohmann_json
 )
 
 # Add precompiled header
