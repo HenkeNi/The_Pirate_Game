@@ -8,6 +8,7 @@ namespace cursed_engine
 {
 	class Renderer;
 	class Texture;
+	class Audio;
 
 	// USE CASE; store handle in components
 	// TODO; add normalize path?
@@ -28,6 +29,10 @@ namespace cursed_engine
 		[[nodiscard]] TextureHandle getTexture(const std::filesystem::path& path); // or just name? loader stores path?
 
 		[[nodiscard]] Texture* resolve(TextureHandle handle);
+
+		[[nodicard]] AudioHandle getAudio(const std::filesystem::path& path);
+
+		[[nodiscard]] Audio* resolve(AudioHandle handle);
 
 	private:
 		struct Impl;
