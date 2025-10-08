@@ -2,7 +2,10 @@
 #include <engine/core/engine.h>
 #include <iostream>
 
-// audio... physics...
+// audio... 
+// physics...
+// Events
+// ECS
 // config... (either each subsystem stores its own, or a EngineConfig class)?
 
 // TODO: fix precompiled header
