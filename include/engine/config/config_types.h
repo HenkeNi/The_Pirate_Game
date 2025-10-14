@@ -6,9 +6,16 @@
 
 namespace cursed_engine
 {
+	struct AppInfo
+	{
+		std::string name = "";
+		std::string identifier = "";
+		std::string version = "";
+	};
+
     struct WindowConfig
     {
-        std::string title = "The Cursed Pirate";
+		std::string iconPath = "";
         int width = 1280;
         int height = 720;
         bool fullscreen = false;
@@ -46,8 +53,10 @@ namespace cursed_engine
 		float contrast = 1.f;
 	};
 
+	// Config manager instead?
 	struct EngineConfig
 	{
+		AppInfo appInfo;
 		WindowConfig windowConfig;
 		InputConfig inputConfig;
 		AudioConfig audioConfig;
