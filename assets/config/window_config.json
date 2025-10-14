@@ -1,7 +1,7 @@
 {
-  "name": "The Cursed Pirate",
   "width": 1280,
   "height": 720,
   "vsync": true,
-  "fullscreen": false
+  "fullscreen": false,
+  "icon_path": "../assets/textures/test3.bmp"
 }
