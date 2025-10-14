@@ -9,8 +9,10 @@
 #include "engine/input/input_handler.h"
 #include "engine/scenes/scene_stack.h"
 #include "engine/events/event_bus.h"
+#include "engine/config/config_manager.h"
 #include <SDL3/SDL.h>
 
+//#include "engine/utils/json_utils.h"
 
 #include "engine/config/config_types.h" // remove later...
 #include "engine/config/config_loader.h"
@@ -35,10 +37,10 @@ namespace cursed_engine
 		Renderer renderer;
 		SceneStack sceneStack;
 		EventBus eventBus;
+		ConfigManager configManager;
 		AudioController audioController;
 		Application& application;
 
-		// Settings? EngineConfigs? Configs?
 
 		// Event? or make static?
 		// Physics?
@@ -59,9 +61,16 @@ namespace cursed_engine
 
 	bool Engine::init()
 	{
-		// TODO; read from json: App meta data..
+		auto& configManager = m_impl->configManager;
 
-		SDL_SetAppMetadata("The Cursed Pirate", "1.0.0-beta", "The_Cursed_Pirate.The Cursed Pirate");
+ 		if (!configManager.loadAllConfigs("../assets/config/"))
+		{
+			Logger::logError("Failed to load one or more configuration files.");
+			return false;
+		}
+
+		const auto& appInfo = configManager.getAppInfo();
+		SDL_SetAppMetadata(appInfo.name.c_str(), appInfo.version.c_str(), appInfo.identifier.c_str());
 
 		if (!SDL_Init(SDL_INIT_AUDIO | SDL_INIT_GAMEPAD | SDL_INIT_VIDEO))
 		{
@@ -69,25 +78,17 @@ namespace cursed_engine
 			return false;
 		}
 		
-		//ConfigLoader::loadFromFile()
+		const auto& windowConfig = configManager.getWindowConfig();
+		m_impl->window.init(appInfo.name.c_str(), windowConfig);
+		m_impl->window.setIcon(windowConfig.iconPath);
 
-		// store in registry? or engine config class?
-		WindowConfig windowCfg{ "The Cursed Pirate", 1280, 720, false, true };
-		m_impl->window.init(windowCfg);
-		m_impl->window.setIcon("../assets/textures/test3.bmp");
-
-		InputConfig inputCfg;
-		inputCfg.keyBindings.insert({ (SDL_Scancode)26, Action::MoveUp });
-		inputCfg.keyBindings.insert({ (SDL_Scancode)4, Action::MoveLeft });
-		inputCfg.keyBindings.insert({ (SDL_Scancode)22, Action::MoveDown });
-		inputCfg.keyBindings.insert({ (SDL_Scancode)7, Action::MoveRight });
-		m_impl->inputHandler.init(inputCfg);
+		const auto& inputConfig = configManager.getInputConfig();	
+		m_impl->inputHandler.init(inputConfig);
 
 		m_impl->renderer.init(m_impl->window);
 		m_impl->audioController.init();
 
 		m_impl->application.onCreated({ m_impl->inputHandler, m_impl->window, m_impl->renderer });
-
 		return true;
 	}
 
@@ -147,8 +148,6 @@ namespace cursed_engine
 			m_impl->renderer.clearScreen();
 
 			// TEST
-
-
 			for (int i = 0; i < 128; ++i)
 			{
 				for (int j = 0; j < 172; ++j)
@@ -175,6 +174,6 @@ namespace cursed_engine
 
 	void Engine::loadMedia()
 	{
-
+		
 	}
 }
