@@ -17,9 +17,9 @@ namespace cursed_engine
 			shutdown();
 	}
 
-	void Window::init(const WindowConfig& config)
+	void Window::init(const char* title, const WindowConfig& config)
 	{
-		m_window = SDL_CreateWindow(config.title.c_str(), config.width, config.height, SDL_WINDOW_RESIZABLE);
+		m_window = SDL_CreateWindow(title, config.width, config.height, SDL_WINDOW_RESIZABLE);
 
 		if (!m_window)
 		{
