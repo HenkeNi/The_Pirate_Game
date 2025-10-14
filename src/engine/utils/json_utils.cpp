@@ -4,107 +4,163 @@
 #include <filesystem>
 #include <fstream>
 #include <unordered_map>
+#include <cassert>
 
 namespace cursed_engine
 {
-	struct JsonLoader::Impl
-	{
-		rapidjson::Document document;
-		std::unordered_map<std::string, rapidjson::Value> property;
-		bool isLoaded = false;
-	};
-
-	JsonLoader::JsonLoader()
-		: m_impl{ std::make_unique<JsonLoader::Impl>() }
-	{
-	}
-	
-	JsonLoader::~JsonLoader()
+	JsonHandler::JsonHandler()
+		: m_isLoaded{ false }
 	{
 	}
 
-	bool JsonLoader::loadFromFile(const std::filesystem::path& path)
+	JsonHandler::JsonHandler(const fs::path& path)
+		: m_isLoaded{ false }
 	{
-		if (!std::filesystem::exists(path))
-		{
-			Logger::logError("[JsonUtils::loadJsonDocument] - Invalid path: " + path.string());
-			return false;
-		}
-
-		std::ifstream ifs{ path };
-
-		if (!ifs.is_open())
-		{
-			Logger::logError("[JsonUtils::loadJsonDocument] - Failed to open file: " + path.string());
-			return false;
-		}
-
-		std::string content{ std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>() };
-
-		rapidjson::Document document;
-		document.Parse(content.data(), content.size());
-
-		if (document.HasParseError())
-		{
-			Logger::logError("[JsonUtils::loadJsonDocument] - Failed to parse document. Path: " + path.string());
-			return false;
-		}
-
-		m_impl->document = std::move(document);
-		m_impl->isLoaded = true;
+		loadFromFile(path);
 	}
 
-	//JsonLoader& JsonLoader::getObject(std::string_view key)
-	//{
-	//	 // currentvaleu?
-
-	//	// TODO: insert return statement here
-	//}
-
-	int JsonLoader::getInteger(std::string key, std::string parent)
+	JsonResult JsonHandler::loadFromFile(const fs::path& path)
 	{
-		return 0;
-	}
+		constexpr std::string_view logPrefix = "[JsonParser::loadFromFile] ";
 
-
-
-
-
-
-
-
-
-	rapidjson::Document loadDocument(const std::filesystem::path& path)
-	{
-		if (!std::filesystem::exists(path))
+		if (!fs::exists(path))
 		{
-			Logger::logError("[JsonUtils::loadJsonDocument] - Invalid path: " + path.string());
-			throw std::runtime_error("Invalid path: " + path.string());
+			const std::string message = "File does not exist: " + path.string();
+			Logger::logError(std::string(logPrefix) + message);
+
+			return { false, message };
 		}
 
-		std::ifstream ifs{ path };
+		std::ifstream ifs(path, std::ios::binary | std::ios::ate);
 
-		if (!ifs.is_open())
+		if (!ifs)
 		{
-			Logger::logError("[JsonUtils::loadJsonDocument] - Failed to open file: " + path.string());
-			throw std::runtime_error("Failed to open file: " + path.string());
+			const std::string message = "Unable to open file: " + path.string();
+			Logger::logError(std::string(logPrefix) + message);
+
+			return { false, message };
 		}
 
-		std::string content{ std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>() };
+		std::streamsize size = ifs.tellg();
+		ifs.seekg(0, std::ios::beg);
+
+		std::string content(static_cast<size_t>(size), '\0');
+		if (!ifs.read(content.data(), size))
+		{
+			const std::string message = "Failed to read contents of file: " + path.string();
+			Logger::logError(std::string(logPrefix) + message);
+
+			return { false, message };
+		}
 
 		rapidjson::Document document;
 		document.Parse(content.data(), content.size());
 
 		if (document.HasParseError())
 		{
-			Logger::logError("[JsonUtils::loadJsonDocument] - Failed to parse document. Path: " + path.string());
-			throw std::runtime_error("JSON parse error in file: " + path.string());
+			const std::string message = "JSON parse error in file: " + path.string();
+
+			Logger::logError(std::string(logPrefix) + message);
+			return { false, message };
 		}
 
-		return document;
+		m_document.CopyFrom(document, document.GetAllocator());
+		m_isLoaded = true;
+
+		return { true, "Successfully loaded document: " + path.string() };
+	}
+
+	std::optional<rapidjson::Value::Object> JsonHandler::getObject(const char* key)
+	{
+		constexpr std::string_view logPrefix = "[JsonParser::getObject] - ";
+
+		if (!m_isLoaded)
+		{
+			Logger::logError(std::string(logPrefix) + "Document not loaded!");
+			return std::nullopt;
+		}
+
+		if (!key || m_document.HasMember(key))
+		{
+			Logger::logError(std::string(logPrefix) + "Missing key: " + (key ? key : "<null>"));
+			return std::nullopt;
+		}
+
+		if (!m_document[key].IsObject())
+		{
+			Logger::logError(std::string(logPrefix) + "Key is not an object: " + key);
+			return std::nullopt;
+		}
+
+		auto object = m_document[key].GetObject();
 	}
 
 
 
 
+
+
+
+
+
+
+
+
+
+	JSONDocument::JSONDocument()
+		: m_isLoaded{ false }
+	{
+		//m_document.SetNull();
+	}
+
+	JsonResult JSONDocument::loadFromFile(const fs::path& path)
+	{
+		constexpr std::string_view logPrefix = "[JsonParser::loadFromFile] ";
+
+		if (!fs::exists(path))
+		{
+			const std::string message = "File does not exist: " + path.string();
+			Logger::logError(std::string(logPrefix) + message);
+
+			return { false, message };
+		}
+
+		std::ifstream ifs(path, std::ios::binary | std::ios::ate);
+
+		if (!ifs)
+		{
+			const std::string message = "Unable to open file: " + path.string();
+			Logger::logError(std::string(logPrefix) + message);
+
+			return { false, message };
+		}
+
+		std::streamsize size = ifs.tellg();
+		ifs.seekg(0, std::ios::beg);
+
+		std::string content(static_cast<size_t>(size), '\0');
+		if (!ifs.read(content.data(), size))
+		{
+			const std::string message = "Failed to read contents of file: " + path.string();
+			Logger::logError(std::string(logPrefix) + message);
+
+			return { false, message };
+		}
+
+		rapidjson::Document document;
+		document.Parse(content.data(), content.size());
+
+		if (document.HasParseError())
+		{
+			const std::string message = "JSON parse error in file: " + path.string();
+
+			Logger::logError(std::string(logPrefix) + message);
+			return { false, message };
+		}
+
+		m_document.CopyFrom(document, m_document.GetAllocator());
+		m_isLoaded = true;
+
+		return { true, "Successfully loaded document: " + path.string() };
+	}
 }
