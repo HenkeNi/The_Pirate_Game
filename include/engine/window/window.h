@@ -18,7 +18,7 @@ namespace cursed_engine
 		Window();
 		~Window();
 
-		void init(const WindowConfig& config);	// or rename: applyConfig();
+		void init(const char* title, const WindowConfig& config);	// or rename: applyConfig();
 
 		void shutdown(); // or destroy?
 
