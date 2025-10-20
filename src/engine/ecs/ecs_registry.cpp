@@ -1,5 +1,5 @@
 #include "engine/ecs/ecs_registry.h"
-#include "engine/ecs/entity_handle.h"
+#include "engine/ecs/entity/entity_handle.h"
 
 namespace cursed_engine
 {

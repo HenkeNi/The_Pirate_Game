@@ -1,6 +1,6 @@
 #pragma once
 #include "entity.h"
-#include "ecs_registry.h"
+#include "../ecs_registry.h"
 #include "engine/utils/non_copyable.h"
 #include "engine/utils/type_traits.h"
 

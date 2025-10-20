@@ -1,5 +1,5 @@
 #pragma once
-#include "ecs_types.h"
+#include "engine/ecs/ecs_types.h"
 #include "engine/utils/type_traits.h"
 #include "engine/utils/non_copyable.h"
 #include "engine/utils/data_structures/sparse_set.hpp"
