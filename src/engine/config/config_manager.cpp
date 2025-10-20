@@ -4,15 +4,9 @@
 
 namespace cursed_engine
 {
-	bool ConfigManager::loadAllConfigs(const fs::path& path)
-	{
-		loadAppInfo(path / "app.json");
-		loadWindowConfig(path / "window_config.json");
+	// ==================== Helpers ====================
 
-		return true;
-	}
-
-	bool ConfigManager::loadAppInfo(const fs::path& path)
+	bool loadAppInfo(const fs::path& path, AppInfo& outAppInfo)
 	{
 		JSONDocument document;
 
@@ -23,14 +17,14 @@ namespace cursed_engine
 			return false;
 		}
 
-		m_appInfo.name = document["name"].to<std::string>();
-		m_appInfo.version = document["version"].to<std::string>();
-		m_appInfo.identifier = document["identifier"].to<std::string>();
+		outAppInfo.name = document["name"].to<std::string>();
+		outAppInfo.version = document["version"].to<std::string>();
+		outAppInfo.identifier = document["identifier"].to<std::string>();
 
 		return true;
 	}
 
-	bool ConfigManager::loadWindowConfig(const fs::path& path)
+	bool loadWindowConfig(const fs::path& path, WindowConfig& outWindowConfig)
 	{
 		JSONDocument document;
 
@@ -41,22 +35,33 @@ namespace cursed_engine
 			return false;
 		}
 
-		m_windowConfig.iconPath = document["icon_path"].to<std::string>();
-		m_windowConfig.width = document["width"].to<int>();
-		m_windowConfig.height = document["height"].to<int>();
-		m_windowConfig.vsync = document["vsync"].to<bool>();
-		m_windowConfig.fullscreen = document["fullscreen"].to<bool>();
+		outWindowConfig.iconPath = document["icon_path"].to<std::string>();
+		outWindowConfig.width = document["width"].to<int>();
+		outWindowConfig.height = document["height"].to<int>();
+		outWindowConfig.vsync = document["vsync"].to<bool>();
+		outWindowConfig.fullscreen = document["fullscreen"].to<bool>();
 
 		return true;
 	}
 
-	bool ConfigManager::loadInputConfig(const fs::path& path)
+	bool loadInputConfig(const fs::path& path, InputConfig& outInputConfig)
 	{
-		m_inputConfig.keyBindings.insert({ (SDL_Scancode)26, Action::MoveUp });
-		m_inputConfig.keyBindings.insert({ (SDL_Scancode)4, Action::MoveLeft });
-		m_inputConfig.keyBindings.insert({ (SDL_Scancode)22, Action::MoveDown });
-		m_inputConfig.keyBindings.insert({ (SDL_Scancode)7, Action::MoveRight });
+		outInputConfig.keyBindings.insert({ (SDL_Scancode)26, Action::MoveUp });
+		outInputConfig.keyBindings.insert({ (SDL_Scancode)4, Action::MoveLeft });
+		outInputConfig.keyBindings.insert({ (SDL_Scancode)22, Action::MoveDown });
+		outInputConfig.keyBindings.insert({ (SDL_Scancode)7, Action::MoveRight });
 
 		return true;
+	}
+
+	bool ConfigManager::loadAllConfigs(const fs::path& path)
+	{
+		bool success = true;
+
+		success &= loadAppInfo(path / "app.json", m_appInfo);
+		success &= loadWindowConfig(path / "window_config.json", m_windowConfig);
+		success &= loadInputConfig(path / "input_config.json", m_inputConfig);
+
+		return success;
 	}
 }

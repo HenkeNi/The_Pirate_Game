@@ -12,27 +12,14 @@ namespace cursed_engine
 	public:
 		bool loadAllConfigs(const fs::path& path);
 		
-		bool loadAppInfo(const fs::path& path);
+		[[nodiscard]] inline const AppInfo& getAppInfo() const noexcept { return m_appInfo; }
 
-		bool loadWindowConfig(const fs::path& path);
+		[[nodiscard]] inline const WindowConfig& getWindowConfig() const noexcept { return m_windowConfig; }
 
-		bool loadInputConfig(const fs::path& path);
-
-		bool loadRenderConfig(const fs::path& path);
-
-		bool loadAudioConfig(const fs::path& path);
-
-
+		[[nodiscard]] inline const InputConfig& getInputConfig() const noexcept { return m_inputConfig; }
 
 		bool saveWindowConfigToFile(const fs::path& path);
 
-
-
-		[[nodiscard]] inline const AppInfo& getAppInfo() const { return m_appInfo; }
-
-		[[nodiscard]] inline const WindowConfig& getWindowConfig() const { return m_windowConfig; }
-
-		[[nodiscard]] inline const InputConfig& getInputConfig() const { return m_inputConfig; }
 
 	private:
 		WindowConfig m_windowConfig;
@@ -43,16 +30,5 @@ namespace cursed_engine
 
 		AppInfo m_appInfo;
 	};
-
-
-
-
-
-
-
-
-
-
-
 
 }
