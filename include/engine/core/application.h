@@ -8,6 +8,9 @@ namespace cursed_engine
 		class InputHandler& inputHandler;
 		class Window& window;
 		class Renderer& renderer;
+		class SceneStack& sceneStack;
+		// scene stack?
+		
 		// event system;
 		// audio audio;
 		// frame timer?
