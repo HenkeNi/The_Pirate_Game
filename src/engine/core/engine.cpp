@@ -20,6 +20,7 @@
 
 // REMOEV
 #include "engine/audio/audio.h"
+#include "engine/utils/data_structures/sparse_set.hpp"
 
 namespace cursed_engine
 {
@@ -31,23 +32,19 @@ namespace cursed_engine
 		}
 
 		InputHandler inputHandler;
-		FrameTimer timer;
+		FrameTimer timer; // Make local?
 		ResourceManager resourceManager;		
 		Window window;
 		Renderer renderer;
-		SceneStack sceneStack;
+		SceneStack sceneStack; // or game specific?
 		EventBus eventBus;
 		ConfigManager configManager;
 		AudioController audioController;
 		Application& application;
 
-
-		// Event? or make static?
 		// Physics?
-		// Audio
 		// Task system
-		// World/ECS?
-		// SceneManager/scene graph? or keep in game?
+		// World/ECS? or in scene?
 	};
 
 	Engine::Engine(Application& app)
@@ -88,7 +85,11 @@ namespace cursed_engine
 		m_impl->renderer.init(m_impl->window);
 		m_impl->audioController.init();
 
-		m_impl->application.onCreated({ m_impl->inputHandler, m_impl->window, m_impl->renderer });
+		SparseSet<int, int> testSet;
+		testSet.emplace(1, 11111);
+
+
+		m_impl->application.onCreated({ m_impl->inputHandler, m_impl->window, m_impl->renderer, m_impl->sceneStack });
 		return true;
 	}
 
@@ -107,7 +108,6 @@ namespace cursed_engine
 		// Test
 		auto textureHandle = m_impl->resourceManager.getTexture("../assets/textures/test3.bmp");
 		auto* texture = m_impl->resourceManager.resolve(textureHandle);
-
 
 		auto audioHandle = m_impl->resourceManager.getAudio("../assets/sounds/707884__dave4884__pirates-song.wav");
 		auto* audio = m_impl->resourceManager.resolve(audioHandle);
