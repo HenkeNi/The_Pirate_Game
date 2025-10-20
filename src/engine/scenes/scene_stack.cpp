@@ -15,7 +15,8 @@ namespace cursed_engine
 
 	void SceneStack::push(std::unique_ptr<Scene> scene)
 	{
-		m_stack.back()->onExit();
+		if (!m_stack.empty())
+			m_stack.back()->onExit();
 
 		scene->onCreated();
 
