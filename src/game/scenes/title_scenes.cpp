@@ -1,10 +1,15 @@
 #include "game/scenes/title_scene.h"
 
-void TitleScene::update(float deltaTime)
+TitleScene::TitleScene(cursed_engine::SystemManager* systemManager)
+	: Scene{ systemManager }
 {
 }
 
-void TitleScene::onEnter() 
+void TitleScene::onUpdate(float deltaTime)
+{
+}
+
+void TitleScene::onEnter()
 {
 }
 

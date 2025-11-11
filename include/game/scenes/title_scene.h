@@ -1,10 +1,11 @@
 #pragma once
-#include <engine/scenes/scene.h>
+#include "game/scenes/scene.h"
 
-class TitleScene : public cursed_engine::Scene
+class TitleScene : public Scene
 {
 public:
-	void update(float deltaTime) override;
+	TitleScene(cursed_engine::SystemManager* systemManager);
+	void onUpdate(float deltaTime) override;
 
 	void onEnter();
 	void onExit();

@@ -1,66 +1,64 @@
-#include "engine/pch.h"
-#include "engine/scenes/scene_stack.h"
-#include "engine/scenes/scene.h"
+//#include "engine/pch.h"
+#include "game/scenes/scene_stack.h"
+#include "game/scenes/scene.h"
 //#include <algorithm>
 
-namespace cursed_engine
+SceneStack::SceneStack()
 {
-	SceneStack::SceneStack()
+}
+
+SceneStack::~SceneStack()
+{
+}
+
+void SceneStack::push(std::unique_ptr<Scene> scene)
+{
+	if (!m_stack.empty())
+		m_stack.back()->onExit();
+
+	scene->onCreated();
+
+	m_stack.push_back(std::move(scene));
+	m_stack.back()->onEnter();
+}
+
+void SceneStack::pop()
+{
+	if (!m_stack.empty()) [[likely]]
 	{
+		auto& scene = m_stack.back();
+		scene->onExit();
+		scene->onDestroyed();
+
+		m_stack.pop_back();
 	}
 
-	SceneStack::~SceneStack()
+	if (!m_stack.empty()) [[likely]]
 	{
-	}
-
-	void SceneStack::push(std::unique_ptr<Scene> scene)
-	{
-		if (!m_stack.empty())
-			m_stack.back()->onExit();
-
-		scene->onCreated();
-
-		m_stack.push_back(std::move(scene));
 		m_stack.back()->onEnter();
 	}
+}
 
-	void SceneStack::pop()
+void SceneStack::update(float deltaTime)
+{
+	if (!m_stack.empty()) [[likely]]
 	{
-		if (!m_stack.empty()) [[likely]]
-		{
-			auto& scene = m_stack.back();
-			scene->onExit();
-			scene->onDestroyed();
-
-			m_stack.pop_back();
-		}
-
-		if (!m_stack.empty()) [[likely]]
-		{
-			m_stack.back()->onEnter();
-		}
-	}
-
-	void SceneStack::update(float deltaTime)
-	{
-		if (!m_stack.empty()) [[likely]]
-		{
-			m_stack.back()->update(deltaTime);
-		}
-	}
-
-	void SceneStack::clear()
-	{
-		std::for_each(m_stack.begin(), m_stack.end(), 
-			[](auto& scene) 
-			{
-				scene->onExit();
-				scene->onDestroyed(); 
-			});
-
-		m_stack.clear();
+		m_stack.back()->update(deltaTime);
 	}
 }
+
+void SceneStack::clear()
+{
+	std::for_each(m_stack.begin(), m_stack.end(),
+		[](auto& scene)
+		{
+			scene->onExit();
+			scene->onDestroyed();
+		});
+
+	m_stack.clear();
+}
+
 //
 //class SceneManager {
 //public:
