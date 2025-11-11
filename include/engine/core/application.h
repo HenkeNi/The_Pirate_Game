@@ -2,15 +2,13 @@
 #include "engine/utils/non_copyable.h"
 
 namespace cursed_engine
-{
-	struct EngineSystems 
+{ 
+	struct AppContext
 	{
+		class SystemManager& systemManager;
 		class InputHandler& inputHandler;
-		class Window& window;
 		class Renderer& renderer;
-		class SceneStack& sceneStack;
-		// scene stack?
-		
+		class Window& window;
 		// event system;
 		// audio audio;
 		// frame timer?
@@ -27,7 +25,7 @@ namespace cursed_engine
 
 		virtual void onUpdate(float deltaTime) = 0;
 
-		virtual void onCreated(const EngineSystems& systems) {};
+		virtual void onCreated(const AppContext& context) {};
 		virtual void onDestroyed() {};
 	};
 }

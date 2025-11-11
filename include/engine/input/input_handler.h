@@ -1,4 +1,5 @@
 #pragma once
+#include "engine/core/subsystem.h"
 #include <array>
 #include <SDL3/SDL.h>
 
@@ -46,7 +47,7 @@ namespace cursed_engine
 		float scroll;
 	};
 
-	class InputHandler
+	class InputHandler : public Subsystem
 	{
 	public:
 		void init(const InputConfig& config); // copy move instead?

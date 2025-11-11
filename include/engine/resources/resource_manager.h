@@ -1,4 +1,5 @@
 #pragma once
+#include "engine/core/subsystem.h"
 #include "resource_handle.h" // Needed?
 
 #include <filesystem> // put in pch
@@ -14,7 +15,7 @@ namespace cursed_engine
 	// TODO; add normalize path?
 	// Rename: AssetHandler? AssetManager? ResourceStore?
 
-	class ResourceManager
+	class ResourceManager : public Subsystem
 	{
 	public:
 		ResourceManager(Renderer& renderer);

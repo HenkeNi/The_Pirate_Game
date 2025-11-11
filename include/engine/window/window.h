@@ -1,4 +1,5 @@
 #pragma once
+#include "engine/core/subsystem.h"
 #include "engine/math/vec2.h"
 #include <filesystem>
 
@@ -11,7 +12,7 @@ namespace cursed_engine
 {
 	struct WindowConfig;
 
-	class Window
+	class Window : public Subsystem
 	{
 	public:
 		// ==================== Lifecycle ====================

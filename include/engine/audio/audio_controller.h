@@ -1,11 +1,12 @@
 #pragma once
+#include "engine/core/subsystem.h"
 
 typedef uint32_t SDL_AudioDeviceID;
 struct SDL_AudioStream;
 
 namespace cursed_engine
 {
-	class AudioController
+	class AudioController : public Subsystem
 	{
 	public:
 		AudioController();

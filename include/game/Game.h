@@ -1,7 +1,8 @@
 #pragma once
 #include <engine/core/application.h>
+#include "game/scenes/scene_stack.h"
 
-using cursed_engine::EngineSystems;
+using cursed_engine::AppContext;
 
 namespace cursed_engine
 {
@@ -15,10 +16,12 @@ public:
 	~Game() = default;
 
 	void onUpdate(float deltaTime) override;
-	void onCreated(const EngineSystems& systems) override;
+	
+	void onCreated(const AppContext& context) override;
+	void onDestroyed() override;
 
 private:
 	void setupScenes();
 
-	cursed_engine::SceneStack* m_sceneStack;
+	SceneStack m_sceneStack;
 };

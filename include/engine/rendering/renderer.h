@@ -1,4 +1,5 @@
 #pragma once
+#include "engine/core/subsystem.h"
 #include "engine/math/vec2.h" // TODO; put in pch...
 
 typedef struct SDL_Renderer SDL_Renderer;
@@ -8,7 +9,7 @@ namespace cursed_engine
 	class Window;
 	class Texture;
 
-	class Renderer
+	class Renderer : public Subsystem
 	{
 	public:
 		Renderer();

@@ -1,4 +1,5 @@
 #pragma once
+#include "engine/core/subsystem.h"
 #include <functional>
 #include <unordered_map>
 #include <queue>
@@ -7,7 +8,7 @@
 
 namespace cursed_engine
 {
-	class EventBus
+	class EventBus : public Subsystem
 	{
 	public:
 		template <typename Event>

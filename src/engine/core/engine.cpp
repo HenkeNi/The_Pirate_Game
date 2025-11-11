@@ -1,15 +1,17 @@
 #include "engine/core/engine.h"
 #include "engine/core/logger.h"
 #include "engine/core/application.h"
+#include "engine/ecs/system/system_manager.h"
 #include "engine/audio/audio_controller.h"
 #include "engine/rendering/renderer.h"
 #include "engine/resources/resource_manager.h"
 #include "engine/window/window.h"
 #include "engine/utils/frame_timer.h"
 #include "engine/input/input_handler.h"
-#include "engine/scenes/scene_stack.h"
+#include "engine/physics/physics.h"
 #include "engine/events/event_bus.h"
 #include "engine/config/config_manager.h"
+#include "engine/core/subsystem_registry.h"
 #include <SDL3/SDL.h>
 
 //#include "engine/utils/json_utils.h"
@@ -27,24 +29,20 @@ namespace cursed_engine
 	struct Engine::Impl
 	{
 		Impl(Application& app)
-			: application{ app }, resourceManager{ renderer }
+			: application{ app }
 		{
 		}
 
-		InputHandler inputHandler;
+		SubsystemRegistry subsystemRegistry;
+		SystemManager systemManager; // subsystem?
 		FrameTimer timer; // Make local?
-		ResourceManager resourceManager;		
-		Window window;
-		Renderer renderer;
-		SceneStack sceneStack; // or game specific?
-		EventBus eventBus;
-		ConfigManager configManager;
-		AudioController audioController;
 		Application& application;
 
-		// Physics?
-		// Task system
-		// World/ECS? or in scene?
+		// TODO; move to game?
+		//SceneStack sceneStack; // or game specific? 
+
+		// Task system/Thread pool
+		// Profiler
 	};
 
 	Engine::Engine(Application& app)
@@ -58,9 +56,10 @@ namespace cursed_engine
 
 	bool Engine::init()
 	{
-		auto& configManager = m_impl->configManager;
+		auto& subsystemRegistry = m_impl->subsystemRegistry;
+		auto& configManager = subsystemRegistry.add<ConfigManager>();
 
- 		if (!configManager.loadAllConfigs("../assets/config/"))
+		if (!configManager.loadAllConfigs("../assets/config/"))
 		{
 			Logger::logError("Failed to load one or more configuration files.");
 			return false;
@@ -74,30 +73,37 @@ namespace cursed_engine
 			Logger::logError(std::format("SDL couldn't be be initialized! Error: {}", SDL_GetError()).c_str());
 			return false;
 		}
+
+		auto& window = subsystemRegistry.add<Window>();
 		
 		const auto& windowConfig = configManager.getWindowConfig();
-		m_impl->window.init(appInfo.name.c_str(), windowConfig);
-		m_impl->window.setIcon(windowConfig.iconPath);
+		window.init(appInfo.name.c_str(), windowConfig);
+		window.setIcon(windowConfig.iconPath);
 
-		const auto& inputConfig = configManager.getInputConfig();	
-		m_impl->inputHandler.init(inputConfig);
+		auto& inputHandler = subsystemRegistry.add<InputHandler>();
+		inputHandler.init(configManager.getInputConfig());
 
-		m_impl->renderer.init(m_impl->window);
-		m_impl->audioController.init();
+		auto& renderer = subsystemRegistry.add<Renderer>();
+		renderer.init(window);
 
-		SparseSet<int, int> testSet;
-		testSet.emplace(1, 11111);
+		auto& audioController = subsystemRegistry.add<AudioController>();
+		audioController.init();
 
+		subsystemRegistry.add<ResourceManager>(renderer);
+		subsystemRegistry.add<EventBus>();
+		subsystemRegistry.add<Physics>();
 
-		m_impl->application.onCreated({ m_impl->inputHandler, m_impl->window, m_impl->renderer, m_impl->sceneStack });
+		m_impl->application.onCreated({ m_impl->systemManager, inputHandler, renderer, window });
 		return true;
 	}
 
 	void Engine::shutdown()
 	{
-		m_impl->window.shutdown();
+		m_impl->subsystemRegistry.forEach([](auto& subsystem) { subsystem->shutdown(); });
+
+		//m_impl->window.shutdown();
 		//m_impl->inputHandler
-		m_impl->sceneStack.clear();
+		//m_impl->sceneStack.clear();
 		SDL_Quit();
 	}
 
@@ -105,18 +111,21 @@ namespace cursed_engine
 	{
 		bool running = true;
 
+		auto& subsystemRegistry = m_impl->subsystemRegistry;
+
 		// Test
-		auto textureHandle = m_impl->resourceManager.getTexture("../assets/textures/test3.bmp");
-		auto* texture = m_impl->resourceManager.resolve(textureHandle);
+		auto& resourceManager = subsystemRegistry.get<ResourceManager>();
+		auto textureHandle = resourceManager.getTexture("../assets/textures/test3.bmp");
+		auto* texture = resourceManager.resolve(textureHandle);
 
-		auto audioHandle = m_impl->resourceManager.getAudio("../assets/sounds/707884__dave4884__pirates-song.wav");
-		auto* audio = m_impl->resourceManager.resolve(audioHandle);
+		auto audioHandle = resourceManager.getAudio("../assets/sounds/707884__dave4884__pirates-song.wav");
+		auto* audio = resourceManager.resolve(audioHandle);
 
-		auto audioHandle2 = m_impl->resourceManager.getAudio("../assets/sounds/249813__spookymodem__goblin-death.wav");
-		auto* audio2 = m_impl->resourceManager.resolve(audioHandle2);
+		auto audioHandle2 = resourceManager.getAudio("../assets/sounds/249813__spookymodem__goblin-death.wav");
+		auto* audio2 = resourceManager.resolve(audioHandle2);
 
-		m_impl->audioController.playSound(audio2->m_stream, audio2->m_buffer, audio2->m_length);
-
+		auto& audioController = subsystemRegistry.get<AudioController>();
+		audioController.playSound(audio2->m_stream, audio2->m_buffer, audio2->m_length);
 		//
 
 		while (running)
@@ -134,46 +143,50 @@ namespace cursed_engine
 					running = false;
 				}
 
-				m_impl->inputHandler.processInput(event);
-				m_impl->window.processEvent(event);
+				subsystemRegistry.get<InputHandler>().processInput(event); // TODO; "prefetch" input handler?
+				subsystemRegistry.get<Window>().processEvent(event);
 			}
 
 			double deltaTime = timer.getDeltaTime();
 
-			m_impl->inputHandler.update();
-			m_impl->sceneStack.update(deltaTime);
+			subsystemRegistry.get<InputHandler>().update();
+			m_impl->application.onUpdate(deltaTime);
 
-			m_impl->eventBus.dispatchAll();
+			// or getactivesceenes.... then iterate and, check if should update next 
+			//m_impl->systemManager.update(deltaTime);
 
-			m_impl->renderer.clearScreen();
+
+			subsystemRegistry.get<EventBus>().dispatchAll();
+			subsystemRegistry.get<Renderer>().clearScreen();
+
 
 			// TEST
 			for (int i = 0; i < 128; ++i)
 			{
 				for (int j = 0; j < 172; ++j)
 				{
-					m_impl->renderer.renderTexture(i * 10, j * 10, *texture);
+					subsystemRegistry.get<Renderer>().renderTexture(i * 10, j * 10, *texture);
 				}
 			}
 
-			m_impl->renderer.renderLine(0, 0, 100, 100);
+			subsystemRegistry.get<Renderer>().renderLine(0, 0, 100, 100);
 
 
 			// END TEST....
 
-			m_impl->renderer.present();
+			subsystemRegistry.get<Renderer>().present();
 
-			
+
 			Uint64 end = SDL_GetPerformanceCounter();
 			float elapsed = (end - start) / (float)SDL_GetPerformanceFrequency();
 			float fps = 1.f / elapsed;
 			// timer.getFPS();
-			m_impl->window.setTitle(std::format("The Cursed Pirate - Fps: {}", (int)fps).c_str());
+			subsystemRegistry.get<Window>().setTitle(std::format("The Cursed Pirate - Fps: {}", (int)fps).c_str());
 		}
 	}
 
 	void Engine::loadMedia()
 	{
-		
+
 	}
 }

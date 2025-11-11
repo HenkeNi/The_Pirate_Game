@@ -1,4 +1,5 @@
 #pragma once
+#include "engine/core/subsystem.h"
 #include "config_types.h"
 #include <filesystem>
 
@@ -7,7 +8,7 @@ namespace cursed_engine
 	namespace fs = std::filesystem;
 
 	// Settings? EngineConfig? ConfigHandler? or POD struct EngineConfig and ConfigLoader helper class?
-	class ConfigManager
+	class ConfigManager : public Subsystem
 	{
 	public:
 		bool loadAllConfigs(const fs::path& path);
