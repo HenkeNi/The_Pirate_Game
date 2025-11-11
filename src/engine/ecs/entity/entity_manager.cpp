@@ -35,7 +35,7 @@ namespace cursed_engine
 		}
 
 		recycle(entity.id);
-		m_alive.remove(entity.id);
+		m_alive.erase(entity.id);
 		m_signatures.reset(entity.id);
 
 		return true;

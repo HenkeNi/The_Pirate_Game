@@ -7,7 +7,7 @@
 namespace cursed_engine
 {
 	template <ComponentType T>
-	using ComponentContainer = SparseSet<std::decay_t<T>, EntityID>;
+	using ComponentContainer = sparse_set<std::decay_t<T>, EntityID>;
 
 	// TODO; prefix with I for all interface classes?
 	class IComponentManager
@@ -73,7 +73,8 @@ namespace cursed_engine
 	template <typename... Args>
 	bool ComponentManager<T>::add(EntityID id, Args&&... args)
 	{
-		return m_components.emplace(id, std::forward<Args>(args)...);
+		auto [it, success] = m_components.emplace(id, std::forward<Args>(args)...);
+		return success;
 	}
 
 	template <ComponentType T>

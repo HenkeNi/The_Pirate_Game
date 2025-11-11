@@ -3,7 +3,9 @@
 #include "engine/utils/type_traits.h"
 #include <array>
 #include <bitset>
+#include <ranges>
 #include <cstddef>
+#include <algorithm>
 
 namespace cursed_engine
 {

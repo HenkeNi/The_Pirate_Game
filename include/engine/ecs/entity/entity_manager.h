@@ -10,7 +10,7 @@
 
 namespace cursed_engine
 {
-	class Entity;
+	struct Entity;
 
 	class EntityManager : private NonCopyable
 	{
@@ -62,7 +62,7 @@ namespace cursed_engine
 
 		// ==================== Data Members ====================
 
-		SparseSet<Entity, EntityID> m_alive;
+		sparse_set<Entity, EntityID> m_alive;
 		std::queue<EntityID> m_available;
 
 		SignatureRegistry<EntityID, MAX_COMPONENTS, MAX_ENTITIES> m_signatures;

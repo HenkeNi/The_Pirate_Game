@@ -2,13 +2,13 @@
 
 namespace cursed_engine
 {
-	class World;
+	class ECSRegistry;
 
 	class System
 	{
 	public:
 		virtual ~System() = default;
-		virtual void configure(World& world) {};
-		virtual void update(World& world, float deltaTime) = 0;
+		virtual void configure(ECSRegistry& registry) {};
+		virtual void update(ECSRegistry& registry, float deltaTime) = 0; // render and update functions?? or different base classes?
 	};
 }
