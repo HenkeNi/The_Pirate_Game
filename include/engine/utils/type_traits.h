@@ -1,5 +1,6 @@
 #pragma once
 #include <type_traits>
+#include <concepts>
 
 // Integral type (ex: int, long, short)
 template <typename T>
