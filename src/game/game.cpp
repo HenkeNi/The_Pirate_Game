@@ -1,4 +1,4 @@
-#include "game/Game.h"
+#include "game/game.h"
 #include "game/scenes/title_scene.h"
 //#include <game/scenes/scene_stack.h>
 #include <iostream>
