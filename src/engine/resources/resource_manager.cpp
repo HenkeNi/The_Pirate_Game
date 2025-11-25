@@ -44,21 +44,22 @@ namespace cursed_engine
 
         auto& textureCache = m_impl->textureCache;
         auto& textureLoader = m_impl->textureLoader;
-
         auto& pathToTextureHandle = m_impl->pathToTextureHandle;
         
-        if (auto it = pathToTextureHandle.find(path.string()); it != pathToTextureHandle.end())
+        const std::string keyPath = path.string();
+
+        if (auto it = pathToTextureHandle.find(keyPath); it != pathToTextureHandle.end())
         {
             if (textureCache.isValidHandle(it->second))
                 return it->second; // TODO; increment ref count?
             else
-                pathToTextureHandle.erase(path.string());
+                pathToTextureHandle.erase(keyPath);
         }
 
         auto texture = textureLoader.load(m_impl->renderer, path);
         auto handle = textureCache.insert(std::move(texture));
             
-        pathToTextureHandle.insert({ path.string(), handle });            
+        pathToTextureHandle.insert({ keyPath, handle });
         return handle;        
     }
 
@@ -78,7 +79,6 @@ namespace cursed_engine
 
         auto& audioCache = m_impl->audioCache;
         auto& audioLoader = m_impl->audioLoader;
-
         auto& pathToAudioHandle = m_impl->pathToAudioHandle;
 
         if (auto it = pathToAudioHandle.find(path.string()); it != pathToAudioHandle.end())
