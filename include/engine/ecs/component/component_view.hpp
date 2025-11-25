@@ -1,6 +1,5 @@
 #pragma once
-
-// TODO; include component manager?
+#include "engine/ecs/component/component_manager.hpp"
 #include "engine/utils/type_traits.h"
 #include "engine/utils/non_copyable.h"
 #include <span>

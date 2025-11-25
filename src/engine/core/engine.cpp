@@ -2,9 +2,11 @@
 #include "engine/core/logger.h"
 #include "engine/core/application.h"
 #include "engine/ecs/system/system_manager.h"
+#include "engine/ecs/entity/entity_factory.h"
 #include "engine/audio/audio_controller.h"
 #include "engine/rendering/renderer.h"
 #include "engine/resources/resource_manager.h"
+#include "engine/assets/asset_manager.h"
 #include "engine/window/window.h"
 #include "engine/utils/frame_timer.h"
 #include "engine/input/input_handler.h"
@@ -12,6 +14,7 @@
 #include "engine/events/event_bus.h"
 #include "engine/config/config_manager.h"
 #include "engine/core/subsystem_registry.h"
+#include "engine/assets/asset_loaders.h"
 #include <SDL3/SDL.h>
 
 //#include "engine/utils/json_utils.h"
@@ -19,10 +22,11 @@
 #include "engine/config/config_types.h" // remove later...
 #include "engine/config/config_loader.h"
 
-
 // REMOEV
 #include "engine/audio/audio.h"
 #include "engine/utils/data_structures/sparse_set.hpp"
+#include <optional>
+
 
 namespace cursed_engine
 {
@@ -34,12 +38,10 @@ namespace cursed_engine
 		}
 
 		SubsystemRegistry subsystemRegistry;
-		SystemManager systemManager; // subsystem?
-		FrameTimer timer; // Make local?
+		SystemManager systemManager;
+		EntityFactory entityFactory;
+		FrameTimer timer;
 		Application& application;
-
-		// TODO; move to game?
-		//SceneStack sceneStack; // or game specific? 
 
 		// Task system/Thread pool
 		// Profiler
@@ -75,7 +77,7 @@ namespace cursed_engine
 		}
 
 		auto& window = subsystemRegistry.add<Window>();
-		
+
 		const auto& windowConfig = configManager.getWindowConfig();
 		window.init(appInfo.name.c_str(), windowConfig);
 		window.setIcon(windowConfig.iconPath);
@@ -93,6 +95,11 @@ namespace cursed_engine
 		subsystemRegistry.add<EventBus>();
 		subsystemRegistry.add<Physics>();
 
+		auto& assetManager = subsystemRegistry.add<AssetManager>();
+		m_impl->entityFactory.initialize(&assetManager);
+
+		loadMedia(); // HERE? Dont do in init? also maybe dont do in Engine?
+
 		m_impl->application.onCreated({ m_impl->systemManager, inputHandler, renderer, window });
 		return true;
 	}
@@ -101,8 +108,6 @@ namespace cursed_engine
 	{
 		m_impl->subsystemRegistry.forEach([](auto& subsystem) { subsystem->shutdown(); });
 
-		//m_impl->window.shutdown();
-		//m_impl->inputHandler
 		//m_impl->sceneStack.clear();
 		SDL_Quit();
 	}
@@ -126,6 +131,8 @@ namespace cursed_engine
 
 		auto& audioController = subsystemRegistry.get<AudioController>();
 		audioController.playSound(audio2->m_stream, audio2->m_buffer, audio2->m_length);
+
+
 		//
 
 		while (running)
@@ -152,8 +159,9 @@ namespace cursed_engine
 			subsystemRegistry.get<InputHandler>().update();
 			m_impl->application.onUpdate(deltaTime);
 
+
 			// or getactivesceenes.... then iterate and, check if should update next 
-			//m_impl->systemManager.update(deltaTime);
+			//m_impl->systemManager.update(deltaTime); // After application update?
 
 
 			subsystemRegistry.get<EventBus>().dispatchAll();
@@ -187,6 +195,26 @@ namespace cursed_engine
 
 	void Engine::loadMedia()
 	{
+		// Asset Manager 
+		auto& assetManager = m_impl->subsystemRegistry.get<AssetManager>();
+		assetManager.addLoader<PrefabLoader>();
 
+		// only load "core" resources(?) - lazy load othewise
+		// TODO; load prefabs with AssetManager later...
+
+		//auto& prefabRegistry = m_impl->subsystemRegistry.get<PrefabRegistry>();
+		//PrefabLoader loader;
+
+		for (const auto& entry : std::filesystem::recursive_directory_iterator("../assets/prefabs/"))
+		{
+			if (!entry.is_regular_file())
+				continue;
+
+			auto handle = assetManager.loadAsset<Prefab>(entry.path());
+			auto index = handle.index;
+
+			const auto& prefab = assetManager.getAsset<Prefab>(handle);
+			int x = 20;
+		}
 	}
 }

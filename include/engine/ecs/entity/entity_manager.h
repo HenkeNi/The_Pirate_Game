@@ -1,8 +1,8 @@
 #pragma once
-#include "../component/component_manager.h"
-#include "../signature_registry.hpp"
-#include "../ecs_types.h"
+#include "engine/ecs/signature_registry.hpp"
 #include "engine/utils/non_copyable.h"
+#include "engine/utils/data_structures/sparse_set.hpp"
+#include "engine/ecs/ecs_types.h"
 #include "entity.h"
 #include <optional>
 #include <queue>
