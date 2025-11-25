@@ -1,8 +1,7 @@
 #pragma once
 #include "entity/entity_manager.h"
-#include "engine/ecs/component/component_view.hpp"
 #include "component/component_view.hpp"
-#include "component/component_manager.h"
+#include "component/component_manager.hpp"
 #include "engine/utils/non_copyable.h"
 #include "engine/core/logger.h"
 #include "ecs_types.h"
