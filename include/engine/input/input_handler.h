@@ -43,8 +43,9 @@ namespace cursed_engine
 	struct MouseState
 	{
 		std::array<InputInfo, (std::size_t)MouseButton::Count> buttons;
-		float x, y;
-		float scroll;
+		float x = 0.f;
+		float y = 0.f;
+		float scroll = 0.f;
 	};
 
 	class InputHandler : public Subsystem
