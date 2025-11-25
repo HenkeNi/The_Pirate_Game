@@ -1,9 +1,9 @@
 #pragma once
 #include "engine/core/subsystem.h"
+#include "engine/utils/type_utils.h"
 #include <functional>
 #include <unordered_map>
 #include <queue>
-#include <typeindex>
 #include <any>
 
 namespace cursed_engine
@@ -26,9 +26,6 @@ namespace cursed_engine
 		void dispatchAll();
 
 	private:
-		template <typename Event>
-		[[nodiscard]] constexpr std::type_index getTypeIndex() const;
-
 		struct QueuedEvent
 		{
 			std::type_index type;
@@ -68,12 +65,6 @@ namespace cursed_engine
 				callback(event);
 			});
 
-	}
-
-	template <typename Event>
-	constexpr std::type_index EventBus::getTypeIndex() const
-	{
-		return std::type_index(typeid(Event));
 	}
 
 #pragma endregion

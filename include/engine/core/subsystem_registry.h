@@ -1,7 +1,7 @@
 #pragma once
 #include "engine/utils/non_copyable.h"
 #include "engine/utils/type_traits.h"
-#include <typeindex>
+#include "engine/utils/type_utils.h"
 #include <cassert>
 
 namespace cursed_engine
@@ -52,9 +52,6 @@ namespace cursed_engine
 		std::size_t size() const noexcept;
 
 	private:
-		template <DerivedFrom<Subsystem> T>
-		constexpr std::type_index getTypeIndex() const noexcept;
-
 		using SubsystemPtr = std::unique_ptr<Subsystem>;
 		using Subsystems = std::unordered_map<std::type_index, SubsystemPtr>;
 
@@ -114,12 +111,6 @@ namespace cursed_engine
 	bool SubsystemRegistry::has() const noexcept
 	{
 		return m_subsystems.contains(getTypeIndex<T>());
-	}
-
-	template <DerivedFrom<Subsystem> T>
-	constexpr std::type_index SubsystemRegistry::getTypeIndex() const noexcept
-	{
-		return std::type_index(typeid(T));
 	}
 
 	template <typename Callback>
