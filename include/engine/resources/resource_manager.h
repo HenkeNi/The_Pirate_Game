@@ -11,10 +11,10 @@ namespace cursed_engine
 	class Texture;
 	class Audio;
 
-	// USE CASE; store handle in components
+	// TODO; use templated 'get' and 'resolve' functions?
 	// TODO; add normalize path?
-	// Rename: AssetHandler? AssetManager? ResourceStore?
-
+	// USE CASE; store handle in components
+	 
 	class ResourceManager : public Subsystem
 	{
 	public:
@@ -22,12 +22,12 @@ namespace cursed_engine
 		~ResourceManager();
 
 		ResourceManager(const ResourceManager&) = delete;
-		ResourceManager(ResourceManager&&) = default; // Or delete??
+		ResourceManager(ResourceManager&&) = default;
 
 		ResourceManager& operator=(const ResourceManager&) = delete;
 		ResourceManager& operator=(ResourceManager&&) = default;
 
-		[[nodiscard]] TextureHandle getTexture(const std::filesystem::path& path); // or just name? loader stores path?
+		[[nodiscard]] TextureHandle getTexture(const std::filesystem::path& path);
 
 		[[nodiscard]] Texture* resolve(TextureHandle handle);
 
