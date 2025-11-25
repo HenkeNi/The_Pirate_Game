@@ -5,7 +5,6 @@
 
 namespace cursed_engine
 {
-
 	constexpr std::size_t MAX_SYSTEMS = 64;
 	constexpr std::size_t MAX_ENTITIES = 100000; // 5000;
 	constexpr std::uint8_t MAX_COMPONENTS = 64;
