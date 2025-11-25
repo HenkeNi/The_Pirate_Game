@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <string_view>
 #include <rapidjson/document.h>
+#include <variant>
 
 namespace cursed_engine
 {
@@ -60,63 +61,99 @@ namespace cursed_engine
 		std::string errorMessage;
 	};
 
-	class JsonHandler
-	{
-	public:
-		JsonHandler();
-		JsonHandler(const fs::path& path);
+	//class JsonHandler
+	//{
+	//public:
+	//	JsonHandler();
+	//	JsonHandler(const fs::path& path);
 
-		[[nodiscard]] JsonResult loadFromFile(const fs::path& path);
+	//	[[nodiscard]] JsonResult loadFromFile(const fs::path& path);
+
+	//	template <typename T>
+	//	[[nodiscard]] T getValueOr(const char* key, const T& defaultValue);
+
+	//	[[nodiscard]] std::optional<rapidjson::Value::Object> getObject(const char* key);
+
+	//	[[nodiscard]] inline bool isLoaded() const { return m_isLoaded; }
+	//	// TODO; create write functions!?
+
+	//private:
+	//	rapidjson::Document m_document;
+	//	bool m_isLoaded;
+	//};
+
+	//template <typename T>
+	//T JsonHandler::getValueOr(const char* key, const T& defaultValue)
+	//{
+	//	constexpr std::string_view logPrefix = "[JsonParser::getValueOr] - ";
+
+	//	if (!m_isLoaded) [[likely]]
+	//	{
+	//		Logger::logError(std::string(logPrefix) + "Document not loaded!");
+	//		return defaultValue;
+	//	}
+
+	//	if (!key || !m_document.HasMember(key))
+	//	{
+	//		Logger::logError(std::string(logPrefix) + "Missing key: " + (key ? key : "<null>"));
+	//		return defaultValue;
+	//	}
+
+	//	const auto& val = m_document[key];
+
+	//	if (!TypeHelper<T>::Is(val))
+	//	{
+	//		Logger::logError(std::string(logPrefix) + "Type mismatch for key: " + key);
+	//		return defaultValue;
+	//	}
+
+	//	return TypeHelper<T>::Get(val);
+	//}
+
+
+
+	struct PropertyValue : std::variant<
+		std::nullptr_t,
+		bool,
+		int,
+		float,
+		std::string,
+		std::unordered_map<std::string, PropertyValue>,
+		std::vector<PropertyValue>>
+	{
+		using variant::variant;
 
 		template <typename T>
-		[[nodiscard]] T getValueOr(const char* key, const T& defaultValue);
+		const T* as() const noexcept
+		{
+			return std::get_if<T>(this);
+		}
 
-		[[nodiscard]] std::optional<rapidjson::Value::Object> getObject(const char* key);
+		template <typename T>
+		T getOr(const T& fallback) const noexcept
+		{
+			if (auto p = std::get_if<T>(this))
+				return *p;
 
-		[[nodiscard]] inline bool isLoaded() const { return m_isLoaded; }
-		// TODO; create write functions!?
+			return fallback;
+		}
 
-	private:
-		rapidjson::Document m_document;
-		bool m_isLoaded;
+		bool isNumeric() const noexcept
+		{
+			return std::holds_alternative<int>(*this) || std::holds_alternative<float>(*this); // TODO; double check
+		}
 	};
 
-	template <typename T>
-	T JsonHandler::getValueOr(const char* key, const T& defaultValue)
+	/*struct PropertyNode
 	{
-		constexpr std::string_view logPrefix = "[JsonParser::getValueOr] - ";
+		PropertyValue value;
+	};*/
 
-		if (!m_isLoaded) [[likely]]
-		{
-			Logger::logError(std::string(logPrefix) + "Document not loaded!");
-			return defaultValue;
-		}
-
-		if (!key || !m_document.HasMember(key))
-		{
-			Logger::logError(std::string(logPrefix) + "Missing key: " + (key ? key : "<null>"));
-			return defaultValue;
-		}
-
-		const auto& val = m_document[key];
-
-		if (!TypeHelper<T>::Is(val))
-		{
-			Logger::logError(std::string(logPrefix) + "Type mismatch for key: " + key);
-			return defaultValue;
-		}
-
-		return TypeHelper<T>::Get(val);
-	}
+	PropertyValue parsePropertyValue(const rapidjson::Value& value);
 
 
 
-
-
-
-
-
-
+	// Rename jsonloader? or json or something? JsonParser? 
 	class JSONDocument
 	{
 	public:
@@ -142,6 +179,11 @@ namespace cursed_engine
 		template <typename T>
 		T parseAs() const;
 
+		//template <typename T>
+		//void forEachProperty(T&& callable, const std::string& key) // TODO; move later! Pass in value??
+		//{
+		//	//for (const auto property : m_document[key].GetArray())
+		//}
 
 		// TODO; is ValueProxy redundant? maybe just use document["test"]["child"]???
 
@@ -183,9 +225,43 @@ namespace cursed_engine
 				// Implementation for type conversion...
 			}
 
-			bool isValid() const { return m_value != nullptr; }
+			// put for each here?
+
+			template <typename Callback>
+			void forEach(Callback&& callback) // make const? noexcept? HARD TO KNOW WHICH ARGUMENTS IN CALLBACK ARE EXPECTED
+			{
+				bool isObject = m_value->IsObject();
+				bool isArray = m_value->IsArray();
+
+				assert(isObject || isArray && "Can't iterate over type");
+
+				if (isArray)
+					forEachArray(callback);
+				else
+					forEachObject(callback);
+			}
+
+			[[nodiscard]] inline bool isValid() const { return m_value != nullptr; }
 
 		private:
+			template <typename Callback>
+			void forEachArray(Callback&& callback)
+			{
+				for (const auto& value : m_value->GetArray())
+				{
+					callback("", value);
+				}
+			}
+
+			template <typename Callback>
+			void forEachObject(Callback&& callback)
+			{
+				for (const auto& [name, value] : m_value->GetObject())
+				{
+					callback(name.GetString(), value);
+				}
+			}
+
 			const rapidjson::Value* m_value;
 		};
 
