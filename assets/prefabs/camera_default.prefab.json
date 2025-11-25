@@ -1,0 +1,17 @@
+{
+	"name": "MainCamera",
+	"components": {
+		"Transform": {
+			"position": [ 0, 0 ],
+			"scale": [ 1.0, 1.0 ],
+			"rotation": 0.0
+		},
+		"Camera": {
+
+		},
+		"Tag": {
+			"type": "Camera"
+		}
+	}
+
+}
