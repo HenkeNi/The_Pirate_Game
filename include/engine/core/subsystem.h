@@ -4,8 +4,16 @@ namespace cursed_engine
 {
 	class Subsystem
 	{
-	public:
+	protected:
+		Subsystem() = default;
 		virtual ~Subsystem() = default;
+
+		Subsystem(const Subsystem&) = delete;
+		Subsystem(Subsystem&&) = delete;
+
+		Subsystem& operator=(const Subsystem&) = delete;
+		Subsystem& operator=(Subsystem&&) = delete;
+
 		virtual void shutdown() {};
 	};
 }
