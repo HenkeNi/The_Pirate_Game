@@ -1,0 +1,15 @@
+{
+  "texture": "pirate_sheet.png",
+  "frame_width": 117,
+  "frame_height": 127,
+  "rows": 6,
+  "columns": 3,
+  "animations": {
+    "idle_default": [ 0, 1, 2 ],
+    "idle_special": [ 3, 4, 5 ],
+    "walk_right": [ 6, 7, 8 ],
+    "walk_left": [ 9, 10, 11 ],
+    "walk_down": [ 12, 13, 14 ],
+    "walk_up": [ 15, 16, 17 ]
+  }
+}
