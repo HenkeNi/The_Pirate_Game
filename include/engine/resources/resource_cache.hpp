@@ -10,6 +10,147 @@ namespace cursed_engine
 	// TODO; increase ref count?
 	// [Consider] removing mutex (keep only in resource manager)
 
+	class ResourceCacheBase
+	{
+	public:
+		virtual ~ResourceCacheBase() = default;
+	};
+
+	// Should, or shouldn't accept Tag 
+	template <typename Resource>
+	class ResourceCache
+	{
+	public:
+		template <typename... Args>
+		ResourceHandle<Resource> emplace(Args&&... args);
+
+		ResourceHandle<Resource> insert(std::unique_ptr<Resource> resource);
+
+		[[nodiscard]] const Resource& get(ResourceHandle<Resource> handle) const;
+
+		[[nodiscard]] Resource& get(ResourceHandle<Resource> handle);
+
+		[[nodiscard]] const Resource* tryGet(ResourceHandle<Resource> handle) const;
+
+		[[nodiscard]] Resource* tryGet(ResourceHandle<Resource> handle);
+
+		[[nodiscard]] bool isValidHandle(ResourceHandle<Resource> handle) const noexcept;
+		
+		void clear();
+
+	private:
+		[[nodiscard]] bool isValidIndex(uint32_t index) const noexcept;
+
+		struct Slot
+		{
+			std::unique_ptr<Resource> resource = nullptr;
+			uint32_t version = 0;
+		};
+
+		std::vector<Slot> m_slots;
+		mutable std::mutex m_mutex;
+	};
+
+#pragma region Methods
+
+	template <typename Resource>
+	template <typename... Args>
+	ResourceHandle<Resource> ResourceCache<Resource>::emplace(Args&&... args)
+	{
+		// TODO; redundant function (remove)?
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		m_slots.emplace_back(std::make_unique<Args>(args)..., 0);
+		return ResourceHandle<Resource>{ m_slots.size() - 1, 0 };
+	}
+	
+	template <typename Resource>
+	ResourceHandle<Resource> ResourceCache<Resource>::insert(std::unique_ptr<Resource> resource)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		m_slots.push_back({ std::move(resource), 0 });
+		return ResourceHandle<Resource>{ (uint32_t)m_slots.size() - 1, 0 };
+	}
+
+	template <typename Resource>
+	const Resource& ResourceCache<Resource>::get(ResourceHandle<Resource> handle) const
+	{
+		assert(isValidHandle(handle) && "ResourceCache::get - Invalid handle!"); // Redudnant? since manager is already checking!
+
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		auto& slot = m_slots.at(handle.index);
+		return *slot.resource;
+	}
+
+	template <typename Resource>
+	Resource& ResourceCache<Resource>::get(ResourceHandle<Resource> handle)
+	{
+		return const_cast<Resource&>(std::as_const(*this).get(handle));
+	}
+
+	template <typename Resource>
+	const Resource* ResourceCache<Resource>::tryGet(ResourceHandle<Resource> handle) const
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		return isValidHandle(handle) ? m_slots.at(handle.index).resource.get() : nullptr;
+	}
+
+	template <typename Resource>
+	Resource* ResourceCache<Resource>::tryGet(ResourceHandle<Resource> handle)
+	{
+		return const_cast<Resource*>(std::as_const(*this).tryGet(handle));
+	}
+
+	template <typename Resource>
+	bool ResourceCache<Resource>::isValidHandle(ResourceHandle<Resource> handle) const noexcept
+	{
+		// mutex here (checking slots)
+		return isValidIndex(handle.index) && (m_slots[handle.index].version == handle.version);
+
+		return false;
+	}
+
+	template <typename Resource>
+	void ResourceCache<Resource>::clear()
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		m_slots.clear();
+	}
+
+	template <typename Resource>
+	bool ResourceCache<Resource>::isValidIndex(uint32_t index) const noexcept
+	{
+		return index >= 0 && index < m_slots.size();
+	}
+
+#pragma endregion
+}
+
+
+
+/*
+* #pragma once
+#include "resource_handle.h"
+#include <memory>
+#include <mutex>
+#include <cassert>
+#include <filesystem>
+
+namespace cursed_engine
+{
+	// TODO; increase ref count?
+	// [Consider] removing mutex (keep only in resource manager)
+
+	class ResourceCacheBase
+	{
+	public:
+		virtual ~ResourceCacheBase() = default;
+	};
+
 	template <typename Res, typename Tag>
 	class ResourceCache
 	{
@@ -122,3 +263,5 @@ namespace cursed_engine
 
 #pragma endregion
 }
+
+*/
