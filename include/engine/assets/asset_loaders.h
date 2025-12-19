@@ -1,6 +1,7 @@
 #pragma once
 #include "engine/assets/asset_loader.h"
 #include "engine/assets/asset_types.h"
+#include "engine/resources/engine_resources.h"
 
 namespace cursed_engine
 {
@@ -9,16 +10,23 @@ namespace cursed_engine
 	class TextureAtlasLoader : public AssetLoader<TextureAtlas>
 	{
 	public:
+		TextureAtlasLoader(EngineResources& resources);
 		std::optional<TextureAtlas> load(const std::string& path) const override;
-	};
 
+	private:
+		EngineResources& m_resources;
+	};
 
 	struct SpriteSheet;
 
 	class SpriteSheetLoader : public AssetLoader<SpriteSheet>
 	{
 	public:
+		SpriteSheetLoader(EngineResources& resources);
 		std::optional<SpriteSheet> load(const std::string& path) const override;
+	
+	private:
+		EngineResources& m_resources;
 	};
 
 

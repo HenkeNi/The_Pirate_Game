@@ -1,29 +1,62 @@
 #pragma once
 #include "engine/resources/resource_handle.h"
 #include "engine/utils/json_utils.h"
+#include "engine/math/vec2.h"
+#include <string>
 #include <vector>
 #include <unordered_map>
-#include <string>
+
+#include "engine/rendering/animation_types.h" // TEMP!
 
 namespace cursed_engine
 {
+	// using TextureHandle = ResourceHandle<class Texture>;
+
 	struct AtlasRegion
 	{
+		std::string name;
+		IVec2 pivot;
+		IVec2 size;
 		int x, y, w, h;
+	};
+
+	struct SpriteDefinition
+	{
+		std::string name;
+		int rect[4]; // change to a rect struct!
+		IVec2 pivot;
+		IVec2 size;
 	};
 
 	struct TextureAtlas
 	{
-		TextureHandle texture;
-		std::vector<AtlasRegion> regions; // or use Rect?
+		std::string textureID;
+		//TextureHandle texture;
+		std::vector<AtlasRegion> regions;
+
+		// or vector of sprite definitions...? UV's
 	};
 
+	
 	struct SpriteSheet
 	{
-		TextureAtlas* atlas; // or a TextureAtlasAssetHandle?
-		//int atlasID;
-		std::vector<int> frameIndices;
-		float frameDuration;
+		std::string textureID;
+		//TextureHandle textureHandle;
+		
+		// width? height?
+
+		std::vector<SpriteDefinition> definitions;
+
+		int rows = 0;
+		int columns = 0;
+
+		//std::vector<Animation> animations;
+		std::unordered_map<std::string, Animation> idToAnimations; // or nameToAnimations?
+
+		// TODO; store sequences?
+
+		//std::vector<int> frameIndices; // TODO; store frame here??
+		float frameDuration = 0.f;
 		bool loop = true;
 	};
 

@@ -37,7 +37,7 @@ namespace cursed_engine
 			return index != INVALID_INDEX;
 		}
 
-		bool operator==(const AssetHandle& other)
+		bool operator==(const AssetHandle& other) const
 		{
 			return index == other.index && version == other.version && type == other.type;
 		}
@@ -119,7 +119,7 @@ namespace cursed_engine
 			return AssetHandle{ AssetHandle::INVALID_INDEX, 0, getTypeIndex<Asset>() }; // TODO; throw instead!?
 		}
 
-		auto assetOpt = assetLoader->load(keyPath);
+ 		auto assetOpt = assetLoader->load(keyPath);
 
 		if (!assetOpt.has_value())
 		{
