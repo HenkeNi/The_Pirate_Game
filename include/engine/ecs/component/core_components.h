@@ -1,5 +1,9 @@
 #pragma region
 #include "engine/math/vec2.h"
+#include "engine/assets/asset_types.h"
+#include "engine/assets/asset_manager.h" // TODO; put in asset handle file instead?
+#include "engine/rendering/animation_types.h"
+#include <unordered_map>
 
 namespace cursed_engine
 {
@@ -13,9 +17,9 @@ namespace cursed_engine
 
 	struct VelocityComponent
 	{
-		FVec2 velocity;
+		FVec2 velocity = { 0.f, 0.f };
 		float baseSpeed = 1.f;
-		float currentSpeed = 1.f;
+		float currentSpeed = 0.f;
 		float speedMultiplier = 1.f;
 		float speedReductionRate = 20.f;  // rename...
 		bool isVelocityConstant = false; // Dont? use physics instead?
@@ -23,22 +27,39 @@ namespace cursed_engine
 
 	struct CameraComponent
 	{
-		FVec2 position;
-		float aspectRatio;
-		float rotation;
-		float zoom;
+		FVec2 position = { 0.f, 0.f };
+		float aspectRatio = 0.f;
+		float rotation = 0.f;
+		float zoom = 1.f;
 
 		bool isActive = true;
 	};
 
 	struct SpriteComponent
 	{
-		std::string textureID; 
-		IVec2 coordinates;
+		AssetHandle atlasHandle; // Handle to texture atlas
+		AtlasRegion region;
+		float colors[4];
+		float zOrder;
+	};
+
+	struct AnimationComponent
+	{
+		AssetHandle spriteSheetHandle; // const ref?
+		
+		// TODO; decide what to store in component vs animation (if should have it at all)
+		//std::unordered_map<std::string, Animation> animations;
+		
+		Animation animation;  // poionter to an animation? store animations in asset manager?
+		int currentFrameIndex = 0;
+
+		float elapsedFrameTime = 0.f;
+		bool isDone = false;
+		bool isPlaying = false;
+		bool isLooping = false;
 	};
 
 	struct InputComponent
 	{
-
 	};
 }

@@ -8,7 +8,7 @@ namespace cursed_engine
 	{
 	public:
 		template <typename T>
-		[[nodiscard]] static std::size_t GetID();
+		[[nodiscard]] static std::size_t GetID() noexcept;
 
 	private:
 		inline static std::size_t s_counter = 0;
@@ -16,7 +16,7 @@ namespace cursed_engine
 
 	template <typename Tag>
 	template <typename T>
-	std::size_t IDGenerator<Tag>::GetID()
+	[[nodiscard]] std::size_t IDGenerator<Tag>::GetID() noexcept
 	{
 		static const std::size_t id = s_counter++;
 		return id;

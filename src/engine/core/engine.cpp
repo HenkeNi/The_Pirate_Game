@@ -5,7 +5,6 @@
 #include "engine/ecs/entity/entity_factory.h"
 #include "engine/audio/audio_controller.h"
 #include "engine/rendering/renderer.h"
-#include "engine/resources/resource_manager.h"
 #include "engine/assets/asset_manager.h"
 #include "engine/window/window.h"
 #include "engine/utils/frame_timer.h"
@@ -15,6 +14,8 @@
 #include "engine/config/config_manager.h"
 #include "engine/core/subsystem_registry.h"
 #include "engine/assets/asset_loaders.h"
+#include "engine/resources/resource_manager.hpp"
+#include "engine/resources/engine_resources.h"
 #include <SDL3/SDL.h>
 
 //#include "engine/utils/json_utils.h"
@@ -24,6 +25,7 @@
 
 // REMOEV
 #include "engine/audio/audio.h"
+#include "engine/rendering/texture.h"
 #include "engine/utils/data_structures/sparse_set.hpp"
 #include <optional>
 
@@ -91,7 +93,9 @@ namespace cursed_engine
 		auto& audioController = subsystemRegistry.add<AudioController>();
 		audioController.init();
 
-		subsystemRegistry.add<ResourceManager>(renderer);
+		auto& engineResources = subsystemRegistry.add<EngineResources>();
+		engineResources.registerLoader<TextureLoader>(renderer);
+		engineResources.registerLoader<AudioLoader>();
 		subsystemRegistry.add<EventBus>();
 		subsystemRegistry.add<Physics>();
 
@@ -119,18 +123,18 @@ namespace cursed_engine
 		auto& subsystemRegistry = m_impl->subsystemRegistry;
 
 		// Test
-		auto& resourceManager = subsystemRegistry.get<ResourceManager>();
-		auto textureHandle = resourceManager.getTexture("../assets/textures/test3.bmp");
-		auto* texture = resourceManager.resolve(textureHandle);
+		auto& resourceManager = subsystemRegistry.get<EngineResources>();
+		auto textureHandle = resourceManager.getHandle<Texture>("test3.bmp");
+		auto& texture = resourceManager.get<Texture>(textureHandle);
 
-		auto audioHandle = resourceManager.getAudio("../assets/sounds/707884__dave4884__pirates-song.wav");
-		auto* audio = resourceManager.resolve(audioHandle);
+		auto audioHandle = resourceManager.getHandle<Audio>("707884__dave4884__pirates-song.wav");
+		const auto& audio = resourceManager.get<Audio>(audioHandle);
 
-		auto audioHandle2 = resourceManager.getAudio("../assets/sounds/249813__spookymodem__goblin-death.wav");
-		auto* audio2 = resourceManager.resolve(audioHandle2);
+		auto audioHandle2 = resourceManager.getHandle<Audio>("249813__spookymodem__goblin-death.wav");
+		const auto& audio2 = resourceManager.get<Audio>(audioHandle2);
 
 		auto& audioController = subsystemRegistry.get<AudioController>();
-		audioController.playSound(audio2->m_stream, audio2->m_buffer, audio2->m_length);
+		audioController.playSound(audio2.m_stream, audio2.m_buffer, audio2.m_length);
 
 
 		//
@@ -173,7 +177,7 @@ namespace cursed_engine
 			{
 				for (int j = 0; j < 172; ++j)
 				{
-					subsystemRegistry.get<Renderer>().renderTexture(i * 10, j * 10, *texture);
+					subsystemRegistry.get<Renderer>().renderTexture(i * 10, j * 10, texture);
 				}
 			}
 
@@ -195,15 +199,12 @@ namespace cursed_engine
 
 	void Engine::loadMedia()
 	{
-		// Asset Manager 
+		// TODO; do lazy loading later on!? -> maybe load core resources?
+
 		auto& assetManager = m_impl->subsystemRegistry.get<AssetManager>();
+
+		// Load prefabs
 		assetManager.addLoader<PrefabLoader>();
-
-		// only load "core" resources(?) - lazy load othewise
-		// TODO; load prefabs with AssetManager later...
-
-		//auto& prefabRegistry = m_impl->subsystemRegistry.get<PrefabRegistry>();
-		//PrefabLoader loader;
 
 		for (const auto& entry : std::filesystem::recursive_directory_iterator("../assets/prefabs/"))
 		{
@@ -211,10 +212,42 @@ namespace cursed_engine
 				continue;
 
 			auto handle = assetManager.loadAsset<Prefab>(entry.path());
-			auto index = handle.index;
+			const auto& prefab = assetManager.getAsset<Prefab>(handle); // Dont later...
+		}
 
-			const auto& prefab = assetManager.getAsset<Prefab>(handle);
-			int x = 20;
+		// Load sprite sheets
+		assetManager.addLoader<SpriteSheetLoader>(m_impl->subsystemRegistry.get<EngineResources>());
+		auto& engineResources = m_impl->subsystemRegistry.get<EngineResources>();
+
+		for (const auto& entry : std::filesystem::recursive_directory_iterator("../assets/textures"))
+		{
+			if (!entry.is_regular_file())
+				continue;
+
+			const auto& path = entry.path();
+
+			std::string filename = path.string();
+			if (filename.ends_with("sprite_sheet.json"))
+			{
+				auto handle = assetManager.loadAsset<SpriteSheet>(entry.path());
+			} else if (filename.ends_with(".png") || filename.ends_with(".bmp")) // TODO; function? isValidTextureFormat
+			{
+				engineResources.insertPath<Texture>(path.filename().string(), path);
+			}
+		}
+
+		for (const auto& entry : std::filesystem::recursive_directory_iterator("../assets/sounds"))
+		{
+			if (!entry.is_regular_file())
+				continue;
+
+			const auto& path = entry.path();
+			std::string filename = path.string();
+
+			if (filename.ends_with(".wav"))
+			{
+				engineResources.insertPath<Audio>(path.filename().string(), path);
+			}
 		}
 	}
 }

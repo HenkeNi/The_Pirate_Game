@@ -4,11 +4,6 @@
 
 using cursed_engine::AppContext;
 
-namespace cursed_engine
-{
-	class SceneStack;
-}
-
 class Game : public cursed_engine::Application
 {
 public:

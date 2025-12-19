@@ -12,14 +12,20 @@ namespace cursed_engine
 	//  * caching component view (pass in sparse set, but pass in entities each frame?)
 	//  * add sorting? and predicate (for ForEach) as optional, or separate function
 	
+	// private consturctor? only ECSRegistry cna construict?
+
+	// TODO; make sure each type is unique!!
 	template <ComponentType... Ts>
-	class ComponentView : public NonCopyable
+	class ComponentView //: public NonCopyable
 	{
 	public:
-		ComponentView(ComponentContainer<Ts>&... containers, std::span<const Entity> entities);
+		// TODO, make private? friend class ECSRegistry..
+		ComponentView(ComponentContainer<Ts>&... containers, std::span<const Entity> entities); 
 		~ComponentView() = default;
 
-		// TODO; Add deafult move?
+		// Allow moving? Disable copying?
+		ComponentView(ComponentView&&) = default;
+		ComponentView& operator=(ComponentView&&) = default;
 	 
 		// ==================== Core API ====================
 		template <typename Callback>  // TODO; replace typename with Callable (<Callable<Ts...>>), assure (force) reference? add predicate (ForEach if...)
@@ -81,7 +87,7 @@ namespace cursed_engine
 
 	private:
 		// ==================== Helpers ====================
-		std::tuple<const Ts&...> getComponents(EntityID id) const;
+		std::tuple<const Ts&...> getComponents(EntityID id) const; // will this work with const TransformComponent and SpriteComponent
 
 		std::tuple<Ts&...> getComponents(EntityID id);
 
@@ -92,8 +98,8 @@ namespace cursed_engine
 #pragma region Methods
 
 	template <ComponentType ...Ts>
-	ComponentView<Ts...>::ComponentView(ComponentContainer<Ts>& ...containers, std::span<const Entity> entities)
-		: m_components{ containers }, m_entities{ entities }
+	ComponentView<Ts...>::ComponentView(ComponentContainer<Ts>&... containers, std::span<const Entity> entities)
+	: m_components{ containers... }, m_entities{ entities }
 	{
 	}
 
@@ -195,7 +201,7 @@ namespace cursed_engine
 	[[nodiscard]] const T* ComponentView<Ts...>::getComponent(Entity entity) const
 	{
 		if (contains(entity))
-			return std::get<ComponentContainer<T>&>(m_components).Get(entity.id);
+			return std::get<ComponentContainer<T>&>(m_components).get(entity.id);
 
 		return nullptr;
 	}
@@ -225,13 +231,13 @@ namespace cursed_engine
 		return m_entities.size();
 	}
 
-	template <ComponentType ...Ts>
+	template <ComponentType... Ts>
 	template <typename Predicate> // template <Callable Func>
 	std::optional<Entity> ComponentView<Ts...>::findIf(Predicate&& predicate) const
 	{
 		auto it = std::ranges::find_if(m_entities, [](Entity entity) 
 			{
-				return predicate(std::get<ComponentContainer<Ts>&>(m_components).At(entity.id)...); // TODO; pass in entity to?
+				return predicate(std::get<ComponentContainer<Ts>&>(m_components).at(entity.id)...); // TODO; pass in entity to?
 			});
 
 		if (it != m_entities.end())
@@ -265,13 +271,13 @@ namespace cursed_engine
 	template <ComponentType ...Ts>
 	std::tuple<const Ts&...> ComponentView<Ts...>::getComponents(EntityID id) const
 	{
-		return std::tie(std::get<ComponentContainer<Ts>&>(m_components).At(id)...);
+		return std::tie(std::get<ComponentContainer<Ts>&>(m_components).at(id)...);
 	}
 
 	template <ComponentType ...Ts>
 	std::tuple<Ts&...> ComponentView<Ts...>::getComponents(EntityID id)
 	{
-		return std::tie(std::get<ComponentContainer<Ts>&>(m_components).At(id)...);
+		return std::tie(std::get<ComponentContainer<Ts>&>(m_components).at(id)...); // Use at instead?
 	}
 
 

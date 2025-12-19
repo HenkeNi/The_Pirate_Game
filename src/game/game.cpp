@@ -1,6 +1,5 @@
 #include "game/game.h"
 #include "game/scenes/title_scene.h"
-//#include <game/scenes/scene_stack.h>
 #include <iostream>
 
 
@@ -15,7 +14,9 @@ void Game::onUpdate(float deltaTime)
 
 void Game::onCreated(const AppContext& context)
 {
-	setupScenes();
+	m_sceneStack.push(std::make_unique<TitleScene>(&context.systemManager)); // NOTE; (maybe problem) but every scene will need to accept systemmanager!
+
+	//setupScenes();
 }
 
 void Game::onDestroyed()
@@ -25,5 +26,4 @@ void Game::onDestroyed()
 
 void Game::setupScenes()
 {
-	//m_sceneStack->push(std::make_unique<TitleScene>());
 }

@@ -34,7 +34,7 @@ namespace cursed_engine
 		template <DerivedFrom<System> T>
 		bool contains() const noexcept;
 
-		void update(ECSRegistry& registry, float deltaTime);
+		void update(ECSRegistry& registry, float deltaTime); // make private? friend class Egnein?
 
 		void clear();
 

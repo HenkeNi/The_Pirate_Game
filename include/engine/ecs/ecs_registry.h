@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 #include <cassert>
+#include <type_traits>
 
 namespace cursed_engine
 {
@@ -39,7 +40,7 @@ Mark the cache dirty if so.
 
 		// ==================== Entity Lifecycle ====================
 
-		EntityHandle createEntity();
+		EntityHandle createEntity(); // nodiscard?
 
 		bool destroyEntity(Entity entity);
 
@@ -49,10 +50,9 @@ Mark the cache dirty if so.
 
 		// ==================== Entity Lookup / Metadata ====================
 
-		std::optional<EntityHandle> FindEntityByName(std::string_view name);
+		[[nodiscard]] std::optional<EntityHandle> FindEntityByName(std::string_view name);
 
-		std::vector<EntityHandle> FindAllEntitiesWithTag(std::string_view tag);
-
+		[[nodiscard]] std::vector<EntityHandle> FindAllEntitiesWithTag(std::string_view tag);
 
 		// ==================== Component Queries ====================
 
@@ -99,8 +99,17 @@ Mark the cache dirty if so.
 		template <ComponentType T>
 		[[nodiscard]] const ComponentManager<T>* getComponentManager() const;
 
+		template <ComponentType T>
+		[[nodiscard]] ComponentManager<T>* getComponentManager();
+
 		template <ComponentType... Ts>
-		EntitySignature createEntitySignature() const;
+		[[nodiscard]] bool hasComponentManagers() const noexcept;
+
+		template <ComponentType... Ts>
+		[[nodiscard]] EntitySignature createEntitySignature() const noexcept;
+
+		template<typename T>
+		using DecayComponentT = std::remove_cvref_t<T>;
 
 		using ComponentManagers = std::vector<std::unique_ptr<class IComponentManager>>;
 		using QueryCacheStorage = std::unordered_map<EntitySignature, QueryCache>;
@@ -115,26 +124,35 @@ Mark the cache dirty if so.
 	template <ComponentType... Ts>
 	[[nodiscard]] std::optional<ComponentView<Ts...>> ECSRegistry::view() const
 	{
-		const auto signature = createEntitySignature<Ts...>();
-		const auto entities = m_entityManager.getEntities(signature);
-
-		bool allManagersExist = ((getComponentManager<Ts>() != nullptr) && ...);
-
-		if (!allManagersExist)
+		if (!hasComponentManagers<Ts...>())
 		{
-			Logger::logError("[ECSRegistry::view] - One or more required component managers do not exist!");
+			Logger::logError("[ECSRegistry::view] - One or more required ComponentManagers do not exist!");
 			return std::nullopt;
 		}
 
-		ComponentView<Ts...> componentView{ getComponentManager<Ts>()->getContainer()..., std::move(entities) };
-		return componentView;
+		const auto signature = createEntitySignature<Ts...>();
+		auto entities = m_entityManager.getEntities(signature);
+
+		//return ComponentView<Ts...>(getComponentManager<Ts>()->getContainer()..., entities);
+		return ComponentView<Ts...>{ getComponentManager<Ts>()->getContainer()..., entities };
 	}
 
+	// Consider if possible to use const_cast instead?
 	template <ComponentType... Ts>
 	[[nodiscard]] ComponentView<Ts...> ECSRegistry::view()
 	{
-		return const_cast<const ECSRegistry*>(this)->view<Ts...>().value(); // works?
+		if (!hasComponentManagers<Ts...>())
+		{
+			Logger::logError("[ECSRegistry::view] - One or more required component managers do not exist!");
+			assert(false && "Not all ComponentManager's found!");
 
+			// throw?
+		}
+
+		const auto signature = createEntitySignature<Ts...>();
+		auto entities = m_entityManager.getEntities(signature);
+
+		return ComponentView<Ts...>(getComponentManager<Ts>()->getContainer()..., entities);
 	}
 
 	template <ComponentType T, typename... Args>
@@ -253,7 +271,7 @@ Mark the cache dirty if so.
 	}
 
 	template <ComponentType T>
-	[[nodiscard]] ComponentManager<T>& ECSRegistry::findOrCreateComponentManager()
+	[[nodiscard]] ComponentManager<T>& ECSRegistry::findOrCreateComponentManager() 
 	{
 		ComponentID id = getComponentID<T>();
 
@@ -275,7 +293,7 @@ Mark the cache dirty if so.
 	{
 		ComponentID id = getComponentID<T>();
 
-		if (id >= m_componentManagers.size() || !m_componentManagers[id])
+		if (id >= m_componentManagers.size() || !m_componentManagers[id]) // TODO; make sure its safe!
 		{
 			Logger::logWarning("[ECSRegistry::getComponentManager] - Tried to access invalid component manager!");
 			return nullptr;
@@ -284,11 +302,23 @@ Mark the cache dirty if so.
 		return static_cast<const ComponentManager<T>*>(m_componentManagers.at(id).get());
 	}
 
+	template <ComponentType T>
+	[[nodiscard]] ComponentManager<T>* ECSRegistry::getComponentManager()
+	{
+		return const_cast<ComponentManager<T>*>(std::as_const(*this).getComponentManager<T>());
+	}
+
+	template <ComponentType... Ts>
+	[[nodiscard]] bool ECSRegistry::hasComponentManagers() const noexcept
+	{
+		return ((m_componentManagers[getComponentID<DecayComponentT<Ts>>()] != nullptr) && ...);
+	}
+
 	template <ComponentType ...Ts>
-	EntitySignature ECSRegistry::createEntitySignature() const
+	[[nodiscard]] EntitySignature ECSRegistry::createEntitySignature() const noexcept
 	{
 		EntitySignature signature;
-		(signature.set(getComponent<Ts>()), ...);
+		(signature.set(getComponentID<Ts>()), ...);
 
 		return signature;
 	}

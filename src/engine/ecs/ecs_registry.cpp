@@ -1,6 +1,8 @@
 #include "engine/ecs/ecs_registry.h"
 #include "engine/ecs/entity/entity_handle.h"
 
+// TODO; mark noexcept where possible
+
 namespace cursed_engine
 {
 	EntityHandle ECSRegistry::createEntity()

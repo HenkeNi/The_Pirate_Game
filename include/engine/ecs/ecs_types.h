@@ -21,17 +21,15 @@ namespace cursed_engine
 	struct SystemTag final {};
 
 	template <ComponentType T>
-	ComponentID getComponentID()
+	[[nodiscard]] ComponentID getComponentID() noexcept
 	{
 		return static_cast<ComponentID>(IDGenerator<ComponentTag>::GetID<T>());
 	}
 
 	class System;
 	template <DerivedFrom<System> T>
-	SystemID getSystemID()
+	[[nodiscard]] SystemID getSystemID() noexcept
 	{
 		return static_cast<SystemID>(IDGenerator<SystemTag>::GetID<T>());
 	}
-
-	// Store entity here as well?
 }

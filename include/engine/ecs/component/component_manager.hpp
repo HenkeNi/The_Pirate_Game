@@ -6,10 +6,6 @@
 
 namespace cursed_engine
 {
-	template <ComponentType T>
-	using ComponentContainer = sparse_set<std::decay_t<T>, EntityID>;
-
-	// TODO; prefix with I for all interface classes?
 	class IComponentManager
 	{
 	public:
@@ -23,6 +19,9 @@ namespace cursed_engine
 		[[nodiscard]] virtual std::size_t size() const noexcept = 0;
 		[[nodiscard]] virtual bool contains(EntityID id) const = 0;
 	};
+
+	template <ComponentType T>
+	using ComponentContainer = sparse_set<std::decay_t<T>, EntityID>;
 
 	template <ComponentType T>
 	class ComponentManager : public IComponentManager, public NonCopyable
@@ -80,7 +79,7 @@ namespace cursed_engine
 	template <ComponentType T>
 	void ComponentManager<T>::remove(EntityID id)
 	{
-		m_components.remove(id);
+		m_components.erase(id); 
 	}
 
 	template <ComponentType T>

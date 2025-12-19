@@ -26,7 +26,6 @@ public:
 	template <DerivedFrom<Scene> T, typename... Args>
 	void replace(Args&&... args);
 
-
 	void update(float deltaTime);
 	void clear();
 

@@ -1,5 +1,7 @@
 #pragma once
-#include "engine/ecs/ecs_types.h" // TODO; remove if moving entity id to this file!
+#include "engine/ecs/ecs_types.h"
+
+// Consdier moviong Entity to ecs_types.h
 
 namespace cursed_engine
 {
