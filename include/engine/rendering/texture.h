@@ -9,6 +9,8 @@ namespace cursed_engine
 	class Texture
 	{
 	public:
+		struct Tag{}; // Where to place?
+
 		Texture(SDL_Texture* texture = nullptr);
 		~Texture();
 

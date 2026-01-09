@@ -16,7 +16,7 @@ namespace cursed_engine
 
 	// TODO; make sure each type is unique!!
 	template <ComponentType... Ts>
-	class ComponentView //: public NonCopyable
+	class ComponentView //: private NonCopyable
 	{
 	public:
 		// TODO, make private? friend class ECSRegistry..

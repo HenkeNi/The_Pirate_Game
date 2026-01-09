@@ -6,6 +6,8 @@ namespace cursed_engine
 	class Audio
 	{
 	public:
+		struct Tag {};
+		 
 		Audio();
 		Audio(SDL_AudioStream* stream, uint8_t* buffer, uint32_t length);
 		//Audio(const SDL_AudioSpec& spec, uint8_t* buffer, uint32_t length);

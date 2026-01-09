@@ -11,10 +11,34 @@ SceneStack::~SceneStack()
 {
 }
 
+void SceneStack::addPath(std::string sceneID, std::filesystem::path path)
+{
+	m_idToPaths.insert({ std::move(sceneID), std::move(path) });
+}
+
 void SceneStack::push(std::unique_ptr<Scene> scene)
 {
 	if (!m_stack.empty())
 		m_stack.back()->onExit();
+
+	if (auto it = m_idToPaths.find(std::string(scene->id())); it != m_idToPaths.end())
+	{
+		m_sceneLoader.loadAssets(*scene, it->second);
+	}
+	else 
+	{
+		cursed_engine::Logger::logError("Path not registered!");
+		assert(false);
+
+		return;
+	}
+
+	// m_sceneLoader.loadAssets(scene, ) get type index from scene? (type to paths)?
+	//auto type = std::type_index(typeid(*scene)); // WORKS?
+	//if (auto it = m_typesToPaths.find(type); it != m_typesToPaths.end())
+	//{
+	//	m_sceneLoader.loadAssets(*scene, it->second);
+	//}
 
 	scene->onCreated();
 

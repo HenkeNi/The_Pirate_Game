@@ -1,5 +1,6 @@
 #pragma once
 #include "engine/utils/non_copyable.h"
+#include <filesystem>
 
 namespace cursed_engine
 { 
@@ -7,8 +8,14 @@ namespace cursed_engine
 	{
 		class SystemManager& systemManager;
 		class InputHandler& inputHandler;
+		class AssetManager& assetManager;
 		class Renderer& renderer;
 		class Window& window;
+		const std::filesystem::path& assetRoot;
+
+		// ecs registry?
+		// entity factory?
+
 		// event system;
 		// audio audio;
 		// frame timer?

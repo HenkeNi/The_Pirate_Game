@@ -1,6 +1,6 @@
 #include "engine/config/config_manager.h"
 #include "engine/core/logger.h"
-#include <engine/utils/json_utils.h>
+#include <engine/utils/json/json_document.h>
 
 namespace cursed_engine
 {
@@ -8,7 +8,7 @@ namespace cursed_engine
 
 	bool loadAppInfo(const fs::path& path, AppInfo& outAppInfo)
 	{
-		JSONDocument document;
+		JsonDocument document;
 
 		const auto [success, message] = document.loadFromFile(path);
 		if (!success)
@@ -17,16 +17,16 @@ namespace cursed_engine
 			return false;
 		}
 
-		outAppInfo.name = document["name"].to<std::string>();
-		outAppInfo.version = document["version"].to<std::string>();
-		outAppInfo.identifier = document["identifier"].to<std::string>();
+		outAppInfo.name = document["name"].asString();
+		outAppInfo.version = document["version"].asString();
+		outAppInfo.identifier = document["identifier"].asString();
 
 		return true;
 	}
 
 	bool loadWindowConfig(const fs::path& path, WindowConfig& outWindowConfig)
 	{
-		JSONDocument document;
+		JsonDocument document;
 
 		const auto [success, message] = document.loadFromFile(path);
 		if (!success)
@@ -35,11 +35,11 @@ namespace cursed_engine
 			return false;
 		}
 
-		outWindowConfig.iconPath = document["icon_path"].to<std::string>();
-		outWindowConfig.width = document["width"].to<int>();
-		outWindowConfig.height = document["height"].to<int>();
-		outWindowConfig.vsync = document["vsync"].to<bool>();
-		outWindowConfig.fullscreen = document["fullscreen"].to<bool>();
+		outWindowConfig.iconPath = document["icon_path"].asString();
+		outWindowConfig.width = document["width"].asInt();
+		outWindowConfig.height = document["height"].asInt();
+		outWindowConfig.vsync = document["vsync"].asBool();
+		outWindowConfig.fullscreen = document["fullscreen"].asBool();
 
 		return true;
 	}

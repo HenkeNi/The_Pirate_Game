@@ -8,7 +8,7 @@ namespace cursed_engine
 {
 	// TODO; add hash?
 
-	class EntityHandle : public NonCopyable
+	class EntityHandle : private NonCopyable
 	{
 	public:
 		EntityHandle(Entity entity, ECSRegistry* registry);

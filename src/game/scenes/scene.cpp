@@ -2,8 +2,8 @@
 #include "engine/ecs/system/system_manager.h"
 #include <cassert>
 
-Scene::Scene(cursed_engine::SystemManager* systemManager)
-	: m_context{ systemManager }
+Scene::Scene(cursed_engine::SystemManager* systemManager, std::string id)
+	: m_context{ systemManager }, m_id{ std::move(id) }
 {
 }
 

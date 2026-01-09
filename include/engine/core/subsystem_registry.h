@@ -8,7 +8,7 @@ namespace cursed_engine
 {
 	class Subsystem;
 
-	class SubsystemRegistry : public NonCopyable
+	class SubsystemRegistry : private NonCopyable
 	{   
 	public:
 		// ==================== Construction/Destruction ====================

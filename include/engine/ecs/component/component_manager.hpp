@@ -24,7 +24,7 @@ namespace cursed_engine
 	using ComponentContainer = sparse_set<std::decay_t<T>, EntityID>;
 
 	template <ComponentType T>
-	class ComponentManager : public IComponentManager, public NonCopyable
+	class ComponentManager : public IComponentManager, private NonCopyable
 	{
 	public:
 		// ==================== Construction/Destruction ====================

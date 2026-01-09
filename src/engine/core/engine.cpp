@@ -29,21 +29,25 @@
 #include "engine/utils/data_structures/sparse_set.hpp"
 #include <optional>
 
+#include "engine/utils/json/json_document.h"
+
 
 namespace cursed_engine
 {
 	struct Engine::Impl
 	{
 		Impl(Application& app)
-			: application{ app }
+			: application{ app }, assetRoot{ "../assets/" }
 		{
 		}
 
 		SubsystemRegistry subsystemRegistry;
 		SystemManager systemManager;
-		EntityFactory entityFactory;
 		FrameTimer timer;
+		std::filesystem::path assetRoot;
 		Application& application;
+		
+		//EntityFactory entityFactory; // dont store instnace? let game use if needed?
 
 		// Task system/Thread pool
 		// Profiler
@@ -98,13 +102,14 @@ namespace cursed_engine
 		engineResources.registerLoader<AudioLoader>();
 		subsystemRegistry.add<EventBus>();
 		subsystemRegistry.add<Physics>();
+		//subsystemRegistry.add<ECSRegistry>();
 
 		auto& assetManager = subsystemRegistry.add<AssetManager>();
-		m_impl->entityFactory.initialize(&assetManager);
+		//m_impl->entityFactory.initialize(&assetManager);
 
 		loadMedia(); // HERE? Dont do in init? also maybe dont do in Engine?
 
-		m_impl->application.onCreated({ m_impl->systemManager, inputHandler, renderer, window });
+		m_impl->application.onCreated({ m_impl->systemManager, inputHandler, assetManager, renderer, window, m_impl->assetRoot });
 		return true;
 	}
 
@@ -136,9 +141,6 @@ namespace cursed_engine
 		auto& audioController = subsystemRegistry.get<AudioController>();
 		audioController.playSound(audio2.m_stream, audio2.m_buffer, audio2.m_length);
 
-
-		//
-
 		while (running)
 		{
 			Uint64 start = SDL_GetPerformanceCounter();
@@ -167,7 +169,6 @@ namespace cursed_engine
 			// or getactivesceenes.... then iterate and, check if should update next 
 			//m_impl->systemManager.update(deltaTime); // After application update?
 
-
 			subsystemRegistry.get<EventBus>().dispatchAll();
 			subsystemRegistry.get<Renderer>().clearScreen();
 
@@ -183,11 +184,9 @@ namespace cursed_engine
 
 			subsystemRegistry.get<Renderer>().renderLine(0, 0, 100, 100);
 
-
 			// END TEST....
 
 			subsystemRegistry.get<Renderer>().present();
-
 
 			Uint64 end = SDL_GetPerformanceCounter();
 			float elapsed = (end - start) / (float)SDL_GetPerformanceFrequency();

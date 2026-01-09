@@ -8,6 +8,8 @@ namespace cursed_engine
 	class ECSRegistry;
 	class AssetManager;
 
+	// Reanem PrefabInstantiator (or something) instead?
+
 	class EntityFactory // TODO; accept asset mangaer instead!
 	{
 	public:

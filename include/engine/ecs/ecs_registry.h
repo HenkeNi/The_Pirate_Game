@@ -34,7 +34,7 @@ Mark the cache dirty if so.
 
 	class EntityHandle;
 
-	class ECSRegistry : public NonCopyable
+	class ECSRegistry : private NonCopyable
 	{
 	public:
 
