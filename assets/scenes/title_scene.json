@@ -1,0 +1,17 @@
+{
+  "identifier": "title_scene",
+  "entities": [
+    {
+      "id": "background",
+      "components": {
+        "transform": {
+          "x": 0,
+          "y": 0
+        },
+        "sprite": {
+          "id": "title_background.jpeg"
+        }
+      }
+    }
+  ]
+}
