@@ -23,13 +23,13 @@ namespace cursed_engine
 	template <ComponentType T>
 	[[nodiscard]] ComponentID getComponentID() noexcept
 	{
-		return static_cast<ComponentID>(IDGenerator<ComponentTag>::GetID<T>());
+		return static_cast<ComponentID>(IDGenerator<ComponentTag>::getID<T>());
 	}
 
 	class System;
 	template <DerivedFrom<System> T>
 	[[nodiscard]] SystemID getSystemID() noexcept
 	{
-		return static_cast<SystemID>(IDGenerator<SystemTag>::GetID<T>());
+		return static_cast<SystemID>(IDGenerator<SystemTag>::getID<T>());
 	}
 }

@@ -28,7 +28,7 @@ void SceneLoader::loadAssets(Scene& scene, const std::filesystem::path& path) co
 					// name == "transform", etc....
 
 					// how to handle if object?
-					use the value["test"].asFloat().... ? or check how done in old project if need to handle it more generic
+					//use the value["test"].asFloat().... ? or check how done in old project if need to handle it more generic
 
 					// Register component types in ECS, map name to load info?
 
@@ -36,8 +36,6 @@ void SceneLoader::loadAssets(Scene& scene, const std::filesystem::path& path) co
 
 			// auto object = value.
 			// std::string id = value.
-
-
 		});
 
 	//document["entities"].forEach([](std::string name, const rapidjson::Value& value){}) dont expose rapidjson to game?

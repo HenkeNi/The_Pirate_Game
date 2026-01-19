@@ -39,7 +39,7 @@ namespace cursed_engine
 
 		// ==================== Component Operations ====================
 		template <typename... Args>
-		bool add(EntityID id, Args&&... args);
+		T* add(EntityID id, Args&&... args); // TODO; add both insert and emplace?
 
 		void remove(EntityID id) override; // TODO, return bool? valid check?
 		void removeAll() override;
@@ -70,10 +70,10 @@ namespace cursed_engine
 
 	template <ComponentType T>
 	template <typename... Args>
-	bool ComponentManager<T>::add(EntityID id, Args&&... args)
+	T* ComponentManager<T>::add(EntityID id, Args&&... args)
 	{
-		auto [it, success] = m_components.emplace(id, std::forward<Args>(args)...);
-		return success;
+		auto[it, success] = m_components.emplace(id, std::forward<Args>(args)...);
+		return &*it;
 	}
 
 	template <ComponentType T>

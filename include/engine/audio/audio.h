@@ -6,7 +6,7 @@ namespace cursed_engine
 	class Audio
 	{
 	public:
-		struct Tag {};
+		struct Tag {}; // not used anymore???
 		 
 		Audio();
 		Audio(SDL_AudioStream* stream, uint8_t* buffer, uint32_t length);

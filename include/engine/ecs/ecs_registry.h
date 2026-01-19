@@ -164,17 +164,16 @@ Mark the cache dirty if so.
 			return { nullptr, false };
 		}
 
-		if (hasComponents<T>())
+		if (hasComponents<T>(entity))
 		{
 			Logger::logWarning("[ECSRegistry::attachComponent] - entity already have component!");
 			return { nullptr, false };
 		}
 
 		auto& componentManager = findOrCreateComponentManager<T>();
+		auto* component = componentManager.add(entity.id, std::forward<Args>(args)...);
 
-		auto [component, success] = componentManager.addComponent(entity.id, std::forward<Args>(args)...);
-
-		if (!success)
+		if (!component)
 		{
 			Logger::logWarning("[ECSRegistry::attachComponent] - failed to attach component!");
 			return { nullptr, false };
@@ -183,7 +182,7 @@ Mark the cache dirty if so.
 		auto signature = m_entityManager.getSignature(entity.id);
 		signature.set(getComponentID<T>());
 
-		m_entityManager.setSignature(entity, signature);
+		m_entityManager.setSignature(entity.id, signature);
 		return { component, true };
 	}
 
@@ -217,10 +216,10 @@ Mark the cache dirty if so.
 	template <ComponentType T>
 	const T& ECSRegistry::getComponent(Entity entity) const
 	{
-		assert(m_entityManager.isAlive(entity)) && "Tried to call 'getComponent' with an invalid entity!";
-		assert(hasAllComponents<T>(entity.id) && "Entity doesn't have the required component!");
+		assert(m_entityManager.isAlive(entity) && "Tried to call 'getComponent' with an invalid entity!");
+		assert(hasComponents<T>(entity) && "Entity doesn't have the required component!");
 
-		return getComponentManager<T>()->GetComponent(entity.id);
+		return getComponentManager<T>()->get(entity.id);
 	}
 
 	template <ComponentType T>
@@ -264,8 +263,8 @@ Mark the cache dirty if so.
 			return false;
 		}
 
-		EntitySignature currentSignature = m_entityManager.getSignature(entity);
-		EntitySignature requiredSignature = buildSignature<Ts>();
+		EntitySignature currentSignature = m_entityManager.getSignature(entity.id);
+		EntitySignature requiredSignature = createEntitySignature<Ts...>();
 
 		return (currentSignature & requiredSignature) == requiredSignature;
 	}

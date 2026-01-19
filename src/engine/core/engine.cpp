@@ -16,6 +16,7 @@
 #include "engine/assets/asset_loaders.h"
 #include "engine/resources/resource_manager.hpp"
 #include "engine/resources/engine_resources.h"
+#include "engine/core/type_registry.hpp"
 #include <SDL3/SDL.h>
 
 //#include "engine/utils/json_utils.h"
@@ -29,11 +30,19 @@
 #include "engine/utils/data_structures/sparse_set.hpp"
 #include <optional>
 
+#include "engine/core/types.h"
 #include "engine/utils/json/json_document.h"
+#include "engine/ecs/component/core_components.h"
 
 
 namespace cursed_engine
 {
+	struct MetaStorage // MOVE?
+	{
+		TypeRegistry<ComponentInfo> componentData;
+
+	};
+
 	struct Engine::Impl
 	{
 		Impl(Application& app)
@@ -41,17 +50,26 @@ namespace cursed_engine
 		{
 		}
 
+		//struct MetaStorage
+		//{
+		//	TypeRegistry<ComponentInfo> componentData;
+
+		//} metaStorage;
+
 		SubsystemRegistry subsystemRegistry;
 		SystemManager systemManager;
 		FrameTimer timer;
+		MetaStorage metaStorage;
 		std::filesystem::path assetRoot;
 		Application& application;
-		
+
 		//EntityFactory entityFactory; // dont store instnace? let game use if needed?
 
 		// Task system/Thread pool
 		// Profiler
 	};
+
+	void registerComponents(TypeRegistry<ComponentInfo>& registry);
 
 	Engine::Engine(Application& app)
 		: m_impl{ std::make_unique<Engine::Impl>(app) }
@@ -229,7 +247,8 @@ namespace cursed_engine
 			if (filename.ends_with("sprite_sheet.json"))
 			{
 				auto handle = assetManager.loadAsset<SpriteSheet>(entry.path());
-			} else if (filename.ends_with(".png") || filename.ends_with(".bmp")) // TODO; function? isValidTextureFormat
+			}
+			else if (filename.ends_with(".png") || filename.ends_with(".bmp")) // TODO; function? isValidTextureFormat
 			{
 				engineResources.insertPath<Texture>(path.filename().string(), path);
 			}
@@ -248,5 +267,39 @@ namespace cursed_engine
 				engineResources.insertPath<Audio>(path.filename().string(), path);
 			}
 		}
+	}
+
+	void registerComponents(TypeRegistry<ComponentInfo>& registry)
+	{
+		registerComponent<TransformComponent>(registry, "Transform",
+			[](EntityHandle& handle, const ComponentProperties& properties)
+			{
+				auto& transformComponent = handle.getComponent<TransformComponent>();
+				//transformComponent.position = properties.at("position"); // WORKS???
+			});
+
+
+
+		//registry.emplace<TransformComponent>("Transform",
+		//	[](EntityHandle& handle, const ComponentProperties& properties) 
+		//	{
+
+		//	},
+		//	[](EntityHandle& handle) 
+		//	{
+
+		//	});
+
+		// register components
+		//ComponentID id;
+		//std::string name;
+		//std::size_t alignment;
+		//std::size_t size;
+
+		//// TODO; need to include ComponentProperties? or forward declare it...
+		//std::function<void(EntityHandle& handle, const ComponentProperties& properties)> initialization;
+		//std::function<void(EntityHandle& handle)> addComponent;
+
+		// add constructor that accepts name id, and functions.... do size and alignment in constructor...		
 	}
 }
