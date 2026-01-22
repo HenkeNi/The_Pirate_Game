@@ -1,7 +1,8 @@
 #include "game/scenes/title_scene.h"
 
-TitleScene::TitleScene(cursed_engine::SystemManager* systemManager)
-	: Scene{ systemManager, "TitleScene"}
+
+TitleScene::TitleScene(cursed_engine::SystemManager* systemManager, cursed_engine::EntityFactory* entityFactory, cursed_engine::ComponentRegistry* componentData)
+	: Scene{ systemManager, entityFactory, componentData, "TitleScene"}
 {
 }
 

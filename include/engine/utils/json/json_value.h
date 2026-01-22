@@ -60,7 +60,7 @@ namespace cursed_engine
 
 		// TEMP:
 		void forEachArray(const std::function<void(JsonValue value)>& func) const; // rename forEachElement?
-		void forEachObject(const std::function<void(const char*, JsonValue value)>& func) const; // rename forEachProperty?
+		void forEachObject(const std::function<void(const char*, JsonValue value)>& func) const; // rename forEachProperty?!
 		//void forEach(const std::function<void(const char*, const rapidjson::Value& value)>& func);
 
 		// Iteration

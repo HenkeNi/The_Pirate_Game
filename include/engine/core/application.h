@@ -2,19 +2,26 @@
 #include "engine/utils/non_copyable.h"
 #include <filesystem>
 
+#include "engine/core/registry_aliases.h"
+
 namespace cursed_engine
 { 
+	template <typename T, typename ID>
+	class TypeRegistry;
+
 	struct AppContext
 	{
 		class SystemManager& systemManager;
 		class InputHandler& inputHandler;
 		class AssetManager& assetManager;
+		class EntityFactory& entityFactory;
 		class Renderer& renderer;
 		class Window& window;
+		ComponentRegistry& componentData;
 		const std::filesystem::path& assetRoot;
-
+		
 		// ecs registry?
-		// entity factory?
+		// entity factory? or store EntityFactory as protected in Application class?
 
 		// event system;
 		// audio audio;

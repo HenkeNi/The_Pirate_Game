@@ -1,39 +1,50 @@
 #pragma once
 #include "engine/utils/type_traits.h"
 #include "engine/ecs/entity/entity_handle.h"
+#include <engine/assets/asset_types.h>
+#include "engine/core/registry_aliases.h"
 
 namespace cursed_engine
 {
 	// rename file type_infos.hpp?
 	// Include EnityHandle? include componet propoerties?
 
-	struct ComponentInfo;
+	//struct ComponentInfo;
+	class JsonValue;
 
-	template <ComponentType T, Callable<EntityHandle&, const ComponentProperties&> InitFunc> // better name than initfunc? use from componentinfo instead?
-	void registerComponent(TypeRegistry<ComponentInfo>& registry, const std::string& name, InitFunc&& func)
+	// TODO; or dont have separate functions for init and add?
+
+	// name init func something with prefab? PrefabInstantiation?
+	template <ComponentType T, Callable<EntityHandle&, const ComponentProperties&> PrefabInstantiation, Callable<EntityHandle&, const JsonValue&> Deserialize> // better name than initfunc? use from componentinfo instead?
+	void registerComponent(ComponentRegistry& registry, const std::string& name, PrefabInstantiation&& instantation, Deserialize&& deserialization)
 	{
 		const ComponentID id = getComponentID<T>();
 
-		registry.emplace<T>(name, id, id, name, alignof(T), sizeof(T), std::forward<InitFunc>(func),
-			[](EntityHandle& handle)
-			{
-				handle.attachComponent<T>();
-			});
+		registry.emplace<T>(
+			name, 
+			id, 
+			id, 
+			name, 
+			alignof(T), 
+			sizeof(T), 
+			std::forward<PrefabInstantiation>(instantation),
+			std::forward<Deserialize>(deserialization)
+		);		
 	}
 
 	struct ComponentInfo
 	{
-		using InitFunc = std::function<void(EntityHandle& handle, const ComponentProperties& properties)>;
-		using AddComponentFunc = std::function<void(EntityHandle& handle)>;
-
 		ComponentID id;
 		std::string name;
 		std::size_t alignment;
 		std::size_t size;
 
-		// TODO; need to include ComponentProperties? or forward declare it...
-		InitFunc initialization;
-		AddComponentFunc addComponent;
+		// TODO; find a better name
+		using Deserialization = std::function<void(EntityHandle& handle, const JsonValue& value)>; 
+		using PrefabInstantiation = std::function<void(EntityHandle& handle, const ComponentProperties& properties)>; // prefabInstance
+
+		PrefabInstantiation instantation;
+		Deserialization deserialize;
 	};
 
 	struct SystemInfo

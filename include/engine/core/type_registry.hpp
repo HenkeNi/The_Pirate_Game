@@ -71,7 +71,8 @@ namespace cursed_engine
 	template <typename T, typename ID>
 	const T& TypeRegistry<T, ID>::get(const char* name) const
 	{
-		return T{};
+		auto index = m_namesToIndexes.at(name);
+		return m_entries.at(index);
 	}
 
 	template <typename T, typename ID>

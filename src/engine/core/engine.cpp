@@ -33,14 +33,13 @@
 #include "engine/core/types.h"
 #include "engine/utils/json/json_document.h"
 #include "engine/ecs/component/core_components.h"
-
+#include "engine/core/registry_aliases.h"
 
 namespace cursed_engine
 {
-	struct MetaStorage // MOVE?
+	struct MetaStorage // MOVE to own file?
 	{
-		TypeRegistry<ComponentInfo> componentData;
-
+		ComponentRegistry componentData;
 	};
 
 	struct Engine::Impl
@@ -60,8 +59,11 @@ namespace cursed_engine
 		SystemManager systemManager;
 		FrameTimer timer;
 		MetaStorage metaStorage;
+		EntityFactory entityFactory; // pass in assetmanager, set ecs registry...
 		std::filesystem::path assetRoot;
 		Application& application;
+
+		// store an ECSContext here?
 
 		//EntityFactory entityFactory; // dont store instnace? let game use if needed?
 
@@ -69,7 +71,7 @@ namespace cursed_engine
 		// Profiler
 	};
 
-	void registerComponents(TypeRegistry<ComponentInfo>& registry);
+	void registerComponents(ComponentRegistry& registry);
 
 	Engine::Engine(Application& app)
 		: m_impl{ std::make_unique<Engine::Impl>(app) }
@@ -123,11 +125,21 @@ namespace cursed_engine
 		//subsystemRegistry.add<ECSRegistry>();
 
 		auto& assetManager = subsystemRegistry.add<AssetManager>();
-		//m_impl->entityFactory.initialize(&assetManager);
+		m_impl->entityFactory.init(&assetManager);
 
 		loadMedia(); // HERE? Dont do in init? also maybe dont do in Engine?
+		registerComponents(m_impl->metaStorage.componentData);
 
-		m_impl->application.onCreated({ m_impl->systemManager, inputHandler, assetManager, renderer, window, m_impl->assetRoot });
+		m_impl->application.onCreated({ 
+			m_impl->systemManager, 
+			inputHandler, assetManager, 
+			m_impl->entityFactory, 
+			renderer,
+			window,
+			m_impl->metaStorage.componentData, 
+			m_impl->assetRoot
+			});
+
 		return true;
 	}
 
@@ -269,13 +281,39 @@ namespace cursed_engine
 		}
 	}
 
-	void registerComponents(TypeRegistry<ComponentInfo>& registry)
+	void registerComponents(ComponentRegistry& registry)
 	{
-		registerComponent<TransformComponent>(registry, "Transform",
+		// TODO; use config to check which subsystems are active, only register if active? (physics -> physicsComponent)
+
+		registerComponent<TransformComponent>(registry, "transform",
 			[](EntityHandle& handle, const ComponentProperties& properties)
 			{
 				auto& transformComponent = handle.getComponent<TransformComponent>();
 				//transformComponent.position = properties.at("position"); // WORKS???
+			},
+			[](EntityHandle& handle, const JsonValue& value) 
+			{
+				float x = (float)value["x"].asDouble();
+				float y = (float)value["y"].asDouble();
+
+				// TODO; also valid check it contains the data?
+
+				float width = (float)value["width"].asDouble();
+				float height = (float)value["height"].asDouble();
+
+				FVec2 pivot{ 0.f, 0.f };
+
+				if (value.has("pivot")) {
+					pivot.x = (float)value["pivot"]["x"].asDouble();
+					pivot.y = (float)value["pivot"]["y"].asDouble();
+				}
+
+				float rotation = 0.f;
+
+				if (value.has("rotation"))
+					float rotation = (float)value["rotation"].asDouble();
+
+				handle.attachComponent<TransformComponent>(FVec2{ x, y}, FVec2{ width, height }, pivot, rotation);
 			});
 
 

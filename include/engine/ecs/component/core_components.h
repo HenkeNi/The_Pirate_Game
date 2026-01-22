@@ -9,6 +9,8 @@ namespace cursed_engine
 {
 	struct TransformComponent
 	{
+		// TODO; add 2 constructors? one for each individual argument?
+
 		FVec2 position{ 0.f, 0.f };
 		FVec2 scale{ 1.f, 1.f };
 		FVec2 pivot{ 0.f, 0.f };

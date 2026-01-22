@@ -21,7 +21,7 @@ namespace cursed_engine
 		EntityHandle& operator=(EntityHandle&&) = default;
 
 		template <ComponentType T, typename... Args>
-		void attachComponent(Args&&... args);
+		void attachComponent(Args&&... args); // rename addComponent?
 
 		template <ComponentType T>
 		void detachComponent();
@@ -54,7 +54,7 @@ namespace cursed_engine
 	void EntityHandle::attachComponent(Args&&... args)
 	{
 		assert(m_registry && "Invalid ECSRegistry!");
-		m_registry->attachComponent<T>(m_entity, std::forward<Args>()...);
+		m_registry->attachComponent<T>(m_entity, std::forward<Args>(args)...);
 	}
 
 	template <ComponentType T>
