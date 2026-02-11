@@ -14,7 +14,7 @@ namespace cursed_engine
 
 	struct AtlasRegion
 	{
-		std::string name;
+		std::string name; // rename texture id?
 		IVec2 pivot;
 		IVec2 size;
 		int x, y, w, h;

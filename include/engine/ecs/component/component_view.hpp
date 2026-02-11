@@ -14,10 +14,31 @@ namespace cursed_engine
 	
 	// private consturctor? only ECSRegistry cna construict?
 
+	//class BaseView
+	//{
+	//public:
+	//	~BaseView() = default;
+	//};
+
+	//template <ComponentType... Ts>
+	//class View
+	//{
+	//public:
+
+	//private:
+	//	std::tuple<ComponentContainer<Ts>&...> m_components;
+	//
+	//	// use the smallest sparse set.. get sparse (entities)...
+
+	//	// iterate over entity in smallest sparse set, check if entity has signature?
+	//	// use it to access the component in each sparse set.... components.get(entity);
+	//};
+
+
 	// TODO; make sure each type is unique!!
 	template <ComponentType... Ts>
 	class ComponentView //: private NonCopyable
-	{
+{
 	public:
 		// TODO, make private? friend class ECSRegistry..
 		ComponentView(ComponentContainer<Ts>&... containers, std::span<const Entity> entities); 

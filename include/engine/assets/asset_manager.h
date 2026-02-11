@@ -4,6 +4,7 @@
 #include "engine/utils/type_utils.h"
 #include "engine/core/subsystem.h"
 #include "engine/core/logger.h"
+#include "engine/utils/path_utils.h"
 #include <cstdint>
 #include <filesystem>
 #include <limits>
@@ -20,13 +21,13 @@ namespace cursed_engine
 
 	struct AssetHandle
 	{
-		AssetHandle(uint32_t index_, uint32_t version_, std::type_index type_)
+		AssetHandle(uint32_t index_, uint32_t version_, std::type_index type_) // TODO; try to make tempalted instead?
 			: index{ index_ }, version{ version_ }, type{ type_ }
 		{
 		}
 
 		static constexpr uint32_t INVALID_INDEX = std::numeric_limits<uint32_t>::max();
-		
+
 		uint32_t index;
 		uint32_t version = 0; // ever used?
 
@@ -47,8 +48,14 @@ namespace cursed_engine
 	class AssetManager : public Subsystem
 	{
 	public:
-		template <typename Asset> // Dont use nodiscard here?
-		[[nodiscard]] AssetHandle loadAsset(const std::filesystem::path& path); // Return optional handle?
+
+		// make private? do in Engine? - load all? (remove unload)?
+		template <typename Asset> // Dont use nodiscard here? 
+		[[nodiscard]] AssetHandle loadAsset(const std::filesystem::path& path); // Return optional handle? take in name insteaD?
+
+		template <typename Asset>
+		[[nodiscard]] AssetHandle getAssetHandle(const std::string& name) const; // name or id? return optional?
+		// TODO; getAssetHandle(const char* name) const;
 
 		template <typename Asset>
 		[[nodiscard]] const Asset& getAsset(AssetHandle handle);
@@ -82,15 +89,20 @@ namespace cursed_engine
 		template <typename Asset>
 		[[nodiscard]] AssetLoader<Asset>* getLoader();
 
+		//[[nodiscard]] std::string extractIdentifier(const std::filesystem::path& path); // TODO; make utlity function?
+
 		using TypeToAssetCache = std::unordered_map<std::type_index, std::unique_ptr<AssetCacheBase>>;
 		using TypeToLoaderMap = std::unordered_map<std::type_index, std::unique_ptr<AssetLoaderBase>>;
 
 		TypeToAssetCache m_cachesByType;
 		TypeToLoaderMap m_loadersByType;
 
-		std::unordered_map<std::string, AssetHandle> m_pathToHandles;
+		std::unordered_map<std::filesystem::path, AssetHandle> m_pathToHandles;
+		std::unordered_map<std::string, std::filesystem::path> m_idsToPaths;
 
-		mutable std::mutex m_mutex;
+		// TODO; id's to paths or ids to handles?
+
+		mutable std::mutex m_mutex; // put in archive?
 	};
 
 #pragma region Methods
@@ -106,9 +118,10 @@ namespace cursed_engine
 
 		if (auto it = m_pathToHandles.find(keyPath); it != m_pathToHandles.end())
 		{
+
 			// TODO; assert handle is same type?!
-			// todo; check if valid handle (else remove handle/path)
-			
+			// todo; check if valid handle (else remove handle/pa th)
+
 			return it->second;
 		}
 
@@ -119,11 +132,12 @@ namespace cursed_engine
 			return AssetHandle{ AssetHandle::INVALID_INDEX, 0, getTypeIndex<Asset>() }; // TODO; throw instead!?
 		}
 
- 		auto assetOpt = assetLoader->load(keyPath);
+		auto assetOpt = assetLoader->load(keyPath);
 
 		if (!assetOpt.has_value())
 		{
 			Logger::logError("Failed to load asset!");
+			return AssetHandle{ AssetHandle::INVALID_INDEX, 0, getTypeIndex<Asset>() }; // TODO; throw instead!?
 		}
 
 		auto& storage = getOrCreateCache<Asset>().storage;
@@ -132,7 +146,23 @@ namespace cursed_engine
 		AssetHandle handle{ (uint32_t)storage.size() - 1, 0, getTypeIndex<Asset>() };
 		m_pathToHandles.insert({ keyPath, handle });
 
+		m_idsToPaths.insert({ extractAssetID(path), path});
+		//m_idsToPaths.insert({ extractIdentifier(path), path});
+
 		return handle;
+	}
+
+	template <typename Asset>
+	[[nodiscard]] AssetHandle AssetManager::getAssetHandle(const std::string& name) const
+	{
+		if (auto it = m_idsToPaths.find(name); it != m_idsToPaths.end())
+		{
+			const auto path = it->second;
+			return m_pathToHandles.at(path); // TODO; make sure function works!
+		}
+
+		assert(false && "Asset not loaded");
+		return AssetHandle(-1, -1, getTypeIndex<Asset>()); // FIX!
 	}
 
 	template <typename Asset>
@@ -212,7 +242,7 @@ namespace cursed_engine
 
 
 /*
-* 
+*
 * class AssetManager : public Subsystem
 	{
 	public:

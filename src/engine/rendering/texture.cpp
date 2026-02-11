@@ -54,6 +54,6 @@ namespace cursed_engine
 
 	bool Texture::isLoaded() const
 	{
-		return false;
+		return m_texture != nullptr;
 	}
 }

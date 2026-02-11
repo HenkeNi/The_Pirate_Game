@@ -1,8 +1,8 @@
 #pragma once
-#include "engine/utils/type_traits.h"
 #include "engine/ecs/system/system.h"
-#include "engine/utils/data_structures/sparse_set.hpp"
 #include "engine/ecs/ecs_types.h"
+#include "engine/utils/data_structures/sparse_set.hpp"
+#include "engine/utils/type_traits.h"
 #include <memory>
 
 namespace cursed_engine
@@ -50,7 +50,12 @@ namespace cursed_engine
 	template <DerivedFrom<System> T, typename... Args>
 	T& SystemManager::emplace(Args&&... args)
 	{
-		m_systems.emplace(getSystemID<T>(), std::forward<Args>(args)...);
+		auto system = std::make_unique<T>(std::forward<Args>(args)...);
+		auto* systemPtr = system.get();
+
+		m_systems.insert(getSystemID<T>(), std::move(system));
+		
+		return *systemPtr;
 	}
 
 	template <DerivedFrom<System> T>

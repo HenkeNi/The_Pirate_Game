@@ -1,4 +1,3 @@
-//#include "engine/pch.h"
 #include "game/scenes/scene_stack.h"
 #include "game/scenes/scene.h"
 //#include <algorithm>

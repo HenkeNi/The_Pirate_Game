@@ -8,7 +8,7 @@ namespace cursed_engine
 	struct Entity
 	{
 		EntityID id = INVALID_ENTITY_ID;
-		EntityVersion version = 0;
+		EntityVersion version = 0; // rename Generation?
 
 		bool operator==(const Entity& other) const { return id == other.id && version == other.version; }
 		bool isValid() const { return id != INVALID_ENTITY_ID; }

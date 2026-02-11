@@ -70,17 +70,41 @@ namespace cursed_engine
 		return m_signatures.getSignature(id);
 	}
 
+	bool EntityManager::hasSignature(EntityID id, EntitySignature signature) const noexcept
+	{
+		return (m_signatures.getSignature(id) & signature) == signature;
+	}
+
 	void EntityManager::setSignature(EntityID id, EntitySignature signature)
 	{
 		m_signatures.setSignature(id, signature);
 	}
 
-	std::span<const Entity> EntityManager::getEntities(EntitySignature signature) const noexcept
+	const std::vector<Entity> EntityManager::getEntities(EntitySignature signature) const noexcept // TODO; safe to return span here?
 	{
+		std::vector<Entity> matches; 
 
+		for (const auto& entity : m_alive) 
+		{
+			if ((m_signatures[entity.id] & signature) == signature)
+			{
+				matches.emplace_back(entity);
+			}
+		}
+
+
+		// Opt 1 - return m_alive.getDense();
+
+		// Opt 2 - filter here...
+
+		// Opt 3 - store ref to sparse set in view and iterate (when needed) it... 
+
+		return matches;
+
+		//assert(false && "NOT IMPLEMTENED");
 		// sparse set
 
-		return std::span<const Entity>();
+		//return std::span<const Entity>();
 	}
 
 	void EntityManager::initializeAvailableIDs()

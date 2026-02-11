@@ -1,5 +1,6 @@
 #include "engine/assets/asset_loaders.h"
 #include "engine/utils/json/json_document.h"
+#include "engine/utils/json/json_value.h"
 #include "engine/core/logger.h"
 #include "engine/resources/resource_manager.hpp"
 
@@ -12,9 +13,21 @@ namespace cursed_engine
 	{
 	}
 
-	std::optional<TextureAtlas> cursed_engine::TextureAtlasLoader::load(const std::string& path) const
+	std::optional<TextureAtlas> cursed_engine::TextureAtlasLoader::load(const std::filesystem::path& path) const
 	{
-		return TextureAtlas();
+		JsonDocument document;
+
+		const auto [success, message] = document.loadFromFile(path);
+		if (!success)
+		{
+			Logger::logError("Failed to load SpriteSheet: " + message);
+			return std::nullopt;
+		}
+
+		TextureAtlas textureAtlas;
+		textureAtlas.textureID = document["texture_id"].asString();
+
+		return textureAtlas;
 	}
 
 	SpriteSheetLoader::SpriteSheetLoader(EngineResources& resources)
@@ -22,7 +35,7 @@ namespace cursed_engine
 	{
 	}
 
-	std::optional<SpriteSheet> SpriteSheetLoader::load(const std::string& path) const
+	std::optional<SpriteSheet> SpriteSheetLoader::load(const std::filesystem::path& path) const
 	{
 		JsonDocument document;
 
@@ -91,7 +104,7 @@ namespace cursed_engine
 		return spriteSheet;
 	}
 
-	std::optional<Prefab> PrefabLoader::load(const std::string& path) const
+	std::optional<Prefab> PrefabLoader::load(const std::filesystem::path& path) const
 	{
 		JsonDocument document;
 

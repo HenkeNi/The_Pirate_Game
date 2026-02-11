@@ -1,5 +1,5 @@
 #pragma once
-#include <string>
+#include <filesystem>
 #include <optional>
 
 namespace cursed_engine
@@ -16,6 +16,6 @@ namespace cursed_engine
 	public:
 		using AssetType = T;
 
-		[[nodiscard]] virtual std::optional<T> load(const std::string& path) const = 0; // TODO; nodiscard? safe to mark const? should load modify?
+		[[nodiscard]] virtual std::optional<T> load(const std::filesystem::path& path) const = 0;
 	};
 }

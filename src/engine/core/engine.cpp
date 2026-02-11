@@ -18,7 +18,6 @@
 #include "engine/resources/engine_resources.h"
 #include "engine/core/type_registry.hpp"
 #include <SDL3/SDL.h>
-
 //#include "engine/utils/json_utils.h"
 
 #include "engine/config/config_types.h" // remove later...
@@ -32,8 +31,13 @@
 
 #include "engine/core/types.h"
 #include "engine/utils/json/json_document.h"
-#include "engine/ecs/component/core_components.h"
 #include "engine/core/registry_aliases.h"
+
+
+#include "engine/utils/json/json_value.h" // include this or not?
+
+#include "engine/ecs/component/core_components.h"
+#include "engine/ecs/system/render_system.h"
 
 namespace cursed_engine
 {
@@ -71,7 +75,8 @@ namespace cursed_engine
 		// Profiler
 	};
 
-	void registerComponents(ComponentRegistry& registry);
+	void registerComponents(ComponentRegistry& registry, AssetManager& assetManager);
+	void registerSystems(SystemManager& systemManager, Renderer& renderer, EngineResources& resources, AssetManager& assetManager);
 
 	Engine::Engine(Application& app)
 		: m_impl{ std::make_unique<Engine::Impl>(app) }
@@ -128,15 +133,17 @@ namespace cursed_engine
 		m_impl->entityFactory.init(&assetManager);
 
 		loadMedia(); // HERE? Dont do in init? also maybe dont do in Engine?
-		registerComponents(m_impl->metaStorage.componentData);
 
-		m_impl->application.onCreated({ 
-			m_impl->systemManager, 
-			inputHandler, assetManager, 
-			m_impl->entityFactory, 
+		registerComponents(m_impl->metaStorage.componentData, assetManager);
+		registerSystems(m_impl->systemManager, renderer, engineResources, assetManager);
+
+		m_impl->application.onCreated({
+			m_impl->systemManager,
+			inputHandler, assetManager,
+			m_impl->entityFactory,
 			renderer,
 			window,
-			m_impl->metaStorage.componentData, 
+			m_impl->metaStorage.componentData,
 			m_impl->assetRoot
 			});
 
@@ -159,13 +166,16 @@ namespace cursed_engine
 
 		// Test
 		auto& resourceManager = subsystemRegistry.get<EngineResources>();
-		auto textureHandle = resourceManager.getHandle<Texture>("test3.bmp");
+		auto textureHandle = resourceManager.getHandle<Texture>("test3");
+		//auto textureHandle = resourceManager.getHandle<Texture>("test3.bmp");
 		auto& texture = resourceManager.get<Texture>(textureHandle);
 
-		auto audioHandle = resourceManager.getHandle<Audio>("707884__dave4884__pirates-song.wav");
+		auto audioHandle = resourceManager.getHandle<Audio>("707884__dave4884__pirates-song");
+		//auto audioHandle = resourceManager.getHandle<Audio>("707884__dave4884__pirates-song.wav");
 		const auto& audio = resourceManager.get<Audio>(audioHandle);
 
-		auto audioHandle2 = resourceManager.getHandle<Audio>("249813__spookymodem__goblin-death.wav");
+		//auto audioHandle2 = resourceManager.getHandle<Audio>("249813__spookymodem__goblin-death.wav");
+		auto audioHandle2 = resourceManager.getHandle<Audio>("249813__spookymodem__goblin-death");
 		const auto& audio2 = resourceManager.get<Audio>(audioHandle2);
 
 		auto& audioController = subsystemRegistry.get<AudioController>();
@@ -200,23 +210,23 @@ namespace cursed_engine
 			//m_impl->systemManager.update(deltaTime); // After application update?
 
 			subsystemRegistry.get<EventBus>().dispatchAll();
-			subsystemRegistry.get<Renderer>().clearScreen();
 
+			// subsystemRegistry.get<Renderer>().clearScreen();
 
 			// TEST
-			for (int i = 0; i < 128; ++i)
+			/*for (int i = 0; i < 128; ++i)
 			{
 				for (int j = 0; j < 172; ++j)
 				{
 					subsystemRegistry.get<Renderer>().renderTexture(i * 10, j * 10, texture);
 				}
-			}
+			}*/
 
-			subsystemRegistry.get<Renderer>().renderLine(0, 0, 100, 100);
+			//subsystemRegistry.get<Renderer>().renderLine(0, 0, 100, 100);
 
 			// END TEST....
 
-			subsystemRegistry.get<Renderer>().present();
+			// subsystemRegistry.get<Renderer>().present();
 
 			Uint64 end = SDL_GetPerformanceCounter();
 			float elapsed = (end - start) / (float)SDL_GetPerformanceFrequency();
@@ -228,6 +238,8 @@ namespace cursed_engine
 
 	void Engine::loadMedia()
 	{
+		//Not loading textuer atlases? 
+
 		// TODO; do lazy loading later on!? -> maybe load core resources?
 
 		auto& assetManager = m_impl->subsystemRegistry.get<AssetManager>();
@@ -244,9 +256,11 @@ namespace cursed_engine
 			const auto& prefab = assetManager.getAsset<Prefab>(handle); // Dont later...
 		}
 
-		// Load sprite sheets
-		assetManager.addLoader<SpriteSheetLoader>(m_impl->subsystemRegistry.get<EngineResources>());
 		auto& engineResources = m_impl->subsystemRegistry.get<EngineResources>();
+
+		// Load sprite sheets
+		assetManager.addLoader<SpriteSheetLoader>(engineResources);
+		assetManager.addLoader<TextureAtlasLoader>(engineResources);
 
 		for (const auto& entry : std::filesystem::recursive_directory_iterator("../assets/textures"))
 		{
@@ -260,9 +274,13 @@ namespace cursed_engine
 			{
 				auto handle = assetManager.loadAsset<SpriteSheet>(entry.path());
 			}
-			else if (filename.ends_with(".png") || filename.ends_with(".bmp")) // TODO; function? isValidTextureFormat
+			else if (filename.ends_with("texture_atlas.json"))
 			{
-				engineResources.insertPath<Texture>(path.filename().string(), path);
+				auto handle = assetManager.loadAsset<TextureAtlas>(entry.path());
+			}
+			else if (filename.ends_with(".png") || filename.ends_with(".bmp") || filename.ends_with(".jpeg")) // TODO; function? isValidTextureFormat
+			{
+				engineResources.insertPath<Texture>(path.filename().stem().string(), path);
 			}
 		}
 
@@ -276,12 +294,21 @@ namespace cursed_engine
 
 			if (filename.ends_with(".wav"))
 			{
-				engineResources.insertPath<Audio>(path.filename().string(), path);
+				engineResources.insertPath<Audio>(path.filename().stem().string(), path); // TODO; utiltyFunction getStem()?
 			}
 		}
+
+
+
+
+
+		// TODO; load texture atlas...
+
+
+
 	}
 
-	void registerComponents(ComponentRegistry& registry)
+	void registerComponents(ComponentRegistry& registry, AssetManager& assetManager)
 	{
 		// TODO; use config to check which subsystems are active, only register if active? (physics -> physicsComponent)
 
@@ -291,7 +318,7 @@ namespace cursed_engine
 				auto& transformComponent = handle.getComponent<TransformComponent>();
 				//transformComponent.position = properties.at("position"); // WORKS???
 			},
-			[](EntityHandle& handle, const JsonValue& value) 
+			[](EntityHandle& handle, const JsonValue& value)
 			{
 				float x = (float)value["x"].asDouble();
 				float y = (float)value["y"].asDouble();
@@ -313,31 +340,64 @@ namespace cursed_engine
 				if (value.has("rotation"))
 					float rotation = (float)value["rotation"].asDouble();
 
-				handle.attachComponent<TransformComponent>(FVec2{ x, y}, FVec2{ width, height }, pivot, rotation);
+				handle.attachComponent<TransformComponent>(FVec2{ x, y }, FVec2{ width, height }, pivot, rotation);
+			});
+
+		registerComponent<SpriteComponent>(registry, "sprite",
+			[](EntityHandle& handle, const ComponentProperties& properties)
+			{
+			},
+			[&](EntityHandle& handle, const JsonValue& value)
+			{
+				std::string id = value["id"].asString();
+
+				const auto atlasHandle = assetManager.getAssetHandle<TextureAtlas>(id); // pass in id?
+				AtlasRegion region; // TODO; fix!
+				region.x = 0;
+				region.y = 0;
+				region.w = 700;
+				region.h = 700;
+
+				std::array<float, 4> color{ 1.f, 1.f, 1.f, 1.f };
+
+				float zOrder = 1.f; 
+
+				// Figue out...
+				// Treat background images and texture alias the same? or solve with union/variant?
+
+
+				/*
+					AssetHandle atlasHandle; // Handle to texture atlas
+					AtlasRegion region;
+					float colors[4];
+					float zOrder;
+				*/
+
+				handle.attachComponent<SpriteComponent>(atlasHandle, region, color, zOrder);
+			});
+
+		registerComponent<InputComponent>(registry, "input",
+			[](EntityHandle& handle, const ComponentProperties& properties)
+			{},
+			[](EntityHandle& handle, const JsonValue& value)
+			{
+			});
+
+		registerComponent<ButtonComponent>(registry, "button",
+			[](EntityHandle& handle, const ComponentProperties& properties)
+			{
+			},
+			[](EntityHandle& handle, const JsonValue& value)
+			{
 			});
 
 
+	}
 
-		//registry.emplace<TransformComponent>("Transform",
-		//	[](EntityHandle& handle, const ComponentProperties& properties) 
-		//	{
+	void registerSystems(SystemManager& systemManager, Renderer& renderer, EngineResources& resources, AssetManager& assetManager)
+	{
+		systemManager.emplace<RenderSystem>(renderer, resources, assetManager);
 
-		//	},
-		//	[](EntityHandle& handle) 
-		//	{
 
-		//	});
-
-		// register components
-		//ComponentID id;
-		//std::string name;
-		//std::size_t alignment;
-		//std::size_t size;
-
-		//// TODO; need to include ComponentProperties? or forward declare it...
-		//std::function<void(EntityHandle& handle, const ComponentProperties& properties)> initialization;
-		//std::function<void(EntityHandle& handle)> addComponent;
-
-		// add constructor that accepts name id, and functions.... do size and alignment in constructor...		
 	}
 }

@@ -45,13 +45,15 @@ namespace cursed_engine
 
 		// ==================== Signature Management ====================
 
-		[[nodiscard]] EntitySignature getSignature(EntityID id) const noexcept;
+		[[nodiscard]] EntitySignature getSignature(EntityID id) const noexcept; 
+
+		[[nodiscard]] bool hasSignature(EntityID id, EntitySignature signature) const noexcept;
 
 		void setSignature(EntityID id, EntitySignature signature);
 
 		// ==================== Entity Queries ====================
 
-		[[nodiscard]] std::span<const Entity> getEntities(EntitySignature signature) const noexcept;
+		[[nodiscard]] const std::vector<Entity> getEntities(EntitySignature signature) const noexcept;
 
 	private:
 		// ==================== Internal Helpers ====================

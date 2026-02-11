@@ -42,14 +42,15 @@ namespace cursed_engine
 		SDL_RenderPresent(m_renderer);
 	}
 
-	void Renderer::renderTexture(FVec2 pos, Texture& texture)
+	void Renderer::renderTexture(FVec2 pos, FVec2 size, Texture& texture)
 	{
-		renderTexture(pos.x, pos.y, texture);
+		renderTexture(pos.x, pos.y, size.x, size.y, texture);
 	}
 
-	void Renderer::renderTexture(float x, float y, Texture& texture)
+	void Renderer::renderTexture(float x, float y, float width, float height, Texture& texture)
 	{
-		SDL_FRect dstRect{ x, y, 25.f, 25.f };
+		SDL_FRect dstRect{ x, y, width, height };
+
 		//SDL_FRect dstRect{ x, y, (float)texture.getWidth(), (float)texture.getHeight() };
 		SDL_RenderTexture(m_renderer, texture.getTexture(), nullptr, &dstRect);
 	}

@@ -4,6 +4,7 @@
 #include <engine/assets/asset_types.h>
 #include "engine/core/registry_aliases.h"
 
+
 namespace cursed_engine
 {
 	// rename file type_infos.hpp?
@@ -14,7 +15,7 @@ namespace cursed_engine
 
 	// TODO; or dont have separate functions for init and add?
 
-	// name init func something with prefab? PrefabInstantiation?
+	// name init func something with prefab? PrefabInstantiation? can use type alias here?
 	template <ComponentType T, Callable<EntityHandle&, const ComponentProperties&> PrefabInstantiation, Callable<EntityHandle&, const JsonValue&> Deserialize> // better name than initfunc? use from componentinfo instead?
 	void registerComponent(ComponentRegistry& registry, const std::string& name, PrefabInstantiation&& instantation, Deserialize&& deserialization)
 	{
@@ -44,7 +45,7 @@ namespace cursed_engine
 		using PrefabInstantiation = std::function<void(EntityHandle& handle, const ComponentProperties& properties)>; // prefabInstance
 
 		PrefabInstantiation instantation;
-		Deserialization deserialize;
+		Deserialization deserialize; // Rename?
 	};
 
 	struct SystemInfo

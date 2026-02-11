@@ -1,5 +1,6 @@
 #pragma once
 
+// TODO; rename file? resource_fwd?
 namespace cursed_engine
 {
 	class Texture;

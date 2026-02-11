@@ -32,6 +32,8 @@ namespace cursed_engine
 
 		bool isValid(ID id) const;
 
+		bool isValid(const std::string& name) const;
+
 	private:
 		struct Tag {};
 
@@ -91,6 +93,12 @@ namespace cursed_engine
 	bool TypeRegistry<T, ID>::isValid(ID id) const
 	{
 		return false;
+	}
+
+	template <typename T, typename ID>
+	bool TypeRegistry<T, ID>::isValid(const std::string& name) const
+	{
+		return m_namesToIndexes.contains(name);
 	}
 
 #pragma endregion

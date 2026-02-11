@@ -4,6 +4,7 @@
 #include "engine/assets/asset_manager.h" // TODO; put in asset handle file instead?
 #include "engine/rendering/animation_types.h"
 #include <unordered_map>
+#include <array>
 
 namespace cursed_engine
 {
@@ -39,9 +40,13 @@ namespace cursed_engine
 
 	struct SpriteComponent
 	{
-		AssetHandle atlasHandle; // Handle to texture atlas
-		AtlasRegion region;
-		float colors[4];
+		//SpriteComponent(AtlasH handle, AtlasRegion region, float color[4], float z)
+		//	: atlasH
+
+		AssetHandle atlasHandle; // Handle to texture                   --- better than storing id to atlas handle? (maybe to much indirection)
+		AtlasRegion atlasRegion;
+		std::array<float, 4> color;
+		//float colors[4]; // create type or type alias for color!
 		float zOrder;
 	};
 
@@ -63,5 +68,18 @@ namespace cursed_engine
 
 	struct InputComponent
 	{
+	};
+
+	struct BoundingBox
+	{
+		float x, y; // or offset instead?
+		float width, height;
+
+		// rotation?
+	};
+
+	struct ButtonComponent
+	{
+
 	};
 }

@@ -24,7 +24,7 @@ static_cast<std::size_t>(id) will fail to compile or produce nonsense.
 	public: 
 		using Signature = std::bitset<signatureSize>;
 	
-		[[nodiscard]] const Signature& getSignature(Id id) const noexcept;
+		[[nodiscard]] const Signature& getSignature(Id id) const noexcept; // TODO, return by value?
 
 		void setSignature(Id id, const Signature& signature) noexcept;
 
@@ -33,6 +33,10 @@ static_cast<std::size_t>(id) will fail to compile or produce nonsense.
 		void resetAll() noexcept;
 
 		[[nodiscard]] bool isValid(Id id) const noexcept;
+
+		Signature operator[](Id id) const;
+
+		// Signature& operator[](Id id);
 
 	private:
 		std::array<Signature, capacity> m_signatures;
@@ -71,6 +75,12 @@ static_cast<std::size_t>(id) will fail to compile or produce nonsense.
 	bool SignatureRegistry<Id, signatureSize, capacity>::isValid(Id id) const noexcept
 	{
 		return static_cast<std::size_t>(id) < capacity;
+	}
+
+	template <UnsignedIntegral Id, std::size_t signatureSize, std::size_t capacity>
+	SignatureRegistry<Id, signatureSize, capacity>::Signature SignatureRegistry<Id, signatureSize, capacity>::operator[](Id id) const
+	{
+		return m_signatures[id];
 	}
 
 #pragma endregion

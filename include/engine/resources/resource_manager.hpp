@@ -4,6 +4,8 @@
 #include "resource_loader.h"
 #include "resource_cache.hpp"
 
+#include "engine/utils/path_utils.h"
+
 #include <filesystem> // put in pch
 #include <memory>
 #include <optional>
@@ -236,7 +238,9 @@ namespace cursed_engine
 
 		std::lock_guard<std::mutex> lock(archive.mutex);
 
-		const std::string identifier = path.filename().string();
+		const std::string identifier = extractResourceID(path);
+	
+		//const std::string identifier = path.filename().string(); 
 		const std::string keyPath = path.string();
 
 		if (auto it = archive.idsToHandles.find(identifier); it != archive.idsToHandles.end())
@@ -252,7 +256,7 @@ namespace cursed_engine
 			}
 		}
 
-		std::unique_ptr<Resource> resource = archive.loader->load(path);
+		std::unique_ptr<Resource> resource = archive.loader->load(path); // TODO; handle nullptr!
 		auto handle = archive.cache.insert(std::move(resource));
 
 		archive.idsToHandles.insert({ identifier, handle });

@@ -4,6 +4,8 @@
 
 typedef struct SDL_Renderer SDL_Renderer;
 
+// TODO; handle metadata?? objects rendered, etc...
+
 namespace cursed_engine
 {
 	class Window;
@@ -20,8 +22,8 @@ namespace cursed_engine
 		void clearScreen();
 		void present(); // rename?
 
-		void renderTexture(FVec2 pos, Texture& texture);
-		void renderTexture(float x, float y, Texture& texture);
+		void renderTexture(FVec2 pos, FVec2 size, Texture& texture);
+		void renderTexture(float x, float y, float width, float height, Texture& texture);
 
 		void renderLine(FVec2 start, FVec2 end);
 		void renderLine(float startX, float startY, float endX, float endY);

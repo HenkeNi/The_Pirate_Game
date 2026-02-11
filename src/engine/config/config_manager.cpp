@@ -2,6 +2,9 @@
 #include "engine/core/logger.h"
 #include <engine/utils/json/json_document.h>
 
+#include <engine/utils/json/json_value.h>
+
+
 namespace cursed_engine
 {
 	// ==================== Helpers ====================

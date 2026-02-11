@@ -6,6 +6,10 @@
 #include <SDL3_image/SDL_image.h>
 #include <SDL3/SDL_audio.h>
 
+
+
+#include <fstream>
+
 namespace cursed_engine
 {
 	TextureLoader::TextureLoader(Renderer& renderer)
@@ -21,8 +25,10 @@ namespace cursed_engine
 			return nullptr;
 		}
 
+		// use this if not modifying the texture:
+		//auto* texture = IMG_LoadTexture(m_renderer.getRenderer(), path.string().c_str());
 		auto* surface = IMG_Load(path.string().c_str()); // pass const char* instead?
-
+		
 		if (!surface)
 		{
 			Logger::logError("Unable to load image, path: " + path.string() + ", error: " + SDL_GetError());
@@ -37,7 +43,7 @@ namespace cursed_engine
 			return nullptr;
 		}
 
-		SDL_DestroySurface(surface);
+		//SDL_DestroySurface(surface);
 		return std::make_unique<Texture>(texture);
 	}
 
