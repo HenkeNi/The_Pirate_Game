@@ -1,5 +1,6 @@
 #pragma once
 #include "engine/core/subsystem.h"
+#include "engine/math/vec2.h"
 #include <array>
 #include <SDL3/SDL.h>
 
@@ -70,9 +71,9 @@ namespace cursed_engine
 		
 		[[nodiscard]] bool isMouseBtnReleased(MouseButton button) const;
 
-		[[nodiscard]] std::pair<float, float> getMousePosition() const;
+		[[nodiscard]] FVec2 getMousePosition() const;
 		
-		[[nodiscard]] std::pair<float, float> getMouseDelta() const;
+		[[nodiscard]] FVec2 getMouseDelta() const;
 		
 		[[nodiscard]] float getMouseScroll() const;
 

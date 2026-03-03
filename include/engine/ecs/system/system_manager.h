@@ -1,7 +1,7 @@
 #pragma once
 #include "engine/ecs/system/system.h"
 #include "engine/ecs/ecs_types.h"
-#include "engine/utils/data_structures/sparse_set.hpp"
+#include "engine/utils/containers/sparse_set.hpp"
 #include "engine/utils/type_traits.h"
 #include <memory>
 

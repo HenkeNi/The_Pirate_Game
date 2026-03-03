@@ -5,6 +5,7 @@
 namespace cursed_engine
 {
 	class Audio;
+	class Font;
 	class Renderer;
 	class Texture;
 
@@ -19,7 +20,7 @@ namespace cursed_engine
 		[[nodiscard]] virtual std::unique_ptr<Resource> load(const std::filesystem::path& path) const = 0;
 	};
 
-
+	// Consider moving to resource_loaders.h?
 	class TextureLoader : public ResourceLoaderBase<Texture>
 	{
 	public:
@@ -38,6 +39,12 @@ namespace cursed_engine
 		[[nodiscard]] std::unique_ptr<Audio> load(const std::filesystem::path& path) const override;
 	};
 
+	class FontLoader : public ResourceLoaderBase<Font>
+	{
+	public:
+		[[nodiscard]] std::unique_ptr<Font> load(const std::filesystem::path& path) const override;
+
+	};
 
 //	class ResourceLoader
 //	{

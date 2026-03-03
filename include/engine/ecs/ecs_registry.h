@@ -14,6 +14,9 @@
 
 namespace cursed_engine
 {
+	// TODO; return an empty view, if no components found... (not optional) -> return static SparseSet<T> that is empty... or view's store pointer to sparse set
+	// get view (const) shouldnt return an optional!
+
 	/*
 	* Option 2: Manually mark affected caches dirty during component operations
 When adding/removing a component, just:
@@ -56,7 +59,7 @@ Mark the cache dirty if so.
 		// ==================== Component Queries ====================
 
 		template <ComponentType... Ts>
-		[[nodiscard]] std::optional<ComponentView<Ts...>> view() const; // remove? since requires a const world!
+		[[nodiscard]] ComponentView<Ts...> view() const; // remove? since requires a const world!
 
 		template <ComponentType... Ts>
 		[[nodiscard]] ComponentView<Ts...> view(); // return optional??
@@ -107,10 +110,12 @@ Mark the cache dirty if so.
 		template <ComponentType... Ts>
 		[[nodiscard]] EntitySignature createEntitySignature() const noexcept; // TODO; move to entityManager?
 
+		void invalidateCache(ComponentID id);
+
 		template<typename T>
 		using DecayComponentT = std::remove_cvref_t<T>;
 
-		using ComponentManagers = std::vector<std::unique_ptr<class IComponentManager>>;
+		using ComponentManagers = std::vector<std::unique_ptr<class IComponentManager>>; // USe array instead?
 		using QueryCacheStorage = std::unordered_map<EntitySignature, QueryCache>;
 
 		EntityManager m_entityManager;
@@ -124,12 +129,11 @@ Mark the cache dirty if so.
 #pragma region Methods
 
 	template <ComponentType... Ts>
-	[[nodiscard]] std::optional<ComponentView<Ts...>> ECSRegistry::view() const
+	[[nodiscard]] ComponentView<Ts...> ECSRegistry::view() const
 	{
 		if (!hasComponentManagers<Ts...>())
 		{
-			Logger::logError("[ECSRegistry::view] - One or more required ComponentManagers do not exist!");
-			return std::nullopt;
+			return ComponentView<Ts...>{};
 		}
 
 		const auto signature = createEntitySignature<Ts...>();
@@ -137,7 +141,7 @@ Mark the cache dirty if so.
 		if (auto it = m_cachedQueries.find(signature); it != m_cachedQueries.end())
 		{
 			if (!it->second.dirty)
-				return ComponentView<Ts...>{ getComponentManager<Ts>()->getContainer()..., it->second.entities };
+				return ComponentView<Ts...>{ &getComponentManager<Ts>()->getContainer()..., it->second.entities };
 		}
 
 		auto entities = m_entityManager.getEntities(signature);
@@ -146,7 +150,7 @@ Mark the cache dirty if so.
 		if (it == m_cachedQueries.end())
 			return std::nullopt;
 
-		return ComponentView<Ts...>{ getComponentManager<Ts>()->getContainer()..., it->second.entities };
+		return ComponentView<Ts...>{ &getComponentManager<Ts>()->getContainer()..., it->second.entities };
 	}
 
 	// Consider if possible to use const_cast instead?
@@ -155,10 +159,7 @@ Mark the cache dirty if so.
 	{
 		if (!hasComponentManagers<Ts...>())
 		{
-			Logger::logError("[ECSRegistry::view] - One or more required component managers do not exist!");
-			assert(false && "Not all ComponentManager's found!");
-
-			// throw? or return optional?
+			return ComponentView<Ts...>{};
 		}
 
 		const auto signature = createEntitySignature<Ts...>();
@@ -166,7 +167,7 @@ Mark the cache dirty if so.
 		if (auto it = m_cachedQueries.find(signature); it != m_cachedQueries.end())
 		{
 			if (!it->second.dirty)
-				return ComponentView<Ts...>{ getComponentManager<Ts>()->getContainer()..., it->second.entities };
+				return ComponentView<Ts...>{ &getComponentManager<Ts>()->getContainer()..., it->second.entities };
 		}
 
 		auto entities = m_entityManager.getEntities(signature);
@@ -175,7 +176,7 @@ Mark the cache dirty if so.
 		//if (it == m_cachedQueries.end()) HANDLE OR NOT???
 			//return std::nullopt;
 
-		return ComponentView<Ts...>{ getComponentManager<Ts>()->getContainer()..., it->second.entities };
+		return ComponentView<Ts...>{ &getComponentManager<Ts>()->getContainer()..., it->second.entities };
 	}
 
 	template <ComponentType T, typename... Args>
@@ -203,9 +204,13 @@ Mark the cache dirty if so.
 		}
 
 		auto signature = m_entityManager.getSignature(entity.id);
-		signature.set(getComponentID<T>());
+		const ComponentID componentID = getComponentID<T>();
 
+		signature.set(componentID);
 		m_entityManager.setSignature(entity.id, signature);
+
+		invalidateCache(componentID);
+
 		return { component, true };
 	}
 
@@ -228,11 +233,13 @@ Mark the cache dirty if so.
 
 		componentManager->remove(entity.id);
 
+		const auto componentID = getComponentID<T>();
 		auto signature = m_entityManager.getSignature(entity.id);
-		signature.set(getComponentID<T>(), false);
 
+		signature.set(componentID, false);
 		m_entityManager.setSignature(entity, signature);
 
+		invalidateCache(componentID);
 		return false;
 	}
 

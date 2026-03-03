@@ -15,6 +15,9 @@ namespace cursed_engine
 		void update(ECSRegistry& registry, float deltaTime) override;
 	
 	private:
+		void renderText(ECSRegistry& registry);
+		void renderDebug(ECSRegistry& registry);
+
 		Renderer& m_renderer;
 		EngineResources& m_engineResources;
 		AssetManager& m_assetManager;

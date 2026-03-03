@@ -86,14 +86,15 @@ namespace cursed_engine
 		return false;
 	}
 
-	std::pair<float, float> InputHandler::getMousePosition() const
+	FVec2 InputHandler::getMousePosition() const
 	{
-		return std::pair<float, float>();
+		return FVec2{ m_mouseState.x, m_mouseState.y };
 	}
 
-	std::pair<float, float> InputHandler::getMouseDelta() const
+	FVec2 InputHandler::getMouseDelta() const
 	{
-		return std::pair<float, float>();
+		assert(false && "Not implemented!");
+		return FVec2{};
 	}
 
 	float InputHandler::getMouseScroll() const

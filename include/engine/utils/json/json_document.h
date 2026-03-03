@@ -3,8 +3,6 @@
 #include <filesystem>
 #include <memory>
 
-//#include "json_value.h"
-
 namespace cursed_engine
 {
 	namespace fs = std::filesystem;
@@ -21,15 +19,16 @@ namespace cursed_engine
 	{
 	public:
 		JsonDocument();
+		JsonDocument(const fs::path& path); // make sure works!!
 		~JsonDocument();
 
 		JsonResult loadFromFile(const fs::path& path);
 
 		[[nodiscard]] JsonValue root() const;
 
-		[[nodiscard]] bool isLoaded() const;
+		[[nodiscard]] bool isLoaded() const noexcept;
 
-		[[nodiscard]] JsonValue operator[](const char* key) const;
+		[[nodiscard]] JsonValue operator[](const char* key) const; // overload with non const?
 
 	private:
 		struct Impl;

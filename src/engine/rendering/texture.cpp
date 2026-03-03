@@ -3,14 +3,15 @@
 
 namespace cursed_engine
 {
-		Texture::Texture(SDL_Texture* texture)
-			: m_texture{ texture }, m_width{ 0 }, m_height{ 0 }
+	Texture::Texture(SDL_Texture* texture)
+		: m_texture{ texture }, m_width{ 0 }, m_height{ 0 }
+	{
+		if (m_texture && !SDL_GetTextureSize(m_texture, &m_width, &m_height))
 		{
-			if (m_texture && !SDL_GetTextureSize(m_texture, &m_width, &m_height))
-			{
-				SDL_Log("SDL_GetTextureSize failed: %s", SDL_GetError());
-			}
+			SDL_Log("SDL_GetTextureSize failed: %s", SDL_GetError());
 		}
+	}
+
 	Texture::~Texture()
 	{
 		destroy();

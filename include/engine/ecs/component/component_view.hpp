@@ -11,7 +11,7 @@ namespace cursed_engine
 	// [Consider] - have FindAllIf and FindIf - returning either pair<Entity, Ts&> or EntityHandle
 	//  * caching component view (pass in sparse set, but pass in entities each frame?)
 	//  * add sorting? and predicate (for ForEach) as optional, or separate function
-	
+
 	// private consturctor? only ECSRegistry cna construict?
 
 	//class BaseView
@@ -38,16 +38,18 @@ namespace cursed_engine
 	// TODO; make sure each type is unique!!
 	template <ComponentType... Ts>
 	class ComponentView //: private NonCopyable
-{
+	{
 	public:
 		// TODO, make private? friend class ECSRegistry..
-		ComponentView(ComponentContainer<Ts>&... containers, std::span<const Entity> entities); 
+		ComponentView();
+		ComponentView(ComponentContainer<Ts>*... containers, std::span<const Entity> entities);
+
 		~ComponentView() = default;
 
 		// Allow moving? Disable copying?
 		ComponentView(ComponentView&&) = default;
 		ComponentView& operator=(ComponentView&&) = default;
-	 
+
 		// ==================== Core API ====================
 		template <typename Callback>  // TODO; replace typename with Callable (<Callable<Ts...>>), assure (force) reference? add predicate (ForEach if...)
 		void forEach(Callback&& callback) const;
@@ -113,14 +115,21 @@ namespace cursed_engine
 		std::tuple<Ts&...> getComponents(EntityID id);
 
 		std::span<const Entity> m_entities; // TODO; or handles?
-		std::tuple<ComponentContainer<Ts>&...> m_components;
+		std::tuple<ComponentContainer<Ts>*...> m_components;
 	};
 
 #pragma region Methods
 
+	template <ComponentType... Ts>
+	ComponentView<Ts...>::ComponentView()
+		: m_components(static_cast<ComponentContainer<Ts>*>(nullptr)...), m_entities{}
+	{
+		//std::apply([](auto&... ptrs) { ((ptrs = nullptr), ...); }, m_components);
+	}
+
 	template <ComponentType ...Ts>
-	ComponentView<Ts...>::ComponentView(ComponentContainer<Ts>&... containers, std::span<const Entity> entities)
-	: m_components{ containers... }, m_entities{ entities }
+	ComponentView<Ts...>::ComponentView(ComponentContainer<Ts>*... containers, std::span<const Entity> entities)
+		: m_components{ containers... }, m_entities{ entities }
 	{
 	}
 
@@ -129,7 +138,7 @@ namespace cursed_engine
 	void ComponentView<Ts...>::forEach(Callback&& callback) const // TODO; fix this function!
 	{
 		static_assert(!std::invocable<Callback, Ts&..., Entity> && "Entity can't be last argument in callback!");
-		
+
 		constexpr bool hasEntityParam = std::invocable<Callback, Entity, Ts&...>;
 
 		for (const auto& entity : m_entities)
@@ -222,7 +231,7 @@ namespace cursed_engine
 	[[nodiscard]] const T* ComponentView<Ts...>::getComponent(Entity entity) const
 	{
 		if (contains(entity))
-			return std::get<ComponentContainer<T>&>(m_components).get(entity.id);
+			return std::get<ComponentContainer<T>*>(m_components)->get(entity.id);
 
 		return nullptr;
 	}
@@ -256,9 +265,9 @@ namespace cursed_engine
 	template <typename Predicate> // template <Callable Func>
 	std::optional<Entity> ComponentView<Ts...>::findIf(Predicate&& predicate) const
 	{
-		auto it = std::ranges::find_if(m_entities, [](Entity entity) 
+		auto it = std::ranges::find_if(m_entities, [](Entity entity)
 			{
-				return predicate(std::get<ComponentContainer<Ts>&>(m_components).at(entity.id)...); // TODO; pass in entity to?
+				return predicate(std::get<ComponentContainer<Ts>*>(m_components)->at(entity.id)...); // TODO; pass in entity to?
 			});
 
 		if (it != m_entities.end())
@@ -292,13 +301,13 @@ namespace cursed_engine
 	template <ComponentType ...Ts>
 	std::tuple<const Ts&...> ComponentView<Ts...>::getComponents(EntityID id) const
 	{
-		return std::tie(std::get<ComponentContainer<Ts>&>(m_components).at(id)...);
+		return std::tie(std::get<ComponentContainer<Ts>*>(m_components)->at(id)...);
 	}
 
 	template <ComponentType ...Ts>
 	std::tuple<Ts&...> ComponentView<Ts...>::getComponents(EntityID id)
 	{
-		return std::tie(std::get<ComponentContainer<Ts>&>(m_components).at(id)...); // Use at instead?
+		return std::tie(std::get<ComponentContainer<Ts>*>(m_components)->at(id)...); // Use at instead?
 	}
 
 
@@ -309,7 +318,7 @@ namespace cursed_engine
 		: m_view{ view }, m_index{ index }
 	{
 	}
-	
+
 	template <ComponentType... Ts>
 	typename ComponentView<Ts...>::Iterator& ComponentView<Ts...>::Iterator::operator++()
 	{

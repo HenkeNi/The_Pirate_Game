@@ -66,20 +66,54 @@ namespace cursed_engine
 		bool isLooping = false;
 	};
 
-	struct InputComponent
-	{
-	};
+	// Not needed? maybe dont make any sense? (in menu, where to attach to?)
+	//struct InputComponent
+	//{
+	//	//std::unordered_map<Hi_Engine::eKey, bool> InputStates; // replace with state instead of bool?? rename KeyStates?
+	//	//FVector2 MousePosition;
+	//	//FVector2 MouseWorldPosition;
+	//	//float MouseScroll;
+	//	FVec2 mousePosition;
+	//};
 
 	struct BoundingBox
 	{
-		float x, y; // or offset instead?
-		float width, height;
+		FVec2 offset;
+		FVec2 halfExtents;
+		//FVec2 position;
+		//int xOffset, yOffset;
+		//float x, y; // or offset instead?
+		//int width, height;
 
 		// rotation?
 	};
 
+
+	struct ButtonAction
+	{
+		// onHover
+		// onPress or onClick
+	};
+
+	// interactable?
 	struct ButtonComponent
 	{
+		enum class State{ Normal, Hovered, Pressed };
+		State state = State::Normal;
 
+		// on click...? function pointer? or send event?
+	};
+	
+	class Texture;
+	class Font;
+
+	struct TextComponent 
+	{
+		std::string text = "";
+		ResourceHandle<Texture> textureHandle; // Test...
+		ResourceHandle<Font> fontHandle;
+		bool isDirty = false;
+
+		// could store a Texture here.... 
 	};
 }

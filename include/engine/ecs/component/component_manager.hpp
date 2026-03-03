@@ -2,7 +2,7 @@
 #include "engine/ecs/ecs_types.h"
 #include "engine/utils/type_traits.h"
 #include "engine/utils/non_copyable.h"
-#include "engine/utils/data_structures/sparse_set.hpp"
+#include "engine/utils/containers/sparse_set.hpp"
 
 namespace cursed_engine
 {

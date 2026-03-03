@@ -29,18 +29,18 @@ void SceneLoader::loadAssets(Scene& scene, const std::filesystem::path& path) co
 
 	auto& ecsRegistry = scene.m_context.registry;
 
-	document["entities"].forEachArray([&](cursed_engine::JsonValue value)
-		{
-			std::string id = value["id"].asString(); // rename id as name?
+	for (const auto& entityValue : document["entities"].asArray())
+	{
+		std::string id = entityValue["id"].asString(); // rename id as name?
 
-			auto entityHandle = ecsRegistry.createEntity();
+		auto entityHandle = ecsRegistry.createEntity();
 
-			value["components"].forEachObject([&](const char* name, cursed_engine::JsonValue value)
-				{
-					assert(componentRegistry->isValid(name) && "[SceneLoader::loadAssets] - Component Type not registered!");
+		entityValue["components"].forEachProperty([&](const char* name, cursed_engine::JsonValue value)
+			{
+				assert(componentRegistry->isValid(name) && "[SceneLoader::loadAssets] - Component Type not registered!"); // TODO; make sure program doesnt crahs if not registered
 
-					const auto& componentData = componentRegistry->get(name);
-					componentData.deserialize(entityHandle, value);
-				});
-		});
+				const auto& componentData = componentRegistry->get(name);
+				componentData.deserialize(entityHandle, value);
+			});
+	}
 }

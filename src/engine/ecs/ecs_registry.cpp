@@ -53,4 +53,13 @@ namespace cursed_engine
 	{
 		return std::vector<EntityHandle>();
 	}
+
+	void ECSRegistry::invalidateCache(ComponentID id)
+	{
+		for (auto& cache : m_cachedQueries)
+		{
+			if (cache.first.test(id))
+				cache.second.dirty = true;
+		}
+	}
 }

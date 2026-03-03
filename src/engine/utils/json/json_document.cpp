@@ -18,6 +18,12 @@ namespace cursed_engine
 	{
 	}
 
+	JsonDocument::JsonDocument(const fs::path& path)
+		: m_impl{ std::make_unique<JsonDocument::Impl>() }
+	{
+		loadFromFile(path);
+	}
+
 	JsonDocument::~JsonDocument() = default;
 
 	JsonResult JsonDocument::loadFromFile(const fs::path& path)
@@ -75,9 +81,9 @@ namespace cursed_engine
 		return JsonValue{ &m_impl->document };
 	}
 
-	bool JsonDocument::isLoaded() const
+	bool JsonDocument::isLoaded() const noexcept
 	{
-		return !m_impl->document.HasParseError();
+		return m_impl && !m_impl->document.HasParseError();
 	}
 
 	JsonValue JsonDocument::operator[](const char* key) const

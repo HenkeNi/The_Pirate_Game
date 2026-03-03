@@ -7,8 +7,8 @@
         "transform": {
           "x": 0,
           "y": 0,
-          "width": 300,
-          "height": 300
+          "width": 1280,
+          "height": 720
         },
         "sprite": {
           "id": "title_background"
@@ -29,6 +29,30 @@
         },
         "button": {
 
+        },
+        "bounding_box": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "size": {
+            "width": 200,
+            "height": 50
+          }
+        }
+      }
+    },
+    {
+      "id": "title",
+      "components": {
+        "transform": {
+          "x": 200,
+          "y": 200,
+          "width": 100,
+          "height": 50
+        },
+        "text": {
+          "text": "A Pirate's Adventure"
         }
       }
     }

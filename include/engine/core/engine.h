@@ -8,7 +8,7 @@ namespace cursed_engine
 	class Engine
 	{
 	public:
-		Engine(Application& app);
+		explicit Engine(Application& app);
 		~Engine();
 
 		bool init();

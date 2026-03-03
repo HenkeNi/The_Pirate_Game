@@ -26,10 +26,10 @@ namespace cursed_engine
 		[[nodiscard]] inline float getWidth() const noexcept { return m_width; }
 		[[nodiscard]] inline float getHeight() const noexcept { return m_height; }
 
-		bool isLoaded() const;
-
 		//[[nodiscard]] inline const SDL_Texture* getTexture() const { return m_texture; }
 		[[nodiscard]] inline SDL_Texture* getTexture() { return m_texture; }
+
+		bool isLoaded() const;
 
 	private:
 		SDL_Texture* m_texture;

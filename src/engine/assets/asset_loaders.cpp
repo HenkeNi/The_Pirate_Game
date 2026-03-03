@@ -66,18 +66,21 @@ namespace cursed_engine
 		spriteSheet.rows = document["rows"].asInt();
 		spriteSheet.columns = document["columns"].asInt();
 
-		document["animations"].forEachObject([&](const char* name, JsonValue value)
+		document["animations"].forEachProperty([&](const char* name, JsonValue value)
 			{
 				auto n = name;
 
 				std::vector<int> frames;
 
 				// TODO; fix optional name!
-				value.forEachArray([&](JsonValue value) 
-					{
-						int frameIndex = value.asInt();
-						frames.push_back(frameIndex);
-					});
+
+				//for (const auto& )
+
+				//value.forEachArray([&](JsonValue value) 
+				//	{
+				//		int frameIndex = value.asInt();
+				//		frames.push_back(frameIndex);
+				//	});
 
 				//for (const auto& frame : value.GetArray())
 				//{
@@ -117,7 +120,7 @@ namespace cursed_engine
 
 		Prefab prefab;
 
-		document["components"].forEachObject([&](const char* name, JsonValue value)
+		document["components"].forEachProperty([&](const char* name, JsonValue value)
 			{
 				ComponentProperties properties;
 				//auto values = parsePropertyValue(value);
@@ -126,9 +129,9 @@ namespace cursed_engine
 				{
 					// TODO; dont? or maybe do?
 
-					value.forEachObject([&](const char* name, JsonValue value) 
+					value.forEachProperty([&](const char* name, JsonValue jsonValue) // rename value?
 						{
-							auto property = parsePropertyValue(value);
+							auto property = parsePropertyValue(jsonValue);
 							properties.insert({ name, std::move(property) });
 						});
 
@@ -154,7 +157,7 @@ namespace cursed_engine
 		{
 			std::unordered_map<std::string, PropertyValue> values;
 
-			value.forEachObject([&](const char* name, JsonValue value)
+			value.forEachProperty([&](const char* name, JsonValue value)
 				{
 					values.insert({ name, parsePropertyValue(value) });
 				});
@@ -170,10 +173,15 @@ namespace cursed_engine
 		{
 			std::vector<PropertyValue> values;
 
-			value.forEachArray([&](JsonValue value)
-				{
-					values.push_back(parsePropertyValue(value)); // Move? maybe uneccessary here=
-				});
+			for (const auto& v : value.asArray())
+			{
+				values.push_back(parsePropertyValue(v)); // Move? maybe uneccessary here=
+			}
+
+			//value.forEachArray([&](JsonValue value)
+			//	{
+			//		values.push_back(parsePropertyValue(value)); // Move? maybe uneccessary here=
+			//	});
 			//for (const auto& val : value.GetArray())
 			//{
 			//	values.push_back(parsePropertyValue(val));

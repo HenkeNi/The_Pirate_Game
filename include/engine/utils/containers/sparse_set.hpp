@@ -2,6 +2,7 @@
 #include "engine/utils/type_traits.h"
 #include <cassert>
 #include <limits>
+#include <span>
 #include <stddef.h>
 #include <stdexcept>
 #include <type_traits>
@@ -11,6 +12,9 @@
 namespace cursed_engine
 {
 	// TODO; use dynamic_array instead?
+	// Iterator use key value pair instead?
+	// TODO; add nodiscard to iterator?
+	// TODO; remove constexpr from iterator?
 
 	template <typename Value, Integral Key = std::size_t>
 	class sparse_set final
@@ -58,18 +62,25 @@ namespace cursed_engine
 		constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator{ end() }; }
 		constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator{ begin() }; }
 
+		// ==================== Data Access ====================
+		//const std::span<Value> getDense() const;
+		//std::span<Value> getDense();
+
+		//const std::span<Key> getSparse() const; // key iterator instead???
+		//std::span<Key> getSparse();
+
 		// ==================== Element Access ====================
 		// Safe access (checked)
-		const Value& at(Key key) const;
-		Value& at(Key key);
+		[[nodiscard]] const Value& at(Key key) const;
+		[[nodiscard]] Value& at(Key key);
 
 		// Unsafe access (unchecked)
-		const Value& operator[](Key key) const;
+		[[nodiscard]] const Value& operator[](Key key) const;
 		Value& operator[](Key key);
 
 		// Pointer access
-		const Value* get(Key key) const noexcept;
-		Value* get(Key key) noexcept;
+		[[nodiscard]] const Value* get(Key key) const noexcept;
+		[[nodiscard]] Value* get(Key key) noexcept;
 
 		// ==================== Modifiers ====================
 		// Insertion
@@ -92,7 +103,7 @@ namespace cursed_engine
 		[[nodiscard]] constexpr std::size_t size() const noexcept;
 
 	private:
-		template <typename T>
+		template <typename T> // remove specifiers? TODO; use nodiscard??
 		class iterator_impl
 		{
 		public:
@@ -104,7 +115,7 @@ namespace cursed_engine
 			using pointer = T*;
 
 			// ==================== Constructors ====================
-			constexpr iterator_impl() noexcept : m_ptr{ nullptr } {}
+			constexpr iterator_impl() noexcept : m_ptr{ nullptr } {} // remove?
 			constexpr explicit iterator_impl(pointer ptr) noexcept : m_ptr{ ptr } {}
 
 			// ==================== Dereference ====================
@@ -238,6 +249,7 @@ namespace cursed_engine
 		m_reverse[index] = key;
 
 		m_dense.emplace_back(std::forward<Args>(args)...);
+
 		return { iterator{ m_dense.data() + index }, true };
 	}
 

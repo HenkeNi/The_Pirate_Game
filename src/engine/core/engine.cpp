@@ -20,13 +20,17 @@
 #include <SDL3/SDL.h>
 //#include "engine/utils/json_utils.h"
 
+#include "engine/core/subsystem.h"
+#include "engine/localization/localization.h"
+
 #include "engine/config/config_types.h" // remove later...
 #include "engine/config/config_loader.h"
 
 // REMOEV
 #include "engine/audio/audio.h"
 #include "engine/rendering/texture.h"
-#include "engine/utils/data_structures/sparse_set.hpp"
+#include "engine/rendering/font.h"
+#include "engine/utils/containers/sparse_set.hpp"
 #include <optional>
 
 #include "engine/core/types.h"
@@ -38,6 +42,10 @@
 
 #include "engine/ecs/component/core_components.h"
 #include "engine/ecs/system/render_system.h"
+#include "engine/ecs/system/interaction_system.h"
+#include "engine/ecs/system/input_system.h"
+#include "engine/ecs/system/ui_system.h"
+#include "engine/ecs/system/text_system.h"
 
 namespace cursed_engine
 {
@@ -75,8 +83,8 @@ namespace cursed_engine
 		// Profiler
 	};
 
-	void registerComponents(ComponentRegistry& registry, AssetManager& assetManager);
-	void registerSystems(SystemManager& systemManager, Renderer& renderer, EngineResources& resources, AssetManager& assetManager);
+	void registerComponents(ComponentRegistry& registry, AssetManager& assetManager, EngineResources& engineResources);
+	void registerSystems(SystemManager& systemManager, Renderer& renderer, EngineResources& resources, AssetManager& assetManager, InputHandler& inputHandler);
 
 	Engine::Engine(Application& app)
 		: m_impl{ std::make_unique<Engine::Impl>(app) }
@@ -132,10 +140,15 @@ namespace cursed_engine
 		auto& assetManager = subsystemRegistry.add<AssetManager>();
 		m_impl->entityFactory.init(&assetManager);
 
+		// TODO; iterate through all files in folder...
+		auto& localization = subsystemRegistry.add<Localization>();
+		localization.registerLanguage("english", "../assets/localization/en.json"); // Dont here? read start language from config...
+		localization.setLanguage("english");
+
 		loadMedia(); // HERE? Dont do in init? also maybe dont do in Engine?
 
-		registerComponents(m_impl->metaStorage.componentData, assetManager);
-		registerSystems(m_impl->systemManager, renderer, engineResources, assetManager);
+		registerComponents(m_impl->metaStorage.componentData, assetManager, engineResources);
+		registerSystems(m_impl->systemManager, renderer, engineResources, assetManager, inputHandler);
 
 		m_impl->application.onCreated({
 			m_impl->systemManager,
@@ -238,6 +251,8 @@ namespace cursed_engine
 
 	void Engine::loadMedia()
 	{
+		// TODO; use a single loop for all files in asset
+
 		//Not loading textuer atlases? 
 
 		// TODO; do lazy loading later on!? -> maybe load core resources?
@@ -300,6 +315,21 @@ namespace cursed_engine
 
 
 
+		for (const auto& entry : std::filesystem::recursive_directory_iterator("../assets/fonts"))
+		{
+			if (!entry.is_regular_file())
+				continue;
+
+			const auto& path = entry.path();
+			std::string filename = path.string();
+
+			if (filename.ends_with(".ttf"))
+			{
+				//engineResources.insertPath<Font>(path.filename().stem().string(), path); // auto generate id?
+			}
+		}
+
+
 
 
 		// TODO; load texture atlas...
@@ -308,7 +338,7 @@ namespace cursed_engine
 
 	}
 
-	void registerComponents(ComponentRegistry& registry, AssetManager& assetManager)
+	void registerComponents(ComponentRegistry& registry, AssetManager& assetManager, EngineResources& engineResources)
 	{
 		// TODO; use config to check which subsystems are active, only register if active? (physics -> physicsComponent)
 
@@ -376,28 +406,64 @@ namespace cursed_engine
 				handle.attachComponent<SpriteComponent>(atlasHandle, region, color, zOrder);
 			});
 
-		registerComponent<InputComponent>(registry, "input",
+
+		/*registerComponent<InputComponent>(registry, "input",
 			[](EntityHandle& handle, const ComponentProperties& properties)
 			{},
 			[](EntityHandle& handle, const JsonValue& value)
 			{
-			});
+			});*/
 
+		// TODO; interaction component instead???
 		registerComponent<ButtonComponent>(registry, "button",
 			[](EntityHandle& handle, const ComponentProperties& properties)
 			{
 			},
 			[](EntityHandle& handle, const JsonValue& value)
 			{
+				handle.attachComponent<ButtonComponent>();
 			});
 
 
+		registerComponent<BoundingBox>(registry, "bounding_box",
+			[](EntityHandle& handle, const ComponentProperties& properties)
+			{
+
+			},
+			[](EntityHandle& handle, const JsonValue& value) 
+			{
+				int xOffset = value["offset"]["x"].asInt();
+				int yOffset = value["offset"]["y"].asDouble();
+
+				int width = value["size"]["width"].asInt(); // TODO; use halfextent instead!
+				int height = value["size"]["height"].asInt(); // TODO; decide if float or int...
+
+				handle.attachComponent<BoundingBox>(FVec2{ (float)xOffset, (float)yOffset }, FVec2{ (float)width, (float)height });
+			});
+
+		registerComponent<TextComponent>(registry, "text",
+			[](EntityHandle& handle, const ComponentProperties& properties)
+			{
+
+			},
+			[&](EntityHandle& handle, const JsonValue& value)
+			{
+				std::string id; // no way of knowing the id...
+
+				// store lockup table id to text (and perhaps text to id)
+
+				//auto handle = engineResources.getHandle<Texture>(id); // WIll this load the resource? probably not
+
+				handle.attachComponent<TextComponent>();
+			});
 	}
 
-	void registerSystems(SystemManager& systemManager, Renderer& renderer, EngineResources& resources, AssetManager& assetManager)
+	void registerSystems(SystemManager& systemManager, Renderer& renderer, EngineResources& resources, AssetManager& assetManager, InputHandler& inputHandler)
 	{
 		systemManager.emplace<RenderSystem>(renderer, resources, assetManager);
-
-
+		//systemManager.emplace<InputSystem>(inputHandler);
+		systemManager.emplace<InteractionSystem>();
+		systemManager.emplace<UISystem>(inputHandler);
+		systemManager.emplace<TextSystem>(resources);
 	}
 }
