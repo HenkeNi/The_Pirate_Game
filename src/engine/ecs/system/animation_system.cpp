@@ -11,8 +11,10 @@ namespace cursed_engine
 	{
 	}
 
-	void AnimationSystem::update(ECSRegistry& registry, float deltaTime)
+	void AnimationSystem::update(SystemContext& context)
 	{
+		auto& registry = context.registry;
+
 		 auto view = registry.view<AnimationComponent, SpriteComponent>();
 		 //auto view = registry.view<TransformComponent, SpriteComponent>();
 		

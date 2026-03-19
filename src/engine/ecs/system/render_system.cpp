@@ -13,11 +13,14 @@ namespace cursed_engine
 	{
 	}
 
-	void RenderSystem::update(ECSRegistry& registry, float deltaTime)
+	void RenderSystem::update(SystemContext& context)
 	{
 		// TODO; sort by handles? -> maybe sort using texture id (perhaps integer would be better than string?)
 
 		m_renderer.clearScreen(); // HERE or in main loop?
+
+		auto& registry = context.registry;
+		auto& textureManager = m_engineResources.textureManager;
 
 		const auto componentView = registry.view<SpriteComponent, TransformComponent>();
 		componentView.forEach([&](const SpriteComponent& spriteComponent, const TransformComponent& transformComponent)
@@ -25,8 +28,8 @@ namespace cursed_engine
 
 				const auto& textureAtlas = m_assetManager.getAsset<TextureAtlas>(spriteComponent.atlasHandle); // no asset stored AND invalid index!
 
-				const auto& textureHandle = m_engineResources.getHandle<Texture>(textureAtlas.textureID);
-				auto& texture = m_engineResources.get<Texture>(textureHandle);
+				const auto& textureHandle = textureManager.getHandle(textureAtlas.textureID);
+				auto& texture = textureManager.get(textureHandle);
 
 				// TODO; handle invalid/not loaded texture!
 
@@ -44,13 +47,15 @@ namespace cursed_engine
 
 #endif
 
-		auto textureHandleTest = m_engineResources.getHandle<Texture>("test3"); // pass in "coordinates"? or do that in texture?
-		auto& testTexture = m_engineResources.get<Texture>(textureHandleTest);
+		auto textureHandleTest = textureManager.getHandle("test3"); // pass in "coordinates"? or do that in texture?
+		auto& testTexture = textureManager.get(textureHandleTest);
 
 		m_renderer.renderTexture(10, 10, 10, 10, testTexture);
 		m_renderer.renderLine(0, 0, 100, 100, Color{ 123, 21, 32, 255 });
 
-		m_renderer.present(); // Here or in main loop?
+		//m_renderer.present(); // Here or in main loop?
+
+		//renderText(registry); -> maybe not needed? text uses textuers...
 	}
 
 	void RenderSystem::renderText(ECSRegistry& registry)

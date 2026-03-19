@@ -2,11 +2,11 @@
 
 namespace cursed_engine
 {
-	void SystemManager::update(ECSRegistry& registry, float deltaTime)
+	void SystemManager::update(SystemContext& context)
 	{
 		for (auto& system : m_systems)
 		{
-			system->update(registry, deltaTime);
+			system->update(context);
 		}
 	}
 }

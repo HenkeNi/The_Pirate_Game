@@ -12,7 +12,7 @@ namespace cursed_engine
 	public:
 		RenderSystem(Renderer& renderer, EngineResources& engineResources, AssetManager& assetManager);
 
-		void update(ECSRegistry& registry, float deltaTime) override;
+		void update(SystemContext& context) override;
 	
 	private:
 		void renderText(ECSRegistry& registry);

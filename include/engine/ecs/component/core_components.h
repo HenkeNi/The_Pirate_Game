@@ -98,9 +98,20 @@ namespace cursed_engine
 	// interactable?
 	struct ButtonComponent
 	{
+		using ActionValue = std::variant<std::string, int, double, bool>;
+
+		ButtonComponent() = default;
+
+		ButtonComponent(std::string _action, const ActionValue& _value)
+			: action{ _action }, actionValue{ _value }
+		{
+		}
+
 		enum class State{ Normal, Hovered, Pressed };
 		State state = State::Normal;
 
+		std::string action;
+		ActionValue actionValue; 
 		// on click...? function pointer? or send event?
 	};
 	
@@ -109,6 +120,13 @@ namespace cursed_engine
 
 	struct TextComponent 
 	{
+		TextComponent(std::string id)
+			: textID{ std::move(id) }
+		{
+		}
+
+		std::string textID = "";
+
 		std::string text = "";
 		ResourceHandle<Texture> textureHandle; // Test...
 		ResourceHandle<Font> fontHandle;

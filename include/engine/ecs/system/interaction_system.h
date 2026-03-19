@@ -3,16 +3,13 @@
 
 namespace cursed_engine
 {
-	class AssetManager;
-
-	class AnimationSystem : public System
+	class InteractionSystem : public System
 	{
 	public:
-		AnimationSystem(AssetManager& assetManager);
-
 		void update(SystemContext& context) override;
-	
+
 	private:
-		AssetManager& m_assetManager;
+		void handleMouseInput();
+		void handleControllerInput();
 	};
 }

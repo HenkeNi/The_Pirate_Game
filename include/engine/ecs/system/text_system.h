@@ -4,17 +4,20 @@
 
 namespace cursed_engine
 {
+	class Localization; 
+
 	class TextSystem : public System
 	{
 	public:
-		TextSystem(EngineResources& engineResources);
+		TextSystem(EngineResources& engineResources, Localization& localization);
 
-		void update(ECSRegistry& registry, float deltaTime) override;
+		void update(SystemContext& context) override;
 
 	private:
 		void handleDynamicText();
 		void handleStaticText();
 
 		EngineResources& m_engineResources;
+		Localization& m_localization;
 	};
 }
