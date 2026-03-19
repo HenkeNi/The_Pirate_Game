@@ -6,12 +6,13 @@
 
 union SDL_Event;
 
-
+// TODO; hide sdl_scancode...
 // [CONSIDER] able to call isActionPressed(Action)? -> or should input handler not know about actions?
 // How to store registered keys? -> and save/update config
 
 namespace cursed_engine
 {
+	class EventBus;
 	struct InputConfig;
 
 	enum class InputState
@@ -32,10 +33,29 @@ namespace cursed_engine
 		Count
 	};
 
+	struct MouseBtnPressedEvent // Shared events mouse btn and key?
+	{
+		MouseButton button;
+	};
+
+	struct MouseBtnReleasedEvent
+	{
+		MouseButton button;
+	};
+
+	struct KeyPressedEvent
+	{
+		SDL_Scancode key;
+	};
+
+	struct KeyReleasedEvent
+	{
+		SDL_Scancode key;
+	};
 
 	struct InputInfo
 	{
-		InputState inputState = InputState::None;
+		InputState inputState = InputState::None; // all three needed? or remove this?
 
 		bool isDown = false;
 		bool wasDown = false;
@@ -52,12 +72,17 @@ namespace cursed_engine
 	class InputHandler : public Subsystem
 	{
 	public:
+		InputHandler(EventBus& eventBus);
+
 		void init(const InputConfig& config); // copy move instead?
+	
+		void beginFrame();
 		void processInput(const SDL_Event& event);
 		void update();
 
 		// Bind action function (action, key)
 		// isAction triggered?
+		// add noexcept....
 
 		[[nodiscard]] bool isKeyPressed(SDL_Scancode code) const;
 
@@ -71,6 +96,9 @@ namespace cursed_engine
 		
 		[[nodiscard]] bool isMouseBtnReleased(MouseButton button) const;
 
+		// REMOVE?? 
+		[[nodiscard]] InputState getMouseInputState(MouseButton button) const; // rename input state?
+
 		[[nodiscard]] FVec2 getMousePosition() const;
 		
 		[[nodiscard]] FVec2 getMouseDelta() const;
@@ -78,9 +106,9 @@ namespace cursed_engine
 		[[nodiscard]] float getMouseScroll() const;
 
 	private:
-		void processKeyEvent(const SDL_Event& event, bool isPressed);
+		void processKeyEvent(const SDL_Event& event);
 
-		void processMouseButtonEvent(const SDL_Event& event, bool isPressed);
+		void processMouseButtonEvent(const SDL_Event& event);
 
 		void processMouseMotionEvent(const SDL_Event& event);
 
@@ -91,7 +119,11 @@ namespace cursed_engine
 		// registered key mappings? (config?)
 		//std::array<eKeyState, SDL_NUM_SCANCODES> m_keyStates; // store key state?
 
-		std::unordered_map<SDL_Scancode, InputInfo> m_keyInfo; // scan code(s) or key codes?
+		//using KeyInfo = std::unordered_map<SDL_Scancode, InputInfo>; // name KeyStates?
+		using KeyInfo = std::array<InputInfo, SDL_Scancode::SDL_SCANCODE_COUNT>; // name KeyStates?
+
+		KeyInfo m_keyInfo; // scan code(s) or key codes?
 		MouseState m_mouseState;
+		EventBus& m_eventBus;
 	};
 }

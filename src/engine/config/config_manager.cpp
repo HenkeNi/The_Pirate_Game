@@ -57,6 +57,25 @@ namespace cursed_engine
 		return true;
 	}
 
+	bool loadResourceConfig(const fs::path& path, ResourceConfig& resourceConfig)
+	{
+		JsonDocument document;
+
+		const auto [success, message] = document.loadFromFile(path);
+		if (!success)
+		{
+			Logger::logError("Failed to load resiource config: " + message);
+			return false;
+		}
+
+		for (const auto& supportedFormat : document["supported_image_formats"].asArray())
+		{
+			resourceConfig.validTextureFormats.push_back(supportedFormat.asString());
+		}
+
+		return true;
+	}
+
 	bool ConfigManager::loadAllConfigs(const fs::path& path)
 	{
 		bool success = true;
@@ -64,6 +83,7 @@ namespace cursed_engine
 		success &= loadAppInfo(path / "app.json", m_appInfo);
 		success &= loadWindowConfig(path / "window_config.json", m_windowConfig);
 		success &= loadInputConfig(path / "input_config.json", m_inputConfig);
+		success &= loadResourceConfig(path / "resource_config.json", m_resourceConfig);
 
 		return success;
 	}

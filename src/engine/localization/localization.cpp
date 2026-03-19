@@ -20,9 +20,11 @@ namespace cursed_engine
 		}
 
 		bool success = loadLanguage(it->second);
-
 		if (success)
+		{
 			m_currentLanguage = language;
+			onLanguageChanged();
+		}
 
 		return success;
 	}
@@ -70,10 +72,7 @@ namespace cursed_engine
 
 					m_translations.insert({ id, value.asString() });
 				});
-
 		}
-
-		onLanguageChanged();
 	}
 
 	void Localization::onLanguageChanged()

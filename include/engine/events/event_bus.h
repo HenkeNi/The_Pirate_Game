@@ -6,6 +6,11 @@
 #include <queue>
 #include <any>
 
+
+#include <vector>
+#include <algorithm>
+#include <typeindex>
+
 namespace cursed_engine
 {
 	class EventBus : public Subsystem
@@ -21,7 +26,10 @@ namespace cursed_engine
 		void publish(Event&& event);
 
 		template <typename Event>
-		void publishInstantly(Event&& event);
+		void publishInstantly(Event&& event); // rename emit?
+
+		template <typename Event, typename... Args>
+		void publishInstantly(Args&&... args); // Make sure work!
 
 		void dispatchAll();
 
@@ -43,7 +51,7 @@ namespace cursed_engine
 	{
 		auto& vec = m_listeners[getTypeIndex<Event>()];
 
-		vec.push_back([cb = std::move(callback)](const std::any& e) 
+		vec.push_back([cb = std::move(callback)](const std::any& e) // why any here?
 			{
 				cb(std::any_cast<const Event&>(e));
 			});
@@ -60,11 +68,17 @@ namespace cursed_engine
 	{
 		auto& vec = m_listeners[getTypeIndex<Event>()];
 
-		std::for_each(vec.begin(), vec.end(), [](auto& callback)
+		std::for_each(vec.begin(), vec.end(), [&](auto& callback)
 			{
 				callback(event);
 			});
 
+	}
+
+	template <typename Event, typename... Args>
+	void EventBus::publishInstantly(Args&&... args)
+	{
+		publishInstantly(Event{ std::forward<Args>(args)... });
 	}
 
 #pragma endregion
