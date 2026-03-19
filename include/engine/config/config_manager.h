@@ -7,6 +7,9 @@ namespace cursed_engine
 {
 	namespace fs = std::filesystem;
 
+	// config loader?
+	// remake into a struct?
+
 	// Settings? EngineConfig? ConfigHandler? or POD struct EngineConfig and ConfigLoader helper class?
 	class ConfigManager : public Subsystem
 	{
@@ -19,6 +22,8 @@ namespace cursed_engine
 
 		[[nodiscard]] inline const InputConfig& getInputConfig() const noexcept { return m_inputConfig; }
 
+		[[nodiscard]] inline const ResourceConfig& getResourceConfig() const noexcept { return m_resourceConfig; }
+
 		bool saveWindowConfigToFile(const fs::path& path);
 
 
@@ -29,7 +34,7 @@ namespace cursed_engine
 		InputConfig m_inputConfig;
 		AudioConfig m_audioConfig;
 
+		ResourceConfig m_resourceConfig;
 		AppInfo m_appInfo;
 	};
-
 }

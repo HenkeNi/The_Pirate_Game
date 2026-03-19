@@ -1,7 +1,8 @@
 #pragma once
-#include <string>
 #include "engine/input/action.h"
+#include <string>
 #include <unordered_map>
+#include <vector>
 #include <SDL3/SDL.h>
 
 namespace cursed_engine
@@ -51,6 +52,11 @@ namespace cursed_engine
 	{
 		float brightness = 1.f;
 		float contrast = 1.f;
+	};
+
+	struct ResourceConfig
+	{
+		std::vector<std::string> validTextureFormats;
 	};
 
 	// Config manager instead?
