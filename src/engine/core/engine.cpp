@@ -83,8 +83,8 @@ namespace cursed_engine
 		// Profiler
 	};
 
-	void registerComponents(ComponentRegistry& registry, AssetManager& assetManager, EngineResources& engineResources);
-	void registerSystems(SystemManager& systemManager, Renderer& renderer, EngineResources& resources, AssetManager& assetManager, InputHandler& inputHandler);
+	void registerComponents(ComponentRegistry& registry, AssetManager& assetManager, EngineResources& engineResources,  Localization& localization);
+	void registerSystems(SystemManager& systemManager, Renderer& renderer, EngineResources& resources, AssetManager& assetManager, InputHandler& inputHandler, Localization& localization, EventBus& eventBus);
 
 	Engine::Engine(Application& app)
 		: m_impl{ std::make_unique<Engine::Impl>(app) }
@@ -116,12 +116,13 @@ namespace cursed_engine
 		}
 
 		auto& window = subsystemRegistry.add<Window>();
+		auto& eventBus = subsystemRegistry.add<EventBus>();
 
 		const auto& windowConfig = configManager.getWindowConfig();
 		window.init(appInfo.name.c_str(), windowConfig);
 		window.setIcon(windowConfig.iconPath);
 
-		auto& inputHandler = subsystemRegistry.add<InputHandler>();
+		auto& inputHandler = subsystemRegistry.add<InputHandler>(eventBus);
 		inputHandler.init(configManager.getInputConfig());
 
 		auto& renderer = subsystemRegistry.add<Renderer>();
@@ -131,9 +132,9 @@ namespace cursed_engine
 		audioController.init();
 
 		auto& engineResources = subsystemRegistry.add<EngineResources>();
-		engineResources.registerLoader<TextureLoader>(renderer);
-		engineResources.registerLoader<AudioLoader>();
-		subsystemRegistry.add<EventBus>();
+		engineResources.textureManager.emplaceLoader<TextureLoader>(renderer);
+		engineResources.audioManager.emplaceLoader<AudioLoader>();
+
 		subsystemRegistry.add<Physics>();
 		//subsystemRegistry.add<ECSRegistry>();
 
@@ -147,8 +148,8 @@ namespace cursed_engine
 
 		loadMedia(); // HERE? Dont do in init? also maybe dont do in Engine?
 
-		registerComponents(m_impl->metaStorage.componentData, assetManager, engineResources);
-		registerSystems(m_impl->systemManager, renderer, engineResources, assetManager, inputHandler);
+		registerComponents(m_impl->metaStorage.componentData, assetManager, engineResources, localization); // Dont pass localization?
+		registerSystems(m_impl->systemManager, renderer, engineResources, assetManager, inputHandler, localization, eventBus);
 
 		m_impl->application.onCreated({
 			m_impl->systemManager,
@@ -156,6 +157,7 @@ namespace cursed_engine
 			m_impl->entityFactory,
 			renderer,
 			window,
+			eventBus,
 			m_impl->metaStorage.componentData,
 			m_impl->assetRoot
 			});
@@ -178,21 +180,21 @@ namespace cursed_engine
 		auto& subsystemRegistry = m_impl->subsystemRegistry;
 
 		// Test
-		auto& resourceManager = subsystemRegistry.get<EngineResources>();
-		auto textureHandle = resourceManager.getHandle<Texture>("test3");
-		//auto textureHandle = resourceManager.getHandle<Texture>("test3.bmp");
-		auto& texture = resourceManager.get<Texture>(textureHandle);
+		//auto& resourceManager = subsystemRegistry.get<EngineResources>();
+		//auto textureHandle = resourceManager.getHandle<Texture>("test3");
+		////auto textureHandle = resourceManager.getHandle<Texture>("test3.bmp");
+		//auto& texture = resourceManager.get<Texture>(textureHandle);
 
-		auto audioHandle = resourceManager.getHandle<Audio>("707884__dave4884__pirates-song");
-		//auto audioHandle = resourceManager.getHandle<Audio>("707884__dave4884__pirates-song.wav");
-		const auto& audio = resourceManager.get<Audio>(audioHandle);
+		//auto audioHandle = resourceManager.getHandle<Audio>("707884__dave4884__pirates-song");
+		////auto audioHandle = resourceManager.getHandle<Audio>("707884__dave4884__pirates-song.wav");
+		//const auto& audio = resourceManager.get<Audio>(audioHandle);
 
-		//auto audioHandle2 = resourceManager.getHandle<Audio>("249813__spookymodem__goblin-death.wav");
-		auto audioHandle2 = resourceManager.getHandle<Audio>("249813__spookymodem__goblin-death");
-		const auto& audio2 = resourceManager.get<Audio>(audioHandle2);
+		////auto audioHandle2 = resourceManager.getHandle<Audio>("249813__spookymodem__goblin-death.wav");
+		//auto audioHandle2 = resourceManager.getHandle<Audio>("249813__spookymodem__goblin-death");
+		//const auto& audio2 = resourceManager.get<Audio>(audioHandle2);
 
-		auto& audioController = subsystemRegistry.get<AudioController>();
-		audioController.playSound(audio2.m_stream, audio2.m_buffer, audio2.m_length);
+		//auto& audioController = subsystemRegistry.get<AudioController>();
+		//audioController.playSound(audio2.m_stream, audio2.m_buffer, audio2.m_length);
 
 		while (running)
 		{
@@ -200,6 +202,11 @@ namespace cursed_engine
 
 			auto& timer = m_impl->timer;
 			timer.tick();
+
+			auto& inputHandler = subsystemRegistry.get<InputHandler>();
+			inputHandler.beginFrame();
+
+			auto& window = subsystemRegistry.get<Window>();
 
 			SDL_Event event;
 			while (SDL_PollEvent(&event))
@@ -209,8 +216,8 @@ namespace cursed_engine
 					running = false;
 				}
 
-				subsystemRegistry.get<InputHandler>().processInput(event); // TODO; "prefetch" input handler?
-				subsystemRegistry.get<Window>().processEvent(event);
+				inputHandler.processInput(event); // TODO; "prefetch" input handler?
+				window.processEvent(event);
 			}
 
 			double deltaTime = timer.getDeltaTime();
@@ -244,8 +251,15 @@ namespace cursed_engine
 			Uint64 end = SDL_GetPerformanceCounter();
 			float elapsed = (end - start) / (float)SDL_GetPerformanceFrequency();
 			float fps = 1.f / elapsed;
+			
+
+			auto& renderer = subsystemRegistry.get<Renderer>();
+			//renderer.renderDebugText(220, 220, "Fps: " + (int)fps);
+			//renderer.renderDebugText(350, 10, std::to_string(fps).c_str());
+
+			renderer.present(); // or in render system? if here, also clear!
 			// timer.getFPS();
-			subsystemRegistry.get<Window>().setTitle(std::format("The Cursed Pirate - Fps: {}", (int)fps).c_str());
+			window.setTitle(std::format("The Cursed Pirate - Fps: {}", (int)fps).c_str()); // render debug text instead?
 		}
 	}
 
@@ -274,7 +288,7 @@ namespace cursed_engine
 		auto& engineResources = m_impl->subsystemRegistry.get<EngineResources>();
 
 		// Load sprite sheets
-		assetManager.addLoader<SpriteSheetLoader>(engineResources);
+		assetManager.addLoader<SpriteSheetLoader>(engineResources); // TOOD; pass texturemanager instead?
 		assetManager.addLoader<TextureAtlasLoader>(engineResources);
 
 		for (const auto& entry : std::filesystem::recursive_directory_iterator("../assets/textures"))
@@ -295,7 +309,7 @@ namespace cursed_engine
 			}
 			else if (filename.ends_with(".png") || filename.ends_with(".bmp") || filename.ends_with(".jpeg")) // TODO; function? isValidTextureFormat
 			{
-				engineResources.insertPath<Texture>(path.filename().stem().string(), path);
+				engineResources.textureManager.insertPath(path.filename().stem().string(), path);
 			}
 		}
 
@@ -307,9 +321,9 @@ namespace cursed_engine
 			const auto& path = entry.path();
 			std::string filename = path.string();
 
-			if (filename.ends_with(".wav"))
+			if (filename.ends_with(".wav")) // TODO; or check if file.extension() == ???
 			{
-				engineResources.insertPath<Audio>(path.filename().stem().string(), path); // TODO; utiltyFunction getStem()?
+				engineResources.audioManager.insertPath(path.filename().stem().string(), path); // TODO; utiltyFunction getStem()?
 			}
 		}
 
@@ -329,16 +343,11 @@ namespace cursed_engine
 			}
 		}
 
-
-
-
 		// TODO; load texture atlas...
-
-
 
 	}
 
-	void registerComponents(ComponentRegistry& registry, AssetManager& assetManager, EngineResources& engineResources)
+	void registerComponents(ComponentRegistry& registry, AssetManager& assetManager, EngineResources& engineResources, Localization& localization)
 	{
 		// TODO; use config to check which subsystems are active, only register if active? (physics -> physicsComponent)
 
@@ -421,7 +430,10 @@ namespace cursed_engine
 			},
 			[](EntityHandle& handle, const JsonValue& value)
 			{
-				handle.attachComponent<ButtonComponent>();
+				std::string action = value["action"].asString();
+				std::string val = value["value"].asString(); // asAny?
+
+				handle.attachComponent<ButtonComponent>(action, val);
 			});
 
 
@@ -448,22 +460,33 @@ namespace cursed_engine
 			},
 			[&](EntityHandle& handle, const JsonValue& value)
 			{
-				std::string id; // no way of knowing the id...
+				//std::string id; // no way of knowing the id...
+
+
+				auto id = value["id"].asString();
+
+				//localization.getText(id);
+				
+				
+				//auto handle = engineResources.getHandle<Texture>(id);
+
+				handle.attachComponent<TextComponent>(id);
 
 				// store lockup table id to text (and perhaps text to id)
 
 				//auto handle = engineResources.getHandle<Texture>(id); // WIll this load the resource? probably not
 
-				handle.attachComponent<TextComponent>();
+				// safe to pass localization? OR handle in TextSystem?
+
 			});
 	}
 
-	void registerSystems(SystemManager& systemManager, Renderer& renderer, EngineResources& resources, AssetManager& assetManager, InputHandler& inputHandler)
+	void registerSystems(SystemManager& systemManager, Renderer& renderer, EngineResources& resources, AssetManager& assetManager, InputHandler& inputHandler, Localization& localization, EventBus& eventBus)
 	{
 		systemManager.emplace<RenderSystem>(renderer, resources, assetManager);
 		//systemManager.emplace<InputSystem>(inputHandler);
 		systemManager.emplace<InteractionSystem>();
-		systemManager.emplace<UISystem>(inputHandler);
-		systemManager.emplace<TextSystem>(resources);
+		systemManager.emplace<UISystem>(inputHandler, eventBus);
+		systemManager.emplace<TextSystem>(resources, localization);
 	}
 }

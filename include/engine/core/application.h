@@ -17,6 +17,7 @@ namespace cursed_engine
 		class EntityFactory& entityFactory;
 		class Renderer& renderer;
 		class Window& window;
+		class EventBus& eventBus;
 		ComponentRegistry& componentData;
 		const std::filesystem::path& assetRoot;
 		
