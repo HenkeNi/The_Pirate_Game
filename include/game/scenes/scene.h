@@ -7,7 +7,7 @@ namespace cursed_engine
 {
 	class SystemManager;
 	class EntityFactory;
-
+	class EventBus;
 	//template <typename T, typename ID>
 	//class TypeRegistry; // TODO; replace with type alias for ComponentInfo instead!!
 
@@ -16,8 +16,8 @@ namespace cursed_engine
 
 struct SceneContext
 {
-	SceneContext(cursed_engine::SystemManager* manager, cursed_engine::EntityFactory* factory, cursed_engine::ComponentRegistry* componentData_)
-		: systemManager{ manager }, entityFactory{ factory }, componentData{ componentData_ }
+	SceneContext(cursed_engine::SystemManager* manager, cursed_engine::EntityFactory* factory, cursed_engine::ComponentRegistry* componentData_, cursed_engine::EventBus* _eventBus)
+		: systemManager{ manager }, entityFactory{ factory }, componentData{ componentData_ }, eventBus{ _eventBus }
 	{
 	}
 
@@ -26,7 +26,7 @@ struct SceneContext
 	//cursed_engine::EntityLoader 
 	cursed_engine::SystemManager* systemManager;// Or each scene stores its own system manager??
 	cursed_engine::EntityFactory* entityFactory;
-	
+	cursed_engine::EventBus* eventBus;
 	cursed_engine::TypeRegistry<cursed_engine::ComponentInfo, uint32_t>* componentData; //  todo, accept this in constructor...
 	//Todo, store meta registry (component data)
 };
@@ -36,8 +36,8 @@ class SceneLoader;
 class Scene
 {
 public:
-	// TODO; fix this...
-	Scene(cursed_engine::SystemManager* systemManager, cursed_engine::EntityFactory* entityFactory, cursed_engine::ComponentRegistry* componentData, std::string id);
+	// TODO; fix this... accept a scene contxt? - make sure to copy move (contains ECSRegistry)
+	Scene(cursed_engine::SystemManager* systemManager, cursed_engine::EntityFactory* entityFactory, cursed_engine::ComponentRegistry* componentData, cursed_engine::EventBus* eventBus, std::string id);
 	virtual ~Scene() = default;
 
 	void update(float deltaTime); // or base scene updates ecs?
