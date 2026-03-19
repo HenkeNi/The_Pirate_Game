@@ -28,7 +28,8 @@
           "id": "pirate-flag"
         },
         "button": {
-
+          "action": "LoadScene",
+          "value": "settings_scene"
         },
         "bounding_box": {
           "offset": {
@@ -52,7 +53,7 @@
           "height": 50
         },
         "text": {
-          "text": "A Pirate's Adventure"
+          "id": "title_text"
         }
       }
     }
