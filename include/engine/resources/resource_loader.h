@@ -27,9 +27,14 @@ namespace cursed_engine
 		TextureLoader(Renderer& renderer);
 
 		[[nodiscard]] std::unique_ptr<Texture> load(const std::filesystem::path& path) const override;
-	
+		//[[nodiscard]] bool isSupportedFormat(const std::string& format)
+
 	private:
+		[[nodiscard]] std::unique_ptr<Texture> loadTexture(const std::filesystem::path& path) const;
+		[[nodiscard]] std::unique_ptr<Texture> loadText(const std::filesystem::path& path) const;
+
 		Renderer& m_renderer;
+		//static const std::vector<std::string> s_supportedExtensions;
 	};
 
 

@@ -20,6 +20,17 @@ namespace cursed_engine
 
 	std::unique_ptr<Texture> TextureLoader::load(const std::filesystem::path& path) const
 	{
+		/*if (path.extension() == ".ttf")
+		{
+			int x = 20;
+		}
+		else if (path.extension() == ".jpeg")
+		{
+			int x = 20;
+		}*/
+
+		// TODO: "delegate" to seprate functions for text and textures?
+
 		if (!std::filesystem::exists(path))
 		{
 			Logger::logError("Failed to load texture, invalid path: " + path.string());
@@ -46,6 +57,16 @@ namespace cursed_engine
 
 		//SDL_DestroySurface(surface);
 		return std::make_unique<Texture>(texture);
+	}
+
+	std::unique_ptr<Texture> TextureLoader::loadTexture(const std::filesystem::path& path) const
+	{
+		return std::unique_ptr<Texture>();
+	}
+
+	std::unique_ptr<Texture> TextureLoader::loadText(const std::filesystem::path& path) const
+	{
+		return std::unique_ptr<Texture>();
 	}
 
 	std::unique_ptr<Audio> AudioLoader::load(const std::filesystem::path& path) const

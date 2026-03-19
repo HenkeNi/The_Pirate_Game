@@ -6,6 +6,7 @@
 
 #include "engine/utils/path_utils.h"
 
+#include <algorithm>
 #include <filesystem> // put in pch
 #include <memory>
 #include <optional>
@@ -14,6 +15,8 @@
 
 namespace cursed_engine
 {
+	// TODO; make sure to increment version!
+
 	// Remaeke ResourceManager? resource base class? store 
 	// TODO; add normalize path?
 	// Document class does lazy loading!
@@ -21,530 +24,216 @@ namespace cursed_engine
 
 
 	//template <ResourceType Resource>
-	template <typename Resource>
-	struct ResourceArchive
-	{
-		ResourceArchive(std::unique_ptr<ResourceLoaderBase<Resource>> loader_ = nullptr)
-			: loader{ std::move(loader) }
-		{
-		}
+	//template <typename Resource>
+	//struct ResourceArchive
+	//{
+	//	ResourceArchive(std::unique_ptr<ResourceLoaderBase<Resource>> loader_ = nullptr)
+	//		: loader{ std::move(loader) }
+	//	{
+	//	}
 
-		ResourceCache<Resource> cache;
-		//std::unordered_map<std::string, std::string> pathsToIds; // use ids to paths instead!
-		std::unordered_map<std::string, std::filesystem::path> idsToPaths;
-		std::unordered_map<std::string, ResourceHandle<Resource>> idsToHandles;
-		
-		std::unique_ptr<ResourceLoaderBase<Resource>> loader; // templated overload instead of base classes
-		mutable std::mutex mutex;
-	};
+	//	ResourceCache<Resource> cache;
+	//	//std::unordered_map<std::string, std::string> pathsToIds; // use ids to paths instead!
+	//	std::unordered_map<std::string, std::filesystem::path> idsToPaths;
+	//	std::unordered_map<std::string, ResourceHandle<Resource>> idsToHandles;
+	//	
+	//	// id to meta data? ResourceMetaData...
+
+	//	std::unique_ptr<ResourceLoaderBase<Resource>> loader; // templated overload instead of base classes
+	//	mutable std::mutex mutex;
+	//};
+
+	//using fs = std::filesystem; --> put in types.h or something...
 
 
-	//class Texture;
-	//class Audio;
-	
-	
-	//template <typename... Ts>
-	//class ResourceManager;
 
-	//using EngineResources = ResourceManager<Texture, Audio>; // put in own header file?
-
-	template <typename... Ts>
-	class ResourceManager final : public Subsystem
+	// use Tag as well?
+	template <typename T>
+	class ResourceManager final
 	{
 	public:
 		ResourceManager() = default;
 		~ResourceManager() = default;
 
 		// ==================== Setup ====================
+
 		template <typename Loader, typename... Args>
-		void registerLoader(Args&&... args);
+		void emplaceLoader(Args&&... args);
 
-		template <typename Resource>
-		void insertLoader(std::unique_ptr<ResourceLoaderBase<Resource>> loader);
+		void insertLoader(std::unique_ptr<ResourceLoaderBase<T>> loader);
 
-		template <typename Resource>
-		void insertPath(const std::string& id, const std::filesystem::path& path);
+		void insertPath(std::string id, std::filesystem::path path);
 
 		// ==================== Resource acquisition ====================
-		template <typename Resource>
-		[[nodiscard]] ResourceHandle<Resource> getHandle(const std::string& id);
+		[[nodiscard]] ResourceHandle<T> getHandle(const std::string& id);
 
-		template <typename Resource>
-		[[nodiscard]] ResourceHandle<Resource> preload(const std::filesystem::path& path);
+		[[nodiscard]] ResourceHandle<T> preload(const std::filesystem::path& path);
 
 		// ==================== Resource access ====================
-		template <typename Resource>
-		[[nodiscard]] const Resource& get(ResourceHandle<Resource> handle) const;
+		[[nodiscard]] const T& get(ResourceHandle<T> handle) const;
 
-		template <typename Resource>
-		[[nodiscard]] Resource& get(ResourceHandle<Resource> handle);
+		[[nodiscard]] T& get(ResourceHandle<T> handle);
 
-		template <typename Resource>
-		const Resource& operator[](ResourceHandle<Resource> handle) const;
+		const T& operator[](ResourceHandle<T> handle) const;
 
 		// ==================== Resource unloading / cleanup ====================
-		template <typename Resource>
-		void unload(ResourceHandle<Resource> handle);
+		void unload(const std::string& id);
 
-		template <typename Resource>
 		void unloadAll();
 
 		void clear();
-		
+
 		// ==================== Queries ====================
-		template <typename Resource>
-		[[nodiscard]] bool isLoaded(const std::filesystem::path& path) const;
+		[[nodiscard]] bool isLoaded(const std::filesystem::path& path) const; // accept id instead+
 
 	private:
 		// ==================== Helpers ====================
-		template <typename Resource>
-		const ResourceArchive<Resource>& getResourceArchive() const;
-		
-		template <typename Resource>
-		ResourceArchive<Resource>& getResourceArchive();
+		ResourceHandle<T> resolve(const std::filesystem::path& path);
 
-		template <typename Resource>
-		ResourceHandle<Resource> resolve(const std::filesystem::path& path);
+		// ==================== Data Members ====================
+		struct ResourceMetaData
+		{
+			ResourceHandle<T> handle;
+			std::filesystem::path path;
+		};
 
-		std::tuple<ResourceArchive<Ts>...> m_archives;
+		std::unordered_map<std::string, ResourceMetaData> m_idToMetaData;
+		std::unique_ptr<ResourceLoaderBase<T>> m_loader; // replace class with function ptr?
+		ResourceCache<T> m_cache;
+		mutable std::mutex m_mutex;
 	};
 
 #pragma region Methods
 
-	template <typename... Ts>
+	template <typename T>
 	template <typename Loader, typename... Args>
-	void ResourceManager<Ts...>::registerLoader(Args&&... args)
+	void ResourceManager<T>::emplaceLoader(Args&&... args)
 	{
-		auto& archive = getResourceArchive<typename Loader::ResourceType>();  // DONT WORK?!
-		archive.loader = std::make_unique<Loader>(std::forward<Args>(args)...);
+		m_loader = std::make_unique<Loader>(std::forward<Args>(args)...);
 	}
 
-	template <typename... Ts>
-	template <typename Resource>
-	void ResourceManager<Ts...>::insertLoader(std::unique_ptr<ResourceLoaderBase<Resource>> loader)
+	template <typename T>
+	void ResourceManager<T>::insertLoader(std::unique_ptr<ResourceLoaderBase<T>> loader)
 	{
-		auto& entry = getResourceArchive<Resource>();
-		entry.loader = std::move(loader);
+		m_loader = std::move(loader);
 	}
 
-	template <typename... Ts>
-	template <typename Resource>
-	void ResourceManager<Ts...>::insertPath(const std::string& id, const std::filesystem::path& path)
+	template <typename T>
+	void ResourceManager<T>::insertPath(std::string id, std::filesystem::path path)
 	{
-		auto& archive = getResourceArchive<Resource>();
-		archive.idsToPaths.insert({ id, path });
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	[[nodiscard]] ResourceHandle<Resource> ResourceManager<Ts...>::getHandle(const std::string& id)
-	{
-		auto& archive = getResourceArchive<Resource>();
-
-		// TODO; assert if filepath and not id...
-		assert(archive.idsToPaths.contains(id) && "ID not found among resource paths!");
-
-		return resolve<Resource>(archive.idsToPaths[id]);
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	[[nodiscard]] ResourceHandle<Resource> ResourceManager<Ts...>::preload(const std::filesystem::path& path)
-	{
-		return resolve<Resource>(path);
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	[[nodiscard]] const Resource& ResourceManager<Ts...>::get(ResourceHandle<Resource> handle) const
-	{
-		const auto& archive = getResourceArchive<Resource>();
-		return archive.cache.get(handle);
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	[[nodiscard]] Resource& ResourceManager<Ts...>::get(ResourceHandle<Resource> handle)
-	{
-		auto& archive = getResourceArchive<Resource>();
-		return archive.cache.get(handle);
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	const Resource& ResourceManager<Ts...>::operator[](ResourceHandle<Resource> handle) const
-	{
-		auto& archive = getResourceArchive<Resource>();
-		assert(archive.cache.isValidHandle(handle) && "ResourceManager::operator[] - not a valid handle");
-
-		return archive.cache.get(handle);
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	void ResourceManager<Ts...>::unload(ResourceHandle<Resource> handle)
-	{
-		auto& archive = getResourceArchive<Resource>();
-		
-		// TODO; how?
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	void ResourceManager<Ts...>::unloadAll()
-	{
-		auto& archive = getResourceArchive<Resource>();
-		archive.cache.clear();
-		archive.pathsToIds.clear();
-		archive.idsToHandles.clear();
-	}
-
-	template <typename... Ts>
-	void ResourceManager<Ts...>::clear()
-	{
-
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	[[nodiscard]] bool ResourceManager<Ts...>::isLoaded(const std::filesystem::path& path) const
-	{
-		auto& archive = getResourceArchive<Resource>();
-		
-		// TODO; maybe check if cache contains id as well? maybe path is not enough?
-
-		return archive.pathToIds.contains(path);
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	const ResourceArchive<Resource>& ResourceManager<Ts...>::getResourceArchive() const
-	{
-		return std::get<ResourceArchive<Resource>>(m_archives);
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	ResourceArchive<Resource>& ResourceManager<Ts...>::getResourceArchive()
-	{
-		return std::get<ResourceArchive<Resource>>(m_archives);
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	ResourceHandle<Resource> ResourceManager<Ts...>::resolve(const std::filesystem::path& path)
-	{
-		auto& archive = getResourceArchive<Resource>();
-
-		std::lock_guard<std::mutex> lock(archive.mutex);
-
-		const std::string identifier = extractResourceID(path);
-	
-		//const std::string identifier = path.filename().string(); 
-		const std::string keyPath = path.string();
-
-		if (auto it = archive.idsToHandles.find(identifier); it != archive.idsToHandles.end())
+		if (auto it = m_idToMetaData.find(id); it != m_idToMetaData.end())
 		{
-			auto handle = it->second;
+			it->second.path = std::move(path);
+			it->second.handle = ResourceHandle<T>::invalid(); // TODO: make sure it's an invalid handle!
+		}
+		else
+		{
+			m_idToMetaData.insert({ std::move(id), ResourceMetaData{ ResourceHandle<T>::invalid(), std::move(path) }}); // TODO; make sure works!
+		}
+	}
 
-			if (archive.cache.isValidHandle(handle))
-				return handle;
-			else
-			{
-				//archive.pathsToIds.erase(keyPath); erase ids to paths to?
-				archive.idsToHandles.erase(identifier);
-			}
+	template <typename T>
+	[[nodiscard]] ResourceHandle<T> ResourceManager<T>::getHandle(const std::string& id)
+	{
+		assert(m_idToMetaData.contains(id) && "Resource ID not found!");
+		assert(std::filesystem::exists(m_idToMetaData.at(id).path) && "Invalid resource path");
+
+		return resolve(m_idToMetaData[id].path);
+	}
+
+	template <typename T>
+	[[nodiscard]] ResourceHandle<T> ResourceManager<T>::preload(const std::filesystem::path& path)
+	{
+		return resolve(path);
+	}
+
+	template <typename T>
+	[[nodiscard]] const T& ResourceManager<T>::get(ResourceHandle<T> handle) const
+	{
+		// assert is valid handle?
+		return m_cache.get(handle);
+	}
+
+	template <typename T>
+	[[nodiscard]] T& ResourceManager<T>::get(ResourceHandle<T> handle)
+	{
+		return m_cache.get(handle);
+	}
+
+	template <typename T>
+	const T& ResourceManager<T>::operator[](ResourceHandle<T> handle) const
+	{
+		assert(m_cache.isValidHandle(handle) && "ResourceManager::operator[] - not a valid handle");
+		return m_cache.get(handle);
+	}
+
+	template <typename T>
+	void ResourceManager<T>::unload(const std::string& id)
+	{
+		if (auto it = m_idToMetaData.find(id); it != m_idToMetaData.end())
+		{
+			auto& handle = it->second.handle;
+			m_cache.remove(handle);
+
+			handle = ResourceHandle<T>::invalid();
 		}
 
-		std::unique_ptr<Resource> resource = archive.loader->load(path); // TODO; handle nullptr!
-		auto handle = archive.cache.insert(std::move(resource));
+		// TODO; else log error?
+	}
 
-		archive.idsToHandles.insert({ identifier, handle });
-		//archive.pathsToIds.insert({ keyPath, identifier });
+	template <typename T>
+	void ResourceManager<T>::unloadAll()
+	{
+		for (auto& [id, meta] : m_idToMetaData)
+		{
+			meta.handle = ResourceHandle<T>::invalid();
+		}
 
-		return handle;
+		m_cache.clear();
+	}
+
+	template <typename T>
+	void ResourceManager<T>::clear()
+	{
+		m_idToMetaData.clear();
+		m_loader = nullptr;
+		m_cache.clear();
+	}
+
+	template <typename T>
+	[[nodiscard]] bool ResourceManager<T>::isLoaded(const std::filesystem::path& path) const
+	{
+		// chekc id? path? cache?
+
+		return false;
+	}
+
+	template <typename T>
+	ResourceHandle<T> ResourceManager<T>::resolve(const std::filesystem::path& path)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+
+		const std::string id = extractResourceID(path);
+
+		// second lookup!? of meta data? - or fine?!
+		if (auto it = m_idToMetaData.find(id); it != m_idToMetaData.end())
+		{
+			auto handle = it->second.handle;
+
+			if (m_cache.isValidHandle(handle)) // why not just check handle itself? or both?
+				return handle;
+		}
+
+		if (std::unique_ptr<T> resource = m_loader->load(path))
+		{
+			auto handle = m_cache.insert(std::move(resource));
+			m_idToMetaData.insert_or_assign(id, ResourceMetaData{ handle, path });
+
+			return handle;
+		}
+
+		return ResourceHandle<T>::invalid();
 	}
 
 #pragma endregion
 } 
-
-
-
-/*
-#pragma once
-#include "engine/core/subsystem.h"
-#include "resource_handle.h" // Needed?
-#include "resource_loader.h"
-#include "resource_cache.hpp"
-
-#include <filesystem> // put in pch
-#include <memory>
-#include <optional>
-
-namespace cursed_engine
-{
-	// Remaeke ResourceManager? resource base class? store
-	// TODO; add normalize path?
-	// Document class does lazy loading!
-	// Redo with, "id generator" that returns index to each type...
-
-	class Audio
-	{
-	public:
-		struct Tag{};
-	};
-
-	//template <typename T>
-	//concept ResourceType = requires {
-	//	typename T::Tag;
-	//};
-
-	//template <ResourceType Resource>
-	template <typename Resource>
-	struct ResourceArchive
-	{
-		using Tag = typename Resource::Tag; // need to see resource::Tag...
-
-		ResourceArchive(std::unique_ptr<ResourceLoaderBase<Resource>> loader_ = nullptr)
-			: loader{ std::move(loader) }
-		{
-		}
-
-		ResourceCache<Resource, Tag> cache;
-		//std::unordered_map<std::string, std::string> pathsToIds; // use ids to paths instead!
-		std::unordered_map<std::string, std::filesystem::path> idsToPaths;
-		std::unordered_map<std::string, ResourceHandle<Tag>> idsToHandles;
-
-		std::unique_ptr<ResourceLoaderBase<Resource>> loader; // templated overload instead of base classes
-		mutable std::mutex mutex;
-	};
-
-
-	//class Texture;
-	//class Audio;
-	class Engine;
-
-	//template <typename... Ts>
-	//class ResourceManager;
-
-	//using EngineResources = ResourceManager<Texture, Audio>; // put in own header file?
-
-	template <typename... Ts>
-	class ResourceManager final : public Subsystem
-	{
-	public:
-		~ResourceManager() = default;
-
-		// ==================== Setup ====================
-		template <typename Loader, typename... Args>
-		void registerLoader(Args&&... args);
-
-		template <typename Resource>
-		void insertLoader(std::unique_ptr<ResourceLoaderBase<Resource>> loader);
-
-		template <typename Resource>
-		void insertPath(const std::filesystem::path& path, const std::string& id);
-
-		// ==================== Resource acquisition ====================
-		template <typename Resource>
-		[[nodiscard]] ResourceHandle<typename Resource::Tag> getHandle(const std::string& id);
-
-		template <typename Resource>
-		[[nodiscard]] ResourceHandle<typename Resource::Tag> preload(const std::filesystem::path& path);
-
-		// ==================== Resource access ====================
-		template <typename Resource>
-		[[nodiscard]] const Resource& get(ResourceHandle<typename Resource::Tag> handle) const;
-
-		template <typename Resource>
-		[[nodiscard]] Resource& get(ResourceHandle<typename Resource::Tag> handle);
-
-		template <typename Resource>
-		const Resource& operator[](ResourceHandle<typename Resource::Tag> handle) const;
-
-		// ==================== Resource unloading / cleanup ====================
-		template <typename Resource>
-		void unload(ResourceHandle<typename Resource::Tag> handle);
-
-		template <typename Resource>
-		void unloadAll();
-
-		void clear();
-
-		// ==================== Queries ====================
-		template <typename Resource>
-		[[nodiscard]] bool isLoaded(const std::filesystem::path& path) const;
-
-	private:
-		friend class Engine;
-
-		ResourceManager() = default;
-
-		// ==================== Helpers ====================
-		template <typename Resource>
-		const ResourceArchive<Resource>& getResourceArchive() const;
-
-		template <typename Resource>
-		ResourceArchive<Resource>& getResourceArchive();
-
-		template <typename Resource>
-		ResourceHandle<typename Resource::Tag> resolve(const std::filesystem::path& path);
-
-		std::tuple<ResourceArchive<Ts>...> m_archives;
-	};
-
-#pragma region Methods
-
-	template <typename... Ts>
-	template <typename Loader, typename... Args>
-	void ResourceManager<Ts...>::registerLoader(Args&&... args)
-	{
-		auto& entry = getResourceArchive<Loader::ResourceType>();
-		entry.loader = std::make_unique<Loader>(std::forward<Args>(args...));
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	void ResourceManager<Ts...>::insertLoader(std::unique_ptr<ResourceLoaderBase<Resource>> loader)
-	{
-		auto& entry = getResourceArchive<Resource>();
-		entry.loader = std::move(loader);
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	void ResourceManager<Ts...>::insertPath(const std::filesystem::path& path, const std::string& id)
-	{
-		auto& archive = getResourceArchive<Resource>();
-		archive.idsToPaths.insert(id, path);
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	[[nodiscard]] ResourceHandle<typename Resource::Tag> ResourceManager<Ts...>::getHandle(const std::string& id)
-	{
-		auto& archive = getResourceArchive<Resource>();
-		assert(archive.idsToPaths.contains(id) && "ID not found among resource paths!");
-
-		return resolve<Resource>(archive.idsToPaths[id]);
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	[[nodiscard]] ResourceHandle<typename Resource::Tag> ResourceManager<Ts...>::preload(const std::filesystem::path& path)
-	{
-		return resolve<Resource>(path);
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	[[nodiscard]] const Resource& ResourceManager<Ts...>::get(ResourceHandle<typename Resource::Tag> handle) const
-	{
-		const auto& archive = getResourceArchive<Resource>();
-		return archive.cache.get(handle);
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	[[nodiscard]] Resource& ResourceManager<Ts...>::get(ResourceHandle<typename Resource::Tag> handle)
-	{
-		auto& archive = getResourceArchive<Resource>();
-		return archive.cache.get(handle);
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	const Resource& ResourceManager<Ts...>::operator[](ResourceHandle<typename Resource::Tag> handle) const
-	{
-		auto& archive = getResourceArchive<Resource>();
-		assert(archive.cache.isValidHandle(handle) && "ResourceManager::operator[] - not a valid handle");
-
-		return archive.cache.get(handle);
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	void ResourceManager<Ts...>::unload(ResourceHandle<typename Resource::Tag> handle)
-	{
-		auto& archive = getResourceArchive<Resource>();
-
-		// TODO; how?
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	void ResourceManager<Ts...>::unloadAll()
-	{
-		auto& archive = getResourceArchive<Resource>();
-		archive.cache.clear();
-		archive.pathsToIds.clear();
-		archive.idsToHandles.clear();
-	}
-
-	template <typename... Ts>
-	void ResourceManager<Ts...>::clear()
-	{
-
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	[[nodiscard]] bool ResourceManager<Ts...>::isLoaded(const std::filesystem::path& path) const
-	{
-		auto& archive = getResourceArchive<Resource>();
-
-		// TODO; maybe check if cache contains id as well? maybe path is not enough?
-
-		return archive.pathToIds.contains(path);
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	const ResourceArchive<Resource>& ResourceManager<Ts...>::getResourceArchive() const
-	{
-		return std::get<ResourceArchive<Resource>>(m_archives);
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	ResourceArchive<Resource>& ResourceManager<Ts...>::getResourceArchive()
-	{
-		return std::get<ResourceArchive<Resource>>(m_archives);
-	}
-
-	template <typename... Ts>
-	template <typename Resource>
-	ResourceHandle<typename Resource::Tag> ResourceManager<Ts...>::resolve(const std::filesystem::path& path)
-	{
-		auto& archive = getResourceArchive<Resource>();
-
-		std::lock_guard<std::mutex> lock(archive.mutex);
-
-		const std::string identifier = path.filename().string();
-		const std::string keyPath = path.string();
-
-		if (auto it = archive.idsToHandles.find(identifier); it != archive.idsToHandles.end())
-		{
-			auto handle = it->second;
-
-			if (archive.cache.isHandleValid(handle))
-				return handle;
-			else
-			{
-				//archive.pathsToIds.erase(keyPath); erase ids to paths to?
-				archive.idsToHandles.erase(identifier);
-			}
-		}
-
-		std::unique_ptr<Resource> resource = archive.loader.load(path);
-		auto handle = archive.cache.insert(std::move(resource));
-
-		archive.idsToHandles.insert({ identifier, handle });
-		//archive.pathsToIds.insert({ keyPath, identifier });
-
-		return handle;
-	}
-
-#pragma endregion
-}
-*/

@@ -4,6 +4,7 @@
 #include <mutex>
 #include <cassert>
 #include <filesystem>
+#include <numeric>
 
 namespace cursed_engine
 {
@@ -17,7 +18,7 @@ namespace cursed_engine
 	};
 
 	// Should, or shouldn't accept Tag 
-	template <typename Resource>
+	template <typename Resource, std::size_t size = 1024>
 	class ResourceCache
 	{
 	public:
@@ -36,7 +37,9 @@ namespace cursed_engine
 
 		[[nodiscard]] bool isValidHandle(ResourceHandle<Resource> handle) const noexcept;
 		
-		void clear();
+		void remove(ResourceHandle<Resource> handle);
+
+		void clear(); // or reset?
 
 	private:
 		[[nodiscard]] bool isValidIndex(uint32_t index) const noexcept;
@@ -45,17 +48,22 @@ namespace cursed_engine
 		{
 			std::unique_ptr<Resource> resource = nullptr;
 			uint32_t version = 0;
+
+			// automatic cleanup: bool?
+			// store last frame used? or reference count? or refreence count in metadata?
 		};
 
 		std::vector<Slot> m_slots;
+		std::vector<std::size_t> m_freeSlots;
+
 		mutable std::mutex m_mutex;
 	};
 
 #pragma region Methods
 
-	template <typename Resource>
+	template <typename Resource, std::size_t size>
 	template <typename... Args>
-	ResourceHandle<Resource> ResourceCache<Resource>::emplace(Args&&... args)
+	ResourceHandle<Resource> ResourceCache<Resource, size>::emplace(Args&&... args)
 	{
 		// TODO; redundant function (remove)?
 		std::lock_guard<std::mutex> lock(m_mutex);
@@ -64,8 +72,8 @@ namespace cursed_engine
 		return ResourceHandle<Resource>{ m_slots.size() - 1, 0 };
 	}
 	
-	template <typename Resource>
-	ResourceHandle<Resource> ResourceCache<Resource>::insert(std::unique_ptr<Resource> resource)
+	template <typename Resource, std::size_t size>
+	ResourceHandle<Resource> ResourceCache<Resource, size>::insert(std::unique_ptr<Resource> resource)
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -73,8 +81,8 @@ namespace cursed_engine
 		return ResourceHandle<Resource>{ (uint32_t)m_slots.size() - 1, 0 };
 	}
 
-	template <typename Resource>
-	const Resource& ResourceCache<Resource>::get(ResourceHandle<Resource> handle) const
+	template <typename Resource, std::size_t size>
+	const Resource& ResourceCache<Resource, size>::get(ResourceHandle<Resource> handle) const
 	{
 		assert(isValidHandle(handle) && "ResourceCache::get - Invalid handle!"); // Redudnant? since manager is already checking!
 
@@ -84,28 +92,28 @@ namespace cursed_engine
 		return *slot.resource;
 	}
 
-	template <typename Resource>
-	Resource& ResourceCache<Resource>::get(ResourceHandle<Resource> handle)
+	template <typename Resource, std::size_t size>
+	Resource& ResourceCache<Resource, size>::get(ResourceHandle<Resource> handle)
 	{
 		return const_cast<Resource&>(std::as_const(*this).get(handle));
 	}
 
-	template <typename Resource>
-	const Resource* ResourceCache<Resource>::tryGet(ResourceHandle<Resource> handle) const
+	template <typename Resource, std::size_t size>
+	const Resource* ResourceCache<Resource, size>::tryGet(ResourceHandle<Resource> handle) const
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 
 		return isValidHandle(handle) ? m_slots.at(handle.index).resource.get() : nullptr;
 	}
 
-	template <typename Resource>
-	Resource* ResourceCache<Resource>::tryGet(ResourceHandle<Resource> handle)
+	template <typename Resource, std::size_t size>
+	Resource* ResourceCache<Resource, size>::tryGet(ResourceHandle<Resource> handle)
 	{
 		return const_cast<Resource*>(std::as_const(*this).tryGet(handle));
 	}
 
-	template <typename Resource>
-	bool ResourceCache<Resource>::isValidHandle(ResourceHandle<Resource> handle) const noexcept
+	template <typename Resource, std::size_t size>
+	bool ResourceCache<Resource, size>::isValidHandle(ResourceHandle<Resource> handle) const noexcept
 	{
 		// mutex here (checking slots)
 		return isValidIndex(handle.index) && (m_slots[handle.index].version == handle.version);
@@ -113,16 +121,32 @@ namespace cursed_engine
 		return false;
 	}
 
-	template <typename Resource>
-	void ResourceCache<Resource>::clear()
+	template <typename Resource, std::size_t size>
+	void ResourceCache<Resource, size>::remove(ResourceHandle<Resource> handle)
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		
+		assert(false && "Not implemented");
+	}
+
+	template <typename Resource, std::size_t size>
+	void ResourceCache<Resource, size>::clear()
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 
 		m_slots.clear();
+		m_freeSlots.clear();
+
+		// Put in own function?
+		m_freeSlots.resize(size);
+		std::iota(m_freeSlots.begin(), m_freeSlots.end(), 0);
+
+		// fill freeSlots with incremented number? (reveresed)... 
+		// put free indixes into m_freeSlots...
 	}
 
-	template <typename Resource>
-	bool ResourceCache<Resource>::isValidIndex(uint32_t index) const noexcept
+	template <typename Resource, std::size_t size>
+	bool ResourceCache<Resource, size>::isValidIndex(uint32_t index) const noexcept
 	{
 		return index >= 0 && index < m_slots.size();
 	}

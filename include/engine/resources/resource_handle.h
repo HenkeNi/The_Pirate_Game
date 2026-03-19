@@ -6,10 +6,17 @@ namespace cursed_engine
 	template <typename Tag>
 	struct ResourceHandle
 	{
+		// TODO, add constexpr constructor
+
 		uint32_t index;
 		uint32_t version = 0;
 
-		// TODO; add a isValid function that checks if index (or id) is numeric limits?
+		static constexpr ResourceHandle invalid()
+		{
+			return ResourceHandle(std::numeric_limits<uint32_t>::max(), 0);
+		}
+
+		//static const ResourceHandle invalid;
 
 		bool isValid() const
 		{
@@ -21,6 +28,12 @@ namespace cursed_engine
 			return index == other.index && version == other.version;
 		}
 	};
+
+	//template <typename Tag>
+	//const ResourceHandle<Tag> ResourceHandle<Tag>::invalid{ -1, 0 };
+
+	//template <typename Tag> 
+	//constexpr ResourceHandle<Tag> INVALID_RESOURCE_HANDLE{ -1, 0 }; // or static function?
 
 	//struct TextureTag {};
 	//struct AudioTag {};
