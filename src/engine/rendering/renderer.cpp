@@ -124,4 +124,10 @@ namespace cursed_engine
 		SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a); // TODO; reset color before rendering textures
 		SDL_RenderLine(m_renderer, startX, startY, endX, endY);
 	}
+
+	void Renderer::renderDebugText(float x, float y, const char* str)
+	{
+		SDL_SetRenderDrawColor(m_renderer, Color::white.r, Color::white.g, Color::white.b, Color::white.a);
+		SDL_RenderDebugText(m_renderer, x, y, str);
+	}
 }

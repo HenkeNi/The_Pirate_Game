@@ -38,6 +38,7 @@ namespace cursed_engine
 	inline const Color Color::orange{ 255, 208, 160, 255 };
 	inline const Color Color::brown{ 160, 128, 96, 255 };
 
+	// add constexpr constructor?
 	// TODO; put in math?
 	struct Rect
 	{

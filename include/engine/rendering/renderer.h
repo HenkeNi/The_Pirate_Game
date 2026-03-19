@@ -51,6 +51,8 @@ namespace cursed_engine
 		void renderLine(FVec2 start, FVec2 end, Color color = Color::black);
 		void renderLine(float startX, float startY, float endX, float endY, Color color = Color::black); // replace with Line struct?
 
+		void renderDebugText(float x, float y, const char* str);
+
 		[[nodiscard]] inline SDL_Renderer* getRenderer() noexcept { return m_renderer; }
 
 	private:
