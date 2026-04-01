@@ -53,7 +53,9 @@
           "height": 50
         },
         "text": {
-          "id": "title_text"
+          "text_id": "title_text",
+          "font": "JackPirate_PERSONAL_USE_ONLY",
+          "size": 15
         }
       }
     }
