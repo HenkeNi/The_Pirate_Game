@@ -18,19 +18,8 @@ namespace cursed_engine
 	{
 	}
 
-	std::unique_ptr<Texture> TextureLoader::load(const std::filesystem::path& path) const
+	std::unique_ptr<Texture> TextureLoader::load(const std::filesystem::path& path, const TextureKey& key) const
 	{
-		/*if (path.extension() == ".ttf")
-		{
-			int x = 20;
-		}
-		else if (path.extension() == ".jpeg")
-		{
-			int x = 20;
-		}*/
-
-		// TODO: "delegate" to seprate functions for text and textures?
-
 		if (!std::filesystem::exists(path))
 		{
 			Logger::logError("Failed to load texture, invalid path: " + path.string());
@@ -59,17 +48,14 @@ namespace cursed_engine
 		return std::make_unique<Texture>(texture);
 	}
 
-	std::unique_ptr<Texture> TextureLoader::loadTexture(const std::filesystem::path& path) const
+	/*std::future<std::unique_ptr<Texture>> TextureLoader::loadAsync(const std::filesystem::path& path) const
 	{
-		return std::unique_ptr<Texture>();
-	}
+		auto future = std::async(std::launch::async, &TextureLoader::loadTexture, path);
 
-	std::unique_ptr<Texture> TextureLoader::loadText(const std::filesystem::path& path) const
-	{
-		return std::unique_ptr<Texture>();
-	}
+		return std::future<std::unique_ptr<Texture>>();
+	}*/
 
-	std::unique_ptr<Audio> AudioLoader::load(const std::filesystem::path& path) const
+	std::unique_ptr<Audio> AudioLoader::load(const std::filesystem::path& path, const AudioKey& key) const
 	{
 		if (!std::filesystem::exists(path))
 		{
@@ -102,7 +88,7 @@ namespace cursed_engine
 		return std::make_unique<Audio>(stream, audioBuffer, audioLength);
 	}
 
-	std::unique_ptr<Font> FontLoader::load(const std::filesystem::path& path) const
+	std::unique_ptr<Font> FontLoader::load(const std::filesystem::path& path, const FontKey& key) const
 	{
 		if (!std::filesystem::exists(path))
 		{
@@ -126,6 +112,6 @@ namespace cursed_engine
 		//	return nullptr;
 		//}
 
-		return std::make_unique<Font>(font);
+		return std::make_unique<Font>(font, 28);
 	}
 }

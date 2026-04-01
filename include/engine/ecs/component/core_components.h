@@ -3,6 +3,7 @@
 #include "engine/assets/asset_types.h"
 #include "engine/assets/asset_manager.h" // TODO; put in asset handle file instead?
 #include "engine/rendering/animation_types.h"
+#include "engine/rendering/render_types.h"
 #include <unordered_map>
 #include <array>
 
@@ -120,8 +121,8 @@ namespace cursed_engine
 
 	struct TextComponent 
 	{
-		TextComponent(std::string id)
-			: textID{ std::move(id) }
+		TextComponent(std::string id, ResourceHandle<Font> fontHandle)
+			: textID{ std::move(id) }, fontHandle{ fontHandle }
 		{
 		}
 
@@ -130,7 +131,9 @@ namespace cursed_engine
 		std::string text = "";
 		ResourceHandle<Texture> textureHandle; // Test...
 		ResourceHandle<Font> fontHandle;
-		bool isDirty = false;
+		Color color = Color::black;
+		int fontSize = 12;
+		bool isDirty = true; // false;
 
 		// could store a Texture here.... 
 	};

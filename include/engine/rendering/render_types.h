@@ -1,4 +1,5 @@
 #pragma once
+#include "engine/math/vec2.h"
 #include <cstdint>
 
 namespace cursed_engine
@@ -6,10 +7,23 @@ namespace cursed_engine
 
 	struct Color
 	{
-		/*Color(uint8_t r_, uint8_t g_, uint8_t b_, uint8_t a_)
-			: r{ r_ }, g{ g_ }, b{ b_ }, a{ a_ }
+		constexpr Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255)
+			: r{ r }, g{ g }, b{ b }, a{ a }
 		{
-		}*/
+		}
+
+		bool operator==(const Color& other) const
+		{
+			return r == other.r 
+				&& g == other.g 
+				&& b == other.b 
+				&& a == other.a;
+		}
+
+		bool operator!=(const Color& other) const
+		{
+			return !(*this == other);
+		}
 
 		uint8_t r, g, b, a;
 		 

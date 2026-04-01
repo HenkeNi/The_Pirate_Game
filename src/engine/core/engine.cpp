@@ -75,6 +75,8 @@ namespace cursed_engine
 		std::filesystem::path assetRoot;
 		Application& application;
 
+
+		uint64_t currentFrame = 0;
 		// store an ECSContext here?
 
 		//EntityFactory entityFactory; // dont store instnace? let game use if needed?
@@ -131,9 +133,11 @@ namespace cursed_engine
 		auto& audioController = subsystemRegistry.add<AudioController>();
 		audioController.init();
 
-		auto& engineResources = subsystemRegistry.add<EngineResources>();
+		auto& engineResources = subsystemRegistry.add<EngineResources>(renderer);
 		engineResources.textureManager.emplaceLoader<TextureLoader>(renderer);
 		engineResources.audioManager.emplaceLoader<AudioLoader>();
+		engineResources.fontManager.emplaceLoader<FontLoader>();
+		//engineResources.textManager.emplaceLoader(renderer);
 
 		subsystemRegistry.add<Physics>();
 		//subsystemRegistry.add<ECSRegistry>();
@@ -198,6 +202,8 @@ namespace cursed_engine
 
 		while (running)
 		{
+			++m_impl->currentFrame;
+
 			Uint64 start = SDL_GetPerformanceCounter();
 
 			auto& timer = m_impl->timer;
@@ -309,7 +315,8 @@ namespace cursed_engine
 			}
 			else if (filename.ends_with(".png") || filename.ends_with(".bmp") || filename.ends_with(".jpeg")) // TODO; function? isValidTextureFormat
 			{
-				engineResources.textureManager.insertPath(path.filename().stem().string(), path);
+				auto id = extractResourceID(path);
+				engineResources.textureManager.insertPath(TextureKey{ std::move(id) }, path); // move here?
 			}
 		}
 
@@ -323,7 +330,8 @@ namespace cursed_engine
 
 			if (filename.ends_with(".wav")) // TODO; or check if file.extension() == ???
 			{
-				engineResources.audioManager.insertPath(path.filename().stem().string(), path); // TODO; utiltyFunction getStem()?
+				auto id = extractResourceID(path);
+				engineResources.audioManager.insertPath(AudioKey{ std::move(id) }, path); // TODO; utiltyFunction getStem()?
 			}
 		}
 
@@ -339,6 +347,11 @@ namespace cursed_engine
 
 			if (filename.ends_with(".ttf"))
 			{
+				auto id = extractResourceID(path);
+
+				// TODO; get "accepted" font sizes from json
+
+				engineResources.fontManager.insertPath(FontKey{ id, 20 }, path);
 				//engineResources.insertPath<Font>(path.filename().stem().string(), path); // auto generate id?
 			}
 		}
@@ -390,6 +403,7 @@ namespace cursed_engine
 			{
 				std::string id = value["id"].asString();
 
+				// [[consider]] if better to store only id at this point, and not reference any manager?
 				const auto atlasHandle = assetManager.getAssetHandle<TextureAtlas>(id); // pass in id?
 				AtlasRegion region; // TODO; fix!
 				region.x = 0;
@@ -463,14 +477,22 @@ namespace cursed_engine
 				//std::string id; // no way of knowing the id...
 
 
-				auto id = value["id"].asString();
+				auto id = value["text_id"].asString();
 
+				std::string fontType = value["font"].asString();
+
+				// maybe just store id?
+				auto fontHandle = engineResources.fontManager.getHandle({ fontType, 20 });
 				//localization.getText(id);
 				
+				if (!fontHandle.isValid())
+				{
+					int x = 20;
+				}
 				
 				//auto handle = engineResources.getHandle<Texture>(id);
 
-				handle.attachComponent<TextComponent>(id);
+				handle.attachComponent<TextComponent>(id, fontHandle);
 
 				// store lockup table id to text (and perhaps text to id)
 
@@ -487,6 +509,6 @@ namespace cursed_engine
 		//systemManager.emplace<InputSystem>(inputHandler);
 		systemManager.emplace<InteractionSystem>();
 		systemManager.emplace<UISystem>(inputHandler, eventBus);
-		systemManager.emplace<TextSystem>(resources, localization);
+		systemManager.emplace<TextSystem>(resources.textManager, localization);
 	}
 }

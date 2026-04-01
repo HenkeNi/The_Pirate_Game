@@ -10,7 +10,7 @@ namespace cursed_engine
 	struct Vec2
 	{
 		constexpr Vec2() = default;
-		constexpr Vec2(T x_, T y_) : x{ x_ }, y{ y_ } {}
+		constexpr Vec2(T x, T y) : x{ x }, y{ y } {}
 
 		T distanceTo(const Vec2& other) const noexcept;
 

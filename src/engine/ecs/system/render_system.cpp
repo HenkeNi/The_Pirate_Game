@@ -28,7 +28,7 @@ namespace cursed_engine
 
 				const auto& textureAtlas = m_assetManager.getAsset<TextureAtlas>(spriteComponent.atlasHandle); // no asset stored AND invalid index!
 
-				const auto& textureHandle = textureManager.getHandle(textureAtlas.textureID);
+				const auto& textureHandle = textureManager.getHandle(TextureKey{ textureAtlas.textureID });
 				auto& texture = textureManager.get(textureHandle);
 
 				// TODO; handle invalid/not loaded texture!
@@ -47,12 +47,14 @@ namespace cursed_engine
 
 #endif
 
-		auto textureHandleTest = textureManager.getHandle("test3"); // pass in "coordinates"? or do that in texture?
+		auto textureHandleTest = textureManager.getHandle(TextureKey{ "test3" }); // pass in "coordinates"? or do that in texture?
 		auto& testTexture = textureManager.get(textureHandleTest);
 
 		m_renderer.renderTexture(10, 10, 10, 10, testTexture);
 		m_renderer.renderLine(0, 0, 100, 100, Color{ 123, 21, 32, 255 });
 
+
+		renderText(registry);
 		//m_renderer.present(); // Here or in main loop?
 
 		//renderText(registry); -> maybe not needed? text uses textuers...
@@ -63,16 +65,32 @@ namespace cursed_engine
 		auto view = registry.view<TransformComponent, TextComponent>();
 		
 		// TODO; check if possible to have one argument const ref and one argument just ref...
-		view.forEach([](const TransformComponent& transformComponent, TextComponent& textComponent)
+		view.forEach([&](const TransformComponent& transformComponent, TextComponent& textComponent)
 			{
-				// here or in text system?
-				if (textComponent.isDirty)
+				auto textureHandle = textComponent.textureHandle;
+				
+				if (!textureHandle.isValid())
 				{
-					// regenerateTexture...
-					int y = 20;
+					// log warning/error?
+					return;
 				}
 
-				int x = 20;
+				auto& texture = m_engineResources.textureManager.get(textureHandle);
+
+				const auto& position = transformComponent.position;
+				const auto& size = transformComponent.scale; // this?
+
+				m_renderer.renderTexture(position, size, texture);
+				//m_renderer.renderTexture(position, 300.f, 100.f, texture);
+
+				// here or in text system?
+				//if (textComponent.isDirty)
+				//{
+				//	// regenerateTexture...
+				//	int y = 20;
+				//}
+
+				// int x = 20;
 			});
 	}
 

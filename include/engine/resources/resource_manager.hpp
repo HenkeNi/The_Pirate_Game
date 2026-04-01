@@ -1,5 +1,6 @@
 #pragma once
 #include "engine/core/subsystem.h"
+#include "engine/core/logger.h"
 #include "resource_handle.h" // Needed?
 #include "resource_loader.h"
 #include "resource_cache.hpp"
@@ -8,6 +9,7 @@
 
 #include <algorithm>
 #include <filesystem> // put in pch
+#include <functional>
 #include <memory>
 #include <optional>
 
@@ -15,40 +17,24 @@
 
 namespace cursed_engine
 {
-	// TODO; make sure to increment version!
+	template <typename T>
+	struct ResourceKey // "overload"?
+	{
+	};
 
-	// Remaeke ResourceManager? resource base class? store 
+	// TODO; make sure to increment (handle) version! 
 	// TODO; add normalize path?
-	// Document class does lazy loading!
+	// TODO; add 'using fs = std::filesystem;' --> put in types.h or something...
+	// Rename; ResourceStore? ResourceHandler?
+
+	// Add documentation; class does lazy loading!
 	// Redo with, "id generator" that returns index to each type...
 
 
-	//template <ResourceType Resource>
-	//template <typename Resource>
-	//struct ResourceArchive
-	//{
-	//	ResourceArchive(std::unique_ptr<ResourceLoaderBase<Resource>> loader_ = nullptr)
-	//		: loader{ std::move(loader) }
-	//	{
-	//	}
-
-	//	ResourceCache<Resource> cache;
-	//	//std::unordered_map<std::string, std::string> pathsToIds; // use ids to paths instead!
-	//	std::unordered_map<std::string, std::filesystem::path> idsToPaths;
-	//	std::unordered_map<std::string, ResourceHandle<Resource>> idsToHandles;
-	//	
-	//	// id to meta data? ResourceMetaData...
-
-	//	std::unique_ptr<ResourceLoaderBase<Resource>> loader; // templated overload instead of base classes
-	//	mutable std::mutex mutex;
-	//};
-
-	//using fs = std::filesystem; --> put in types.h or something...
-
-
-
-	// use Tag as well?
-	template <typename T>
+	// Instead of "key" use "Params"?
+	// use Tag as well? 
+	// assert key contains path?
+	template <typename Resource, typename Key, typename Hasher>
 	class ResourceManager final
 	{
 	public:
@@ -60,180 +46,245 @@ namespace cursed_engine
 		template <typename Loader, typename... Args>
 		void emplaceLoader(Args&&... args);
 
-		void insertLoader(std::unique_ptr<ResourceLoaderBase<T>> loader);
+		void insertLoader(std::unique_ptr<ResourceLoader<Resource, Key>> loader);
 
-		void insertPath(std::string id, std::filesystem::path path);
+		void insertPath(Key key, std::filesystem::path path);
+
+		ResourceHandle<Resource> insertResource(Key key, std::unique_ptr<Resource> resource);
 
 		// ==================== Resource acquisition ====================
-		[[nodiscard]] ResourceHandle<T> getHandle(const std::string& id);
+		[[nodiscard]] ResourceHandle<Resource> getHandle(const Key& key); // Rename acquire?
 
-		[[nodiscard]] ResourceHandle<T> preload(const std::filesystem::path& path);
+		[[nodiscard]] ResourceHandle<Resource> preload(const Key& key);
 
 		// ==================== Resource access ====================
-		[[nodiscard]] const T& get(ResourceHandle<T> handle) const;
+		[[nodiscard]] const Resource& get(ResourceHandle<Resource> handle) const; // rename resolve?
 
-		[[nodiscard]] T& get(ResourceHandle<T> handle);
+		[[nodiscard]] Resource& get(ResourceHandle<Resource> handle);
 
-		const T& operator[](ResourceHandle<T> handle) const;
+		const Resource& operator[](ResourceHandle<Resource> handle) const; // add non const version?
 
 		// ==================== Resource unloading / cleanup ====================
-		void unload(const std::string& id);
+		void unload(const Key& key);
 
 		void unloadAll();
 
 		void clear();
 
 		// ==================== Queries ====================
-		[[nodiscard]] bool isLoaded(const std::filesystem::path& path) const; // accept id instead+
+		[[nodiscard]] bool isLoaded(const Key& key) const;
+
+		[[nodiscard]] bool isValidHandle(ResourceHandle<Resource> handle) const noexcept;
 
 	private:
 		// ==================== Helpers ====================
-		ResourceHandle<T> resolve(const std::filesystem::path& path);
+		ResourceHandle<Resource> resolve(const Key& key);
 
 		// ==================== Data Members ====================
 		struct ResourceMetaData
 		{
-			ResourceHandle<T> handle;
+			ResourceHandle<Resource> handle;
 			std::filesystem::path path;
 		};
 
-		std::unordered_map<std::string, ResourceMetaData> m_idToMetaData;
-		std::unique_ptr<ResourceLoaderBase<T>> m_loader; // replace class with function ptr?
-		ResourceCache<T> m_cache;
-		mutable std::mutex m_mutex;
+		std::unordered_map<Key, ResourceMetaData, Hasher> m_keyToMetaData; // or map id to key with path?
+		//std::unordered_map<std::string, ResourceMetaData> m_idToMetaData;
+		std::unique_ptr<ResourceLoader<Resource, Key>> m_loader; // replace with function ptr?!
+		//std::function<std::unique_ptr<Resource>(const std::filesystem::path& path, const Key& key)> m_loader;
+		ResourceCache<Resource> m_cache;
+		mutable std::mutex m_mutex; // TODO; use!
 	};
 
 #pragma region Methods
 
-	template <typename T>
+	template <typename Resource, typename Key, typename Hasher>
 	template <typename Loader, typename... Args>
-	void ResourceManager<T>::emplaceLoader(Args&&... args)
+	void ResourceManager<Resource, Key, Hasher>::emplaceLoader(Args&&... args)
 	{
 		m_loader = std::make_unique<Loader>(std::forward<Args>(args)...);
 	}
 
-	template <typename T>
-	void ResourceManager<T>::insertLoader(std::unique_ptr<ResourceLoaderBase<T>> loader)
+	template <typename Resource, typename Key, typename Hasher>
+	void ResourceManager<Resource, Key, Hasher>::insertLoader(std::unique_ptr<ResourceLoader<Resource, Key>> loader)
 	{
 		m_loader = std::move(loader);
 	}
 
-	template <typename T>
-	void ResourceManager<T>::insertPath(std::string id, std::filesystem::path path)
+	template <typename Resource, typename Key, typename Hasher>
+	void ResourceManager<Resource, Key, Hasher>::insertPath(Key key, std::filesystem::path path)
 	{
-		if (auto it = m_idToMetaData.find(id); it != m_idToMetaData.end())
+		if (auto it = m_keyToMetaData.find(key); it != m_keyToMetaData.end())
 		{
 			it->second.path = std::move(path);
-			it->second.handle = ResourceHandle<T>::invalid(); // TODO: make sure it's an invalid handle!
+			it->second.handle = ResourceHandle<Resource>::invalid(); // TODO: make sure it's an invalid handle!
 		}
 		else
 		{
-			m_idToMetaData.insert({ std::move(id), ResourceMetaData{ ResourceHandle<T>::invalid(), std::move(path) }}); // TODO; make sure works!
+			m_keyToMetaData.insert({ std::move(key), ResourceMetaData{ ResourceHandle<Resource>::invalid(), std::move(path) }}); // TODO; make sure works!
 		}
 	}
+	
+	template <typename Resource, typename Key, typename Hasher>
+	ResourceHandle<Resource> ResourceManager<Resource, Key, Hasher>::insertResource(Key key, std::unique_ptr<Resource> resource)
+	{
+		if (m_keyToMetaData.contains(key))
+		{
+			Logger::logWarning("[ResourceManager::insertResource] - overwriting existing resource!");
+			return ResourceHandle<Resource>::invalid();
+		}
 
-	template <typename T>
-	[[nodiscard]] ResourceHandle<T> ResourceManager<T>::getHandle(const std::string& id)
+		auto handle = m_cache.insert(std::move(resource));
+		m_keyToMetaData.insert({ std::move(key), ResourceMetaData{ handle, "" } });
+	
+		return handle;
+	}
+	
+	template <typename Resource, typename Key, typename Hasher>
+	ResourceHandle<Resource> ResourceManager<Resource, Key, Hasher>::getHandle(const Key& key) // overload with vardiac template
+	{
+		assert(m_keyToMetaData.contains(key) && "Key not found!");
+
+		// add key if not in map...
+
+		return resolve(key); // or pass key?
+		//return resolve(m_keyToMetaData[key]); // or pass key?
+	}
+	
+	/*template <typename Resource, typename Key, typename Hasher>
+	[[nodiscard]] ResourceHandle<Resource> ResourceManager<Resource, Key, Hasher>::getHandle(const std::string& id)
 	{
 		assert(m_idToMetaData.contains(id) && "Resource ID not found!");
 		assert(std::filesystem::exists(m_idToMetaData.at(id).path) && "Invalid resource path");
 
 		return resolve(m_idToMetaData[id].path);
-	}
+	}*/
 
-	template <typename T>
-	[[nodiscard]] ResourceHandle<T> ResourceManager<T>::preload(const std::filesystem::path& path)
+	template <typename Resource, typename Key, typename Hasher>
+	ResourceHandle<Resource> ResourceManager<Resource, Key, Hasher>::preload(const Key& key)
 	{
-		return resolve(path);
+		return resolve(key);
 	}
 
-	template <typename T>
-	[[nodiscard]] const T& ResourceManager<T>::get(ResourceHandle<T> handle) const
+	template <typename Resource, typename Key, typename Hasher>
+	const Resource& ResourceManager<Resource, Key, Hasher>::get(ResourceHandle<Resource> handle) const
 	{
 		// assert is valid handle?
 		return m_cache.get(handle);
 	}
 
-	template <typename T>
-	[[nodiscard]] T& ResourceManager<T>::get(ResourceHandle<T> handle)
+	template <typename Resource, typename Key, typename Hasher>
+	Resource& ResourceManager<Resource, Key, Hasher>::get(ResourceHandle<Resource> handle)
 	{
 		return m_cache.get(handle);
 	}
 
-	template <typename T>
-	const T& ResourceManager<T>::operator[](ResourceHandle<T> handle) const
+	template <typename Resource, typename Key, typename Hasher>
+	const Resource& ResourceManager<Resource, Key, Hasher>::operator[](ResourceHandle<Resource> handle) const
 	{
 		assert(m_cache.isValidHandle(handle) && "ResourceManager::operator[] - not a valid handle");
 		return m_cache.get(handle);
 	}
 
-	template <typename T>
-	void ResourceManager<T>::unload(const std::string& id)
+	template <typename Resource, typename Key, typename Hasher>
+	void ResourceManager<Resource, Key, Hasher>::unload(const Key& key)
 	{
-		if (auto it = m_idToMetaData.find(id); it != m_idToMetaData.end())
+		if (auto it = m_keyToMetaData.find(key); it != m_keyToMetaData.end())
 		{
 			auto& handle = it->second.handle;
 			m_cache.remove(handle);
 
-			handle = ResourceHandle<T>::invalid();
+			handle = ResourceHandle<Resource>::invalid();
 		}
 
 		// TODO; else log error?
 	}
 
-	template <typename T>
-	void ResourceManager<T>::unloadAll()
+	template <typename Resource, typename Key, typename Hasher>
+	void ResourceManager<Resource, Key, Hasher>::unloadAll()
 	{
-		for (auto& [id, meta] : m_idToMetaData)
+		for (auto& [key, meta] : m_keyToMetaData)
 		{
-			meta.handle = ResourceHandle<T>::invalid();
+			meta.handle = ResourceHandle<Resource>::invalid();
 		}
 
 		m_cache.clear();
 	}
 
-	template <typename T>
-	void ResourceManager<T>::clear()
+	template <typename Resource, typename Key, typename Hasher>
+	void ResourceManager<Resource, Key, Hasher>::clear()
 	{
-		m_idToMetaData.clear();
+		m_keyToMetaData.clear();
 		m_loader = nullptr;
 		m_cache.clear();
 	}
 
-	template <typename T>
-	[[nodiscard]] bool ResourceManager<T>::isLoaded(const std::filesystem::path& path) const
+	template <typename Resource, typename Key, typename Hasher>
+	bool ResourceManager<Resource, Key, Hasher>::isLoaded(const Key& key) const
 	{
-		// chekc id? path? cache?
-
-		return false;
+		return m_keyToMetaData.contains(key);
 	}
 
-	template <typename T>
-	ResourceHandle<T> ResourceManager<T>::resolve(const std::filesystem::path& path)
+	template <typename Resource, typename Key, typename Hasher>
+	bool ResourceManager<Resource, Key, Hasher>::isValidHandle(ResourceHandle<Resource> handle) const noexcept
+	{
+		return m_cache.isValidHandle(handle);
+	}
+
+	template <typename Resource, typename Key, typename Hasher>
+	ResourceHandle<Resource> ResourceManager<Resource, Key, Hasher>::resolve(const Key& key) // accept metadata as well?
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 
-		const std::string id = extractResourceID(path);
+		//const std::string id = extractResourceID(key.path);
 
 		// second lookup!? of meta data? - or fine?!
-		if (auto it = m_idToMetaData.find(id); it != m_idToMetaData.end())
+		if (auto it = m_keyToMetaData.find(key); it != m_keyToMetaData.end())
 		{
 			auto handle = it->second.handle;
 
 			if (m_cache.isValidHandle(handle)) // why not just check handle itself? or both?
 				return handle;
+		
+			const auto& path = it->second.path;
+		
+			if (std::unique_ptr<Resource> resource = m_loader->load(path, key))
+			{
+				auto handle = m_cache.insert(std::move(resource));
+				m_keyToMetaData.insert_or_assign(key, ResourceMetaData{ handle, path });
+				 
+				return handle;
+			}
 		}
 
-		if (std::unique_ptr<T> resource = m_loader->load(path))
-		{
-			auto handle = m_cache.insert(std::move(resource));
-			m_idToMetaData.insert_or_assign(id, ResourceMetaData{ handle, path });
-
-			return handle;
-		}
-
-		return ResourceHandle<T>::invalid();
+		return ResourceHandle<Resource>::invalid();
 	}
 
+	//template <typename Resource, typename Key, typename Hasher>
+	//ResourceHandle<Resource> ResourceManager<Resource, Key, Hasher>::resolve(const Key& key)
+	//{
+	//	std::lock_guard<std::mutex> lock(m_mutex);
+
+	//	const std::string id = extractResourceID(key.path);
+
+	//	// second lookup!? of meta data? - or fine?!
+	//	if (auto it = m_idToMetaData.find(id); it != m_idToMetaData.end())
+	//	{
+	//		auto handle = it->second.handle;
+
+	//		if (m_cache.isValidHandle(handle)) // why not just check handle itself? or both?
+	//			return handle;
+	//	}
+
+	//	if (std::unique_ptr<Resource> resource = m_loader->load(key.path))
+	//	{
+	//		auto handle = m_cache.insert(std::move(resource));
+	//		m_idToMetaData.insert_or_assign(id, ResourceMetaData{ handle, path });
+
+	//		return handle;
+	//	}
+
+	//	return ResourceHandle<Resource>::invalid();
+	//}
+
 #pragma endregion
-} 
+}

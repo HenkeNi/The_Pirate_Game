@@ -4,6 +4,8 @@
 
 namespace cursed_engine
 {
+	// TODO; fix render depth...
+
 	class AssetManager;
 	class Renderer;
 

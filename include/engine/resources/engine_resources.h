@@ -1,34 +1,24 @@
 #pragma once
 #include "engine/core/subsystem.h"
-#include "engine/resources/resource_manager.hpp"
+#include "engine/resources/audio_manager.h"
+#include "engine/resources/font_manager.h"
+#include "engine/resources/texture_manager.h"
+#include "engine/resources/text_manager.h"
 
-// TODO; include resources instead? -> user of engine resources doesnt have to remember to include each resource...
-// TODO; rename file? resource_fwd?
 namespace cursed_engine
 {
-	class Texture;
-	class Audio;
-	class Font;
-
-	//template <typename... Ts>
-	//class ResourceManager;
-
-	//using EngineResources = ResourceManager<Texture, Audio>;
-	//using EngineResources = ResourceManager<Texture, Audio, Font>; // rename FileResources -> make struct?
-
-	//struct EngineResources
-	//{
-	//	ResourceManager<Texture> textureManager;
-	//	ResourceManager<Audio> audioManager;
-	//};
-
-	//template <typename T>
-	//class ResourceManager;
-
+	class Renderer;
+	
 	struct EngineResources : public Subsystem
 	{
-		ResourceManager<Texture> textureManager;
-		ResourceManager<Audio> audioManager;
-		ResourceManager<Font> fontManager;
+		explicit EngineResources(Renderer& renderer)
+			: textManager{ textureManager, fontManager, renderer }
+		{
+		}
+
+		AudioManager audioManager;
+		FontManager fontManager;
+		TextureManager textureManager;
+		TextManager textManager;
 	};
 }

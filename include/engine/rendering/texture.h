@@ -11,7 +11,8 @@ namespace cursed_engine
 	public:
 		struct Tag{}; // Where to place?
 
-		Texture(SDL_Texture* texture = nullptr);
+		Texture(SDL_Texture* texture); 
+		//Texture(SDL_Texture* texture = nullptr); -- better to remove?? 
 		~Texture();
 
 		Texture(const Texture&) = delete;
@@ -20,7 +21,7 @@ namespace cursed_engine
 		Texture& operator=(const Texture& other) = delete;
 		Texture& operator=(Texture&& other) noexcept;
 
-		void init(SDL_Texture* texture);
+		//void init(SDL_Texture* texture);
 		void destroy(); // or rename; "release"?
 
 		[[nodiscard]] inline float getWidth() const noexcept { return m_width; }

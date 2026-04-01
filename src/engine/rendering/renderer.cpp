@@ -1,6 +1,7 @@
 #include "engine/rendering/renderer.h"
 #include "engine/rendering/texture.h"
 #include "engine/rendering/render_types.h"
+#include "engine/rendering/font.h"
 #include "engine/window/window.h"
 #include "engine/core/logger.h"
 #include <SDL3/SDL.h>

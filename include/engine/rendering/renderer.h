@@ -13,6 +13,7 @@ namespace cursed_engine
 	class Window;
 	class Texture;
 	struct FRect;
+	class Font;
 	//struct Color;
 
 	class Renderer : public Subsystem

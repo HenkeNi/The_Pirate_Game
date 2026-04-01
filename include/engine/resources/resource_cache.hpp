@@ -8,20 +8,26 @@
 
 namespace cursed_engine
 {
+	
+
+
 	// TODO; increase ref count?
 	// [Consider] removing mutex (keep only in resource manager)
 
-	class ResourceCacheBase
+	/*class ResourceCacheBase
 	{
 	public:
 		virtual ~ResourceCacheBase() = default;
-	};
+		virtual void process() = 0;
+	};*/
 
-	// Should, or shouldn't accept Tag 
-	template <typename Resource, std::size_t size = 1024>
+	// Should, or shouldn't accept Tag... make Handle part of tempalte specs?
+	template <typename Resource, std::size_t size = 1024> // rename initial size? or make argument in construcor
 	class ResourceCache
 	{
 	public:
+		void process();
+		
 		template <typename... Args>
 		ResourceHandle<Resource> emplace(Args&&... args);
 
@@ -44,14 +50,19 @@ namespace cursed_engine
 	private:
 		[[nodiscard]] bool isValidIndex(uint32_t index) const noexcept;
 
+		// or ResourceEntry? or just Entry? Resource? ResourceInfo?
 		struct Slot
 		{
 			std::unique_ptr<Resource> resource = nullptr;
-			uint32_t version = 0;
+			uint32_t version = 0; // name generation?
 
-			// automatic cleanup: bool?
+			// automatic cleanup: bool? or store in resource itself? or not?
+			//std::chrono::steady_clock::time_point lastUsed;
+
 			// store last frame used? or reference count? or refreence count in metadata?
 		};
+
+
 
 		std::vector<Slot> m_slots;
 		std::vector<std::size_t> m_freeSlots;
@@ -60,6 +71,12 @@ namespace cursed_engine
 	};
 
 #pragma region Methods
+
+	template <typename Resource, std::size_t size>
+	void ResourceCache<Resource, size>::process()
+	{
+
+	}
 
 	template <typename Resource, std::size_t size>
 	template <typename... Args>
@@ -175,22 +192,22 @@ namespace cursed_engine
 		virtual ~ResourceCacheBase() = default;
 	};
 
-	template <typename Res, typename Tag>
+	template <typename Resource, typename Tag>
 	class ResourceCache
 	{
 	public:
 		template <typename... Args>
 		ResourceHandle<Tag> emplace(Args&&... args);
 
-		ResourceHandle<Tag> insert(std::unique_ptr<Res> resource);
+		ResourceHandle<Tag> insert(std::unique_ptr<Resource> resource);
 
-		[[nodiscard]] const Res& get(ResourceHandle<Tag> handle) const;
+		[[nodiscard]] const Resource& get(ResourceHandle<Tag> handle) const;
 
-		[[nodiscard]] Res& get(ResourceHandle<Tag> handle);
+		[[nodiscard]] Resource& get(ResourceHandle<Tag> handle);
 
-		[[nodiscard]] const Res* tryGet(ResourceHandle<Tag> handle) const;
+		[[nodiscard]] const Resource* tryGet(ResourceHandle<Tag> handle) const;
 
-		[[nodiscard]] Res* tryGet(ResourceHandle<Tag> handle);
+		[[nodiscard]] Resource* tryGet(ResourceHandle<Tag> handle);
 
 		[[nodiscard]] bool isValidHandle(ResourceHandle<Tag> handle) const noexcept;
 		
@@ -201,7 +218,7 @@ namespace cursed_engine
 
 		struct Slot
 		{
-			std::unique_ptr<Res> resource = nullptr;
+			std::unique_ptr<Resource> resource = nullptr;
 			uint32_t version = 0;
 		};
 
@@ -211,9 +228,9 @@ namespace cursed_engine
 
 #pragma region Methods
 
-	template <typename Res, typename Tag>
+	template <typename Resource, typename Tag>
 	template <typename... Args>
-	ResourceHandle<Tag> ResourceCache<Res, Tag>::emplace(Args&&... args)
+	ResourceHandle<Tag> ResourceCache<Resource, Tag>::emplace(Args&&... args)
 	{
 		// TODO; redundant function (remove)?
 		std::lock_guard<std::mutex> lock(m_mutex);
@@ -222,8 +239,8 @@ namespace cursed_engine
 		return ResourceHandle<Tag>{ m_slots.size() - 1, 0 };
 	}
 	
-	template <typename Res, typename Tag>
-	ResourceHandle<Tag> ResourceCache<Res, Tag>::insert(std::unique_ptr<Res> resource)
+	template <typename Resource, typename Tag>
+	ResourceHandle<Tag> ResourceCache<Resource, Tag>::insert(std::unique_ptr<Resource> resource)
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -231,8 +248,8 @@ namespace cursed_engine
 		return ResourceHandle<Tag>{ (uint32_t)m_slots.size() - 1, 0 };	
 	}
 
-	template <typename Res, typename Tag>
-	const Res& ResourceCache<Res, Tag>::get(ResourceHandle<Tag> handle) const
+	template <typename Resource, typename Tag>
+	const Resource& ResourceCache<Resource, Tag>::get(ResourceHandle<Tag> handle) const
 	{
 		assert(isValidHandle(handle) && "ResourceCache::get - Invalid handle!"); // Redudnant? since manager is already checking!
 
@@ -242,28 +259,28 @@ namespace cursed_engine
 		return *slot.resource;
 	}
 
-	template <typename Res, typename Tag>
-	Res& ResourceCache<Res, Tag>::get(ResourceHandle<Tag> handle)
+	template <typename Resource, typename Tag>
+	Resource& ResourceCache<Resource, Tag>::get(ResourceHandle<Tag> handle)
 	{
-		return const_cast<Res&>(std::as_const(*this).get(handle));
+		return const_cast<Resource&>(std::as_const(*this).get(handle));
 	}
 
-	template <typename Res, typename Tag>
-	const Res* ResourceCache<Res, Tag>::tryGet(ResourceHandle<Tag> handle) const
+	template <typename Resource, typename Tag>
+	const Resource* ResourceCache<Resource, Tag>::tryGet(ResourceHandle<Tag> handle) const
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 
 		return isValidHandle(handle) ? m_slots.at(handle.index).resource.get() : nullptr;
 	}
 
-	template <typename Res, typename Tag>
-	Res* ResourceCache<Res, Tag>::tryGet(ResourceHandle<Tag> handle)
+	template <typename Resource, typename Tag>
+	Resource* ResourceCache<Resource, Tag>::tryGet(ResourceHandle<Tag> handle)
 	{
-		return const_cast<Res*>(std::as_const(*this).tryGet(handle));
+		return const_cast<Resource*>(std::as_const(*this).tryGet(handle));
 	}
 
-	template <typename Res, typename Tag>
-	bool ResourceCache<Res, Tag>::isValidHandle(ResourceHandle<Tag> handle) const noexcept
+	template <typename Resource, typename Tag>
+	bool ResourceCache<Resource, Tag>::isValidHandle(ResourceHandle<Tag> handle) const noexcept
 	{
 		// mutex here (checking slots)
 		return isValidIndex(handle.index) && (m_slots[handle.index].version == handle.version);
@@ -271,16 +288,16 @@ namespace cursed_engine
 		return false;
 	}
 
-	template <typename Res, typename Tag>
-	void ResourceCache<Res, Tag>::clear()
+	template <typename Resource, typename Tag>
+	void ResourceCache<Resource, Tag>::clear()
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 
 		m_slots.clear();
 	}
 
-	template <typename Res, typename Tag>
-	bool ResourceCache<Res, Tag>::isValidIndex(uint32_t index) const noexcept
+	template <typename Resource, typename Tag>
+	bool ResourceCache<Resource, Tag>::isValidIndex(uint32_t index) const noexcept
 	{
 		return index >= 0 && index < m_slots.size();
 	}

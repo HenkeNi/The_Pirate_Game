@@ -1,23 +1,29 @@
 #pragma once
 #include "engine/ecs/system/system.h"
-#include "engine/resources/engine_resources.h"
+//#include "engine/resources/texture_manager.h"
+//#include "engine/resources/font_manager.h"
 
 namespace cursed_engine
 {
+	class TextManager;
 	class Localization; 
-
+	//class Font;
+	
 	class TextSystem : public System
 	{
 	public:
-		TextSystem(EngineResources& engineResources, Localization& localization);
+		TextSystem(TextManager& textManager, Localization& localization);
+		//TextSystem(TextureManager& textureManager, FontManager& fontManager, Localization& localization);
 
 		void update(SystemContext& context) override;
 
 	private:
-		void handleDynamicText();
-		void handleStaticText();
+		//void handleDynamicText();
+		//void handleStaticText();
 
-		EngineResources& m_engineResources;
+		TextManager& m_textManager;
+		//TextureManager& m_textureManager;
+		//FontManager& m_fontManager;
 		Localization& m_localization;
 	};
 }

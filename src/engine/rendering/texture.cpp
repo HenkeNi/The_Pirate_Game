@@ -38,13 +38,13 @@ namespace cursed_engine
 		return *this;
 	}
 
-	void Texture::init(SDL_Texture* texture)
+	/*void Texture::init(SDL_Texture* texture)
 	{
 		if (m_texture = texture; !SDL_GetTextureSize(m_texture, &m_width, &m_height))
 		{
 			SDL_Log("SDL_GetTextureSize failed: %s", SDL_GetError());
 		}
-	}
+	}*/
 
 	void Texture::destroy()
 	{
