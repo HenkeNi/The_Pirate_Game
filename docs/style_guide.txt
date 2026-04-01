@@ -1,0 +1,17 @@
+For methods use
+
+* [[nodiscard]]
+* const
+* noexcept
+* constexpr
+
+constructors:
+
+* explicit
+* constexpr
+
+if statements:
+
+* [[likely]]
+* [[unlikely]]
+
