@@ -1,308 +1,208 @@
 #pragma once
 #include "resource_handle.h"
-#include <memory>
-#include <mutex>
 #include <cassert>
-#include <filesystem>
+#include <cstdint>
 #include <numeric>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace cursed_engine
 {
-	
-
-
-	// TODO; increase ref count?
+	// [Consider] - maybe each resource should store how long before eviction?
+	// [Consider] replacing stack (vector) with min heap?
 	// [Consider] removing mutex (keep only in resource manager)
+	// [Decide] ref count or last frame used? or both? or use: std::chrono::steady_clock::time_point lastUsed;
+	// [TODO] - make thread safe? or not? Resource loading / handling needs to be done on main thread?
 
-	/*class ResourceCacheBase
-	{
-	public:
-		virtual ~ResourceCacheBase() = default;
-		virtual void process() = 0;
-	};*/
-
-	// Should, or shouldn't accept Tag... make Handle part of tempalte specs?
-	template <typename Resource, std::size_t size = 1024> // rename initial size? or make argument in construcor
+	template <typename T>
 	class ResourceCache
 	{
+	private:		
+		static_assert(std::is_default_constructible_v<T>, "ResourceCache requires T to be default constructible");
+
+		using Handle = ResourceHandle<T>;
+
 	public:
-		void process();
-		
-		template <typename... Args>
-		ResourceHandle<Resource> emplace(Args&&... args);
+		ResourceCache(uint32_t framesBeforeEvict, std::size_t initialSize = 16);
+		~ResourceCache() = default;
 
-		ResourceHandle<Resource> insert(std::unique_ptr<Resource> resource);
+		// ==================== Lifecycle ====================
+		void update(uint64_t frame);
 
-		[[nodiscard]] const Resource& get(ResourceHandle<Resource> handle) const;
+		// ==================== Resource insertion ====================
+		Handle store(T resource);
 
-		[[nodiscard]] Resource& get(ResourceHandle<Resource> handle);
+		// ==================== Resource access ====================
+		[[nodiscard]] const T* retrieve(Handle handle) const;
+		[[nodiscard]] T* retrieve(Handle handle);
 
-		[[nodiscard]] const Resource* tryGet(ResourceHandle<Resource> handle) const;
+		[[nodiscard]] const T& operator[](Handle handle) const;
+		[[nodiscard]] T& operator[](Handle handle);
 
-		[[nodiscard]] Resource* tryGet(ResourceHandle<Resource> handle);
+		// ==================== Resource eviction ====================
+		void release(Handle handle);
 
-		[[nodiscard]] bool isValidHandle(ResourceHandle<Resource> handle) const noexcept;
-		
-		void remove(ResourceHandle<Resource> handle);
-
-		void clear(); // or reset?
-
-	private:
-		[[nodiscard]] bool isValidIndex(uint32_t index) const noexcept;
-
-		// or ResourceEntry? or just Entry? Resource? ResourceInfo?
-		struct Slot
-		{
-			std::unique_ptr<Resource> resource = nullptr;
-			uint32_t version = 0; // name generation?
-
-			// automatic cleanup: bool? or store in resource itself? or not?
-			//std::chrono::steady_clock::time_point lastUsed;
-
-			// store last frame used? or reference count? or refreence count in metadata?
-		};
-
-
-
-		std::vector<Slot> m_slots;
-		std::vector<std::size_t> m_freeSlots;
-
-		mutable std::mutex m_mutex;
-	};
-
-#pragma region Methods
-
-	template <typename Resource, std::size_t size>
-	void ResourceCache<Resource, size>::process()
-	{
-
-	}
-
-	template <typename Resource, std::size_t size>
-	template <typename... Args>
-	ResourceHandle<Resource> ResourceCache<Resource, size>::emplace(Args&&... args)
-	{
-		// TODO; redundant function (remove)?
-		std::lock_guard<std::mutex> lock(m_mutex);
-
-		m_slots.emplace_back(std::make_unique<Args>(args)..., 0);
-		return ResourceHandle<Resource>{ m_slots.size() - 1, 0 };
-	}
-	
-	template <typename Resource, std::size_t size>
-	ResourceHandle<Resource> ResourceCache<Resource, size>::insert(std::unique_ptr<Resource> resource)
-	{
-		std::lock_guard<std::mutex> lock(m_mutex);
-
-		m_slots.push_back({ std::move(resource), 0 });
-		return ResourceHandle<Resource>{ (uint32_t)m_slots.size() - 1, 0 };
-	}
-
-	template <typename Resource, std::size_t size>
-	const Resource& ResourceCache<Resource, size>::get(ResourceHandle<Resource> handle) const
-	{
-		assert(isValidHandle(handle) && "ResourceCache::get - Invalid handle!"); // Redudnant? since manager is already checking!
-
-		std::lock_guard<std::mutex> lock(m_mutex);
-
-		auto& slot = m_slots.at(handle.index);
-		return *slot.resource;
-	}
-
-	template <typename Resource, std::size_t size>
-	Resource& ResourceCache<Resource, size>::get(ResourceHandle<Resource> handle)
-	{
-		return const_cast<Resource&>(std::as_const(*this).get(handle));
-	}
-
-	template <typename Resource, std::size_t size>
-	const Resource* ResourceCache<Resource, size>::tryGet(ResourceHandle<Resource> handle) const
-	{
-		std::lock_guard<std::mutex> lock(m_mutex);
-
-		return isValidHandle(handle) ? m_slots.at(handle.index).resource.get() : nullptr;
-	}
-
-	template <typename Resource, std::size_t size>
-	Resource* ResourceCache<Resource, size>::tryGet(ResourceHandle<Resource> handle)
-	{
-		return const_cast<Resource*>(std::as_const(*this).tryGet(handle));
-	}
-
-	template <typename Resource, std::size_t size>
-	bool ResourceCache<Resource, size>::isValidHandle(ResourceHandle<Resource> handle) const noexcept
-	{
-		// mutex here (checking slots)
-		return isValidIndex(handle.index) && (m_slots[handle.index].version == handle.version);
-
-		return false;
-	}
-
-	template <typename Resource, std::size_t size>
-	void ResourceCache<Resource, size>::remove(ResourceHandle<Resource> handle)
-	{
-		std::lock_guard<std::mutex> lock(m_mutex);
-		
-		assert(false && "Not implemented");
-	}
-
-	template <typename Resource, std::size_t size>
-	void ResourceCache<Resource, size>::clear()
-	{
-		std::lock_guard<std::mutex> lock(m_mutex);
-
-		m_slots.clear();
-		m_freeSlots.clear();
-
-		// Put in own function?
-		m_freeSlots.resize(size);
-		std::iota(m_freeSlots.begin(), m_freeSlots.end(), 0);
-
-		// fill freeSlots with incremented number? (reveresed)... 
-		// put free indixes into m_freeSlots...
-	}
-
-	template <typename Resource, std::size_t size>
-	bool ResourceCache<Resource, size>::isValidIndex(uint32_t index) const noexcept
-	{
-		return index >= 0 && index < m_slots.size();
-	}
-
-#pragma endregion
-}
-
-
-
-/*
-* #pragma once
-#include "resource_handle.h"
-#include <memory>
-#include <mutex>
-#include <cassert>
-#include <filesystem>
-
-namespace cursed_engine
-{
-	// TODO; increase ref count?
-	// [Consider] removing mutex (keep only in resource manager)
-
-	class ResourceCacheBase
-	{
-	public:
-		virtual ~ResourceCacheBase() = default;
-	};
-
-	template <typename Resource, typename Tag>
-	class ResourceCache
-	{
-	public:
-		template <typename... Args>
-		ResourceHandle<Tag> emplace(Args&&... args);
-
-		ResourceHandle<Tag> insert(std::unique_ptr<Resource> resource);
-
-		[[nodiscard]] const Resource& get(ResourceHandle<Tag> handle) const;
-
-		[[nodiscard]] Resource& get(ResourceHandle<Tag> handle);
-
-		[[nodiscard]] const Resource* tryGet(ResourceHandle<Tag> handle) const;
-
-		[[nodiscard]] Resource* tryGet(ResourceHandle<Tag> handle);
-
-		[[nodiscard]] bool isValidHandle(ResourceHandle<Tag> handle) const noexcept;
-		
 		void clear();
 
-	private:
-		[[nodiscard]] bool isValidIndex(uint32_t index) const noexcept;
+		// ==================== Queries ====================
+		[[nodiscard]] bool isValid(Handle handle) const noexcept;
 
-		struct Slot
+	private:
+		struct Entry
 		{
-			std::unique_ptr<Resource> resource = nullptr;
-			uint32_t version = 0;
+			Entry(T resource, uint64_t frame)
+				: resource{ std::move(resource) }, lastFrameUsed{ frame }
+			{
+			}
+
+			T resource;
+			uint32_t generation = 1;
+			mutable uint64_t lastFrameUsed = 0;
+			bool isAlive = true;
 		};
 
-		std::vector<Slot> m_slots;
-		mutable std::mutex m_mutex;
+		// ==================== Helpers ====================
+		[[nodiscard]] bool isValid(uint32_t index) const noexcept;
+
+		void resetEntry(Entry& entry);
+
+		void evictUnused();
+
+		// ==================== Members ====================
+		std::vector<Entry> m_entries;
+		std::vector<std::size_t> m_freeList;
+
+		uint64_t m_currentFrame = 0;
+		const uint32_t m_elapsedFramesBeforeEviction;
 	};
 
 #pragma region Methods
 
-	template <typename Resource, typename Tag>
-	template <typename... Args>
-	ResourceHandle<Tag> ResourceCache<Resource, Tag>::emplace(Args&&... args)
+	template <typename T>
+	ResourceCache<T>::ResourceCache(uint32_t framesBeforeEvict, std::size_t initialSize)
+		: m_elapsedFramesBeforeEviction{ framesBeforeEvict }
 	{
-		// TODO; redundant function (remove)?
-		std::lock_guard<std::mutex> lock(m_mutex);
-
-		m_slots.emplace_back(std::make_unique<Args>(args)..., 0);
-		return ResourceHandle<Tag>{ m_slots.size() - 1, 0 };
-	}
-	
-	template <typename Resource, typename Tag>
-	ResourceHandle<Tag> ResourceCache<Resource, Tag>::insert(std::unique_ptr<Resource> resource)
-	{
-		std::lock_guard<std::mutex> lock(m_mutex);
-
-		m_slots.push_back({ std::move(resource), 0 });
-		return ResourceHandle<Tag>{ (uint32_t)m_slots.size() - 1, 0 };	
+		m_entries.reserve(initialSize);
+		m_freeList.reserve(initialSize);
 	}
 
-	template <typename Resource, typename Tag>
-	const Resource& ResourceCache<Resource, Tag>::get(ResourceHandle<Tag> handle) const
+	template <typename T>
+	void ResourceCache<T>::update(uint64_t currentFrame)
 	{
-		assert(isValidHandle(handle) && "ResourceCache::get - Invalid handle!"); // Redudnant? since manager is already checking!
-
-		std::lock_guard<std::mutex> lock(m_mutex);
-
-		auto& slot = m_slots.at(handle.index);
-		return *slot.resource;
+		m_currentFrame = currentFrame;
+		evictUnused();
 	}
 
-	template <typename Resource, typename Tag>
-	Resource& ResourceCache<Resource, Tag>::get(ResourceHandle<Tag> handle)
+	template <typename T>
+	ResourceCache<T>::Handle ResourceCache<T>::store(T resource)
 	{
-		return const_cast<Resource&>(std::as_const(*this).get(handle));
+		if (m_freeList.empty())
+		{
+			m_entries.push_back(Entry{ std::move(resource), m_currentFrame });
+			return ResourceCache<T>::Handle{ (uint32_t)m_entries.size() - 1, 1 };
+		}
+
+		std::size_t index = m_freeList.back();
+		m_freeList.pop_back();
+
+		auto& entry = m_entries[index];
+		entry.resource = std::move(resource);
+		entry.lastFrameUsed = m_currentFrame;
+		entry.isAlive = true;
+
+		return ResourceCache<T>::Handle{ (uint32_t)index, entry.generation };
 	}
 
-	template <typename Resource, typename Tag>
-	const Resource* ResourceCache<Resource, Tag>::tryGet(ResourceHandle<Tag> handle) const
+	template <typename T>
+	const T* ResourceCache<T>::retrieve(Handle handle) const
 	{
-		std::lock_guard<std::mutex> lock(m_mutex);
-
-		return isValidHandle(handle) ? m_slots.at(handle.index).resource.get() : nullptr;
+		return isValid(handle) ? &m_entries.at(handle.index).resource : nullptr;
 	}
 
-	template <typename Resource, typename Tag>
-	Resource* ResourceCache<Resource, Tag>::tryGet(ResourceHandle<Tag> handle)
+	template <typename T>
+	T* ResourceCache<T>::retrieve(Handle handle)
 	{
-		return const_cast<Resource*>(std::as_const(*this).tryGet(handle));
+		return const_cast<T*>(std::as_const(*this).retrieve(handle));
+
 	}
 
-	template <typename Resource, typename Tag>
-	bool ResourceCache<Resource, Tag>::isValidHandle(ResourceHandle<Tag> handle) const noexcept
+	template <typename T>
+	const T& ResourceCache<T>::operator[](Handle handle) const
 	{
-		// mutex here (checking slots)
-		return isValidIndex(handle.index) && (m_slots[handle.index].version == handle.version);
+		assert(isValid(handle) && "ResourceCache::operator[] - Invalid handle!");
 
-		return false;
+		auto& entry = m_entries.at(handle.index);
+		return entry.resource;
 	}
 
-	template <typename Resource, typename Tag>
-	void ResourceCache<Resource, Tag>::clear()
+	template <typename T>
+	T& ResourceCache<T>::operator[](Handle handle)
 	{
-		std::lock_guard<std::mutex> lock(m_mutex);
+		assert(isValid(handle) && "ResourceCache::operator[] - Invalid handle!");
 
-		m_slots.clear();
+		auto& entry = m_entries.at(handle.index);
+		return entry.resource;
 	}
 
-	template <typename Resource, typename Tag>
-	bool ResourceCache<Resource, Tag>::isValidIndex(uint32_t index) const noexcept
+	template <typename T>
+	void ResourceCache<T>::release(Handle handle)
 	{
-		return index >= 0 && index < m_slots.size();
+		if (!isValid(handle))
+		{
+			Logger::logWarning("[ResourceCaceh::evict] - Trying to evict with invalid handle");
+			return;
+		}
+
+		uint32_t index = handle.index;
+		resetEntry(m_entries[index]);
+
+		m_freeList.push_back(index);
+	}
+
+	template <typename T>
+	void ResourceCache<T>::clear()
+	{
+		m_entries.clear();
+		m_freeList.clear();
+	}
+
+	template <typename T>
+	bool ResourceCache<T>::isValid(Handle handle) const noexcept
+	{
+		return isValid(handle.index) && m_entries[handle.index].generation == handle.generation && m_entries[handle.index].isAlive;
+	}
+
+	template <typename T>
+	bool ResourceCache<T>::isValid(uint32_t index) const noexcept
+	{
+		return index >= 0 && index < m_entries.size();
+	}
+
+	template<typename T>
+	void ResourceCache<T>::resetEntry(Entry& entry)
+	{
+		entry.resource = T{}; // TODO; make sure all resources can be default initialized!
+		entry.generation++;
+		entry.isAlive = false;
+	}
+
+	template <typename T>
+	void ResourceCache<T>::evictUnused()
+	{
+		for (int i = 0; i < m_entries.size(); ++i)
+		{
+			auto& entry = m_entries[i];
+			// or just check if greater than?
+			if (entry.isAlive && m_currentFrame - entry.lastFrameUsed >= m_elapsedFramesBeforeEviction)
+			{
+				resetEntry(entry);
+				m_freeList.push_back(i);
+
+				Logger::logInfo("Offloaded resource");
+			}
+		}
 	}
 
 #pragma endregion
 }
-
-*/
