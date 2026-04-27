@@ -1,5 +1,8 @@
 #include "engine/rendering/texture.h"
+#include "engine/rendering/renderer.h"
+#include "engine/core/logger.h"
 #include <SDL3/SDL.h>
+#include <SDL3_image/SDL_image.h>
 
 namespace cursed_engine
 {
@@ -14,7 +17,7 @@ namespace cursed_engine
 
 	Texture::~Texture()
 	{
-		destroy();
+		release();
 	}
 
 	Texture::Texture(Texture&& other) noexcept
@@ -38,23 +41,52 @@ namespace cursed_engine
 		return *this;
 	}
 
-	/*void Texture::init(SDL_Texture* texture)
+	bool Texture::isLoaded() const
 	{
-		if (m_texture = texture; !SDL_GetTextureSize(m_texture, &m_width, &m_height))
-		{
-			SDL_Log("SDL_GetTextureSize failed: %s", SDL_GetError());
-		}
-	}*/
+		return m_texture != nullptr;
+	}
 
-	void Texture::destroy()
+	void Texture::release()
 	{
 		SDL_DestroyTexture(m_texture);
 		m_texture = nullptr;
 		m_width = m_height = 0;
 	}
 
-	bool Texture::isLoaded() const
+
+
+	TextureLoader::TextureLoader(Renderer& renderer)
+		: m_renderer{ renderer }
 	{
-		return m_texture != nullptr;
+	}
+
+	Texture TextureLoader::operator()(const TextureKey& key) const
+	{
+		if (!std::filesystem::exists(key.path))
+		{
+			Logger::logError("Failed to load texture, invalid path: " + key.path); // stirng format!
+			return Texture{};
+		}
+
+		// use this if not modifying the texture:
+		//auto* texture = IMG_LoadTexture(m_renderer.getRenderer(), path.string().c_str());
+		auto* surface = IMG_Load(key.path.c_str()); // pass const char* instead?
+
+		if (!surface)
+		{
+			Logger::logError("Unable to load image, path: " + key.path + ", error: " + SDL_GetError());
+			return nullptr;
+		}
+
+		SDL_Texture* texture = SDL_CreateTextureFromSurface(m_renderer.getRenderer(), surface);
+
+		if (!texture)
+		{
+			Logger::logError("Unable to create texture from surface, path: " + key.path + ", error: " + SDL_GetError());
+			return Texture{};
+		}
+
+		SDL_DestroySurface(surface);
+		return Texture{ texture };
 	}
 }

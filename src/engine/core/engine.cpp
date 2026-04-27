@@ -1,44 +1,36 @@
 #include "engine/core/engine.h"
-#include "engine/core/logger.h"
 #include "engine/core/application.h"
+#include "engine/core/logger.h"
+#include "engine/config/config_manager.h"
+#include "engine/localization/localization.h"
+#include "engine/input/input_handler.h"
+#include "engine/rendering/renderer.h"
+#include "engine/resources/surface.h"
+#include "engine/window/window.h"
+#include <SDL3/SDL.h>
+
+
+
+
+#include "engine/assets/asset_loader.h"
+#include "engine/audio/audio_controller.h"
+
 #include "engine/ecs/system/system_manager.h"
 #include "engine/ecs/entity/entity_factory.h"
-#include "engine/audio/audio_controller.h"
-#include "engine/rendering/renderer.h"
-#include "engine/assets/asset_manager.h"
-#include "engine/window/window.h"
-#include "engine/utils/frame_timer.h"
-#include "engine/input/input_handler.h"
-#include "engine/physics/physics.h"
 #include "engine/events/event_bus.h"
-#include "engine/config/config_manager.h"
+#include "engine/assets/asset_manager.h"
+#include "engine/utils/frame_timer.h"
+#include "engine/physics/physics.h"
 #include "engine/core/subsystem_registry.h"
-#include "engine/assets/asset_loaders.h"
 #include "engine/resources/resource_manager.hpp"
 #include "engine/resources/engine_resources.h"
-#include "engine/core/type_registry.hpp"
-#include <SDL3/SDL.h>
-//#include "engine/utils/json_utils.h"
+//#include "engine/core/type_registry.hpp"
 
-#include "engine/core/subsystem.h"
-#include "engine/localization/localization.h"
 
 #include "engine/config/config_types.h" // remove later...
 #include "engine/config/config_loader.h"
 
 // REMOEV
-#include "engine/audio/audio.h"
-#include "engine/rendering/texture.h"
-#include "engine/rendering/font.h"
-#include "engine/utils/containers/sparse_set.hpp"
-#include <optional>
-
-#include "engine/core/types.h"
-#include "engine/utils/json/json_document.h"
-#include "engine/core/registry_aliases.h"
-
-
-#include "engine/utils/json/json_value.h" // include this or not?
 
 #include "engine/ecs/component/core_components.h"
 #include "engine/ecs/system/render_system.h"
@@ -46,12 +38,17 @@
 #include "engine/ecs/system/input_system.h"
 #include "engine/ecs/system/ui_system.h"
 #include "engine/ecs/system/text_system.h"
+#include "engine/ecs/system/audio_system.h"
+#include "engine/ecs/component/component_registry.h"
+
 
 namespace cursed_engine
 {
-	struct MetaStorage // MOVE to own file?
+	struct MetaStorage // MOVE to own file? rename registries?
 	{
-		ComponentRegistry componentData;
+		//	TypeRegistry<ComponentInfo> componentData;
+		ComponentRegistry componentData; // rename?
+		// ResourceRegistry?
 	};
 
 	struct Engine::Impl
@@ -60,33 +57,23 @@ namespace cursed_engine
 			: application{ app }, assetRoot{ "../assets/" }
 		{
 		}
-
-		//struct MetaStorage
-		//{
-		//	TypeRegistry<ComponentInfo> componentData;
-
-		//} metaStorage;
-
+	
 		SubsystemRegistry subsystemRegistry;
 		SystemManager systemManager;
 		FrameTimer timer;
 		MetaStorage metaStorage;
 		EntityFactory entityFactory; // pass in assetmanager, set ecs registry...
-		std::filesystem::path assetRoot;
+		std::filesystem::path assetRoot; // ??
+
 		Application& application;
-
-
-		uint64_t currentFrame = 0;
+		uint64_t currentFrame = 0; // store current "stats", fps, etc
 		// store an ECSContext here?
 
-		//EntityFactory entityFactory; // dont store instnace? let game use if needed?
+		//ResourceRegistry resourceRegistry; // Todo; figure out a better way !!
 
 		// Task system/Thread pool
 		// Profiler
 	};
-
-	void registerComponents(ComponentRegistry& registry, AssetManager& assetManager, EngineResources& engineResources,  Localization& localization);
-	void registerSystems(SystemManager& systemManager, Renderer& renderer, EngineResources& resources, AssetManager& assetManager, InputHandler& inputHandler, Localization& localization, EventBus& eventBus);
 
 	Engine::Engine(Application& app)
 		: m_impl{ std::make_unique<Engine::Impl>(app) }
@@ -102,9 +89,9 @@ namespace cursed_engine
 		auto& subsystemRegistry = m_impl->subsystemRegistry;
 		auto& configManager = subsystemRegistry.add<ConfigManager>();
 
-		if (!configManager.loadAllConfigs("../assets/config/"))
+		if (!configManager.loadConfig("../assets/config/engine_config.json"))
 		{
-			Logger::logError("Failed to load one or more configuration files.");
+			Logger::logError("Engine startup failed: could not load configuration file {}");
 			return false;
 		}
 
@@ -117,13 +104,22 @@ namespace cursed_engine
 			return false;
 		}
 
-		auto& window = subsystemRegistry.add<Window>();
 		auto& eventBus = subsystemRegistry.add<EventBus>();
 
-		const auto& windowConfig = configManager.getWindowConfig();
-		window.init(appInfo.name.c_str(), windowConfig);
-		window.setIcon(windowConfig.iconPath);
+		//  Window initialization
+		auto& window = subsystemRegistry.add<Window>();
 
+		const auto& windowConfig = configManager.getWindowConfig();
+		window.create(appInfo.name.c_str(), windowConfig);
+		
+		{
+			SurfaceLoader surfaceLoader;
+			Surface surface = surfaceLoader(windowConfig.iconPath);
+
+			window.setIcon(surface);
+		}
+
+		// Input initialization
 		auto& inputHandler = subsystemRegistry.add<InputHandler>(eventBus);
 		inputHandler.init(configManager.getInputConfig());
 
@@ -133,12 +129,8 @@ namespace cursed_engine
 		auto& audioController = subsystemRegistry.add<AudioController>();
 		audioController.init();
 
-		auto& engineResources = subsystemRegistry.add<EngineResources>(renderer);
-		engineResources.textureManager.emplaceLoader<TextureLoader>(renderer);
-		engineResources.audioManager.emplaceLoader<AudioLoader>();
-		engineResources.fontManager.emplaceLoader<FontLoader>();
-		//engineResources.textManager.emplaceLoader(renderer);
-
+		auto& engineResources = subsystemRegistry.add<EngineResources>(configManager.getResourceConfig(), renderer);
+		
 		subsystemRegistry.add<Physics>();
 		//subsystemRegistry.add<ECSRegistry>();
 
@@ -150,10 +142,18 @@ namespace cursed_engine
 		localization.registerLanguage("english", "../assets/localization/en.json"); // Dont here? read start language from config...
 		localization.setLanguage("english");
 
-		loadMedia(); // HERE? Dont do in init? also maybe dont do in Engine?
+		loadAssets(); // HERE? Dont do in init? also maybe dont do in Engine?
 
-		registerComponents(m_impl->metaStorage.componentData, assetManager, engineResources, localization); // Dont pass localization?
-		registerSystems(m_impl->systemManager, renderer, engineResources, assetManager, inputHandler, localization, eventBus);
+		core_components::registerAll(m_impl->metaStorage.componentData, assetManager, engineResources, configManager.getResourceConfig());
+
+		// Move to other part of code base?
+		auto& systemManager = m_impl->systemManager;
+		systemManager.emplace<RenderSystem>(renderer, engineResources, assetManager);
+		//systemManager.emplace<InputSystem>(inputHandler);
+		systemManager.emplace<InteractionSystem>();
+		systemManager.emplace<UISystem>(inputHandler, eventBus);
+		systemManager.emplace<TextSystem>(engineResources.textManager, localization);
+		systemManager.emplace<AudioSystem>(engineResources.audioManager, audioController);
 
 		m_impl->application.onCreated({
 			m_impl->systemManager,
@@ -166,15 +166,16 @@ namespace cursed_engine
 			m_impl->assetRoot
 			});
 
+		Logger::logInfo("Engine startup successful!");
 		return true;
 	}
 
 	void Engine::shutdown()
 	{
 		m_impl->subsystemRegistry.forEach([](auto& subsystem) { subsystem->shutdown(); });
-
-		//m_impl->sceneStack.clear();
 		SDL_Quit();
+
+		Logger::logInfo("Engine shutdown complete");
 	}
 
 	void Engine::run()
@@ -182,23 +183,6 @@ namespace cursed_engine
 		bool running = true;
 
 		auto& subsystemRegistry = m_impl->subsystemRegistry;
-
-		// Test
-		//auto& resourceManager = subsystemRegistry.get<EngineResources>();
-		//auto textureHandle = resourceManager.getHandle<Texture>("test3");
-		////auto textureHandle = resourceManager.getHandle<Texture>("test3.bmp");
-		//auto& texture = resourceManager.get<Texture>(textureHandle);
-
-		//auto audioHandle = resourceManager.getHandle<Audio>("707884__dave4884__pirates-song");
-		////auto audioHandle = resourceManager.getHandle<Audio>("707884__dave4884__pirates-song.wav");
-		//const auto& audio = resourceManager.get<Audio>(audioHandle);
-
-		////auto audioHandle2 = resourceManager.getHandle<Audio>("249813__spookymodem__goblin-death.wav");
-		//auto audioHandle2 = resourceManager.getHandle<Audio>("249813__spookymodem__goblin-death");
-		//const auto& audio2 = resourceManager.get<Audio>(audioHandle2);
-
-		//auto& audioController = subsystemRegistry.get<AudioController>();
-		//audioController.playSound(audio2.m_stream, audio2.m_buffer, audio2.m_length);
 
 		while (running)
 		{
@@ -232,32 +216,18 @@ namespace cursed_engine
 			m_impl->application.onUpdate(deltaTime);
 
 
-			// or getactivesceenes.... then iterate and, check if should update next 
 			//m_impl->systemManager.update(deltaTime); // After application update?
 
 			subsystemRegistry.get<EventBus>().dispatchAll();
 
+			subsystemRegistry.get<EngineResources>().update(m_impl->currentFrame, deltaTime);
+
 			// subsystemRegistry.get<Renderer>().clearScreen();
 
-			// TEST
-			/*for (int i = 0; i < 128; ++i)
-			{
-				for (int j = 0; j < 172; ++j)
-				{
-					subsystemRegistry.get<Renderer>().renderTexture(i * 10, j * 10, texture);
-				}
-			}*/
-
-			//subsystemRegistry.get<Renderer>().renderLine(0, 0, 100, 100);
-
-			// END TEST....
-
-			// subsystemRegistry.get<Renderer>().present();
-
-			Uint64 end = SDL_GetPerformanceCounter();
+			Uint64 end = SDL_GetPerformanceCounter(); // hide in class?
 			float elapsed = (end - start) / (float)SDL_GetPerformanceFrequency();
 			float fps = 1.f / elapsed;
-			
+
 
 			auto& renderer = subsystemRegistry.get<Renderer>();
 			//renderer.renderDebugText(220, 220, "Fps: " + (int)fps);
@@ -269,18 +239,20 @@ namespace cursed_engine
 		}
 	}
 
-	void Engine::loadMedia()
+	void Engine::loadAssets()
 	{
 		// TODO; use a single loop for all files in asset
-
-		//Not loading textuer atlases? 
+		// TODO; create an AssetRegistry? or handle loading elsewhere? in Assets.h?
 
 		// TODO; do lazy loading later on!? -> maybe load core resources?
 
 		auto& assetManager = m_impl->subsystemRegistry.get<AssetManager>();
+		auto& engineResources = m_impl->subsystemRegistry.get<EngineResources>();
 
-		// Load prefabs
+		assetManager.addLoader<SpriteSheetLoader>(engineResources); // TOOD; pass texturemanager instead?
+		assetManager.addLoader<TextureAtlasLoader>(engineResources);
 		assetManager.addLoader<PrefabLoader>();
+
 
 		for (const auto& entry : std::filesystem::recursive_directory_iterator("../assets/prefabs/"))
 		{
@@ -291,224 +263,58 @@ namespace cursed_engine
 			const auto& prefab = assetManager.getAsset<Prefab>(handle); // Dont later...
 		}
 
-		auto& engineResources = m_impl->subsystemRegistry.get<EngineResources>();
-
-		// Load sprite sheets
-		assetManager.addLoader<SpriteSheetLoader>(engineResources); // TOOD; pass texturemanager instead?
-		assetManager.addLoader<TextureAtlasLoader>(engineResources);
-
 		for (const auto& entry : std::filesystem::recursive_directory_iterator("../assets/textures"))
 		{
 			if (!entry.is_regular_file())
 				continue;
 
 			const auto& path = entry.path();
-
 			std::string filename = path.string();
+
 			if (filename.ends_with("sprite_sheet.json"))
 			{
-				auto handle = assetManager.loadAsset<SpriteSheet>(entry.path());
+				auto handle = assetManager.loadAsset<SpriteSheet>(path);
 			}
 			else if (filename.ends_with("texture_atlas.json"))
 			{
-				auto handle = assetManager.loadAsset<TextureAtlas>(entry.path());
-			}
-			else if (filename.ends_with(".png") || filename.ends_with(".bmp") || filename.ends_with(".jpeg")) // TODO; function? isValidTextureFormat
-			{
-				auto id = extractResourceID(path);
-				engineResources.textureManager.insertPath(TextureKey{ std::move(id) }, path); // move here?
+				auto handle = assetManager.loadAsset<TextureAtlas>(path);
 			}
 		}
 
-		for (const auto& entry : std::filesystem::recursive_directory_iterator("../assets/sounds"))
-		{
-			if (!entry.is_regular_file())
-				continue;
+		//for (const auto& entry : std::filesystem::recursive_directory_iterator("../assets/sounds"))
+		//{
+		//	if (!entry.is_regular_file())
+		//		continue;
 
-			const auto& path = entry.path();
-			std::string filename = path.string();
+		//	const auto& path = entry.path();
+		//	std::string filename = path.string();
 
-			if (filename.ends_with(".wav")) // TODO; or check if file.extension() == ???
-			{
-				auto id = extractResourceID(path);
-				engineResources.audioManager.insertPath(AudioKey{ std::move(id) }, path); // TODO; utiltyFunction getStem()?
-			}
-		}
+		//	if (filename.ends_with(".wav")) // TODO; or check if file.extension() == ???
+		//	{
+		//		auto id = extractResourceID(path);
+		//		registry.audioIdToPath.insert_or_assign(std::move(id), path); // move here?
+		//	}
+		//}
 
+		//for (const auto& entry : std::filesystem::recursive_directory_iterator("../assets/fonts"))
+		//{
+		//	if (!entry.is_regular_file())
+		//		continue;
 
+		//	const auto& path = entry.path();
+		//	std::string filename = path.string();
 
-		for (const auto& entry : std::filesystem::recursive_directory_iterator("../assets/fonts"))
-		{
-			if (!entry.is_regular_file())
-				continue;
+		//	if (filename.ends_with(".ttf"))
+		//	{
+		//		auto id = extractResourceID(path);
+		//		registry.fontIdToPath.insert_or_assign(std::move(id), path); // move here?
 
-			const auto& path = entry.path();
-			std::string filename = path.string();
-
-			if (filename.ends_with(".ttf"))
-			{
-				auto id = extractResourceID(path);
-
-				// TODO; get "accepted" font sizes from json
-
-				engineResources.fontManager.insertPath(FontKey{ id, 20 }, path);
-				//engineResources.insertPath<Font>(path.filename().stem().string(), path); // auto generate id?
-			}
-		}
+		//		//engineResources.fontManager.insertPath(FontKey{ id, 20 }, path);
+		//		//engineResources.insertPath<Font>(path.filename().stem().string(), path); // auto generate id?
+		//	}
+		//}
 
 		// TODO; load texture atlas...
 
-	}
-
-	void registerComponents(ComponentRegistry& registry, AssetManager& assetManager, EngineResources& engineResources, Localization& localization)
-	{
-		// TODO; use config to check which subsystems are active, only register if active? (physics -> physicsComponent)
-
-		registerComponent<TransformComponent>(registry, "transform",
-			[](EntityHandle& handle, const ComponentProperties& properties)
-			{
-				auto& transformComponent = handle.getComponent<TransformComponent>();
-				//transformComponent.position = properties.at("position"); // WORKS???
-			},
-			[](EntityHandle& handle, const JsonValue& value)
-			{
-				float x = (float)value["x"].asDouble();
-				float y = (float)value["y"].asDouble();
-
-				// TODO; also valid check it contains the data?
-
-				float width = (float)value["width"].asDouble();
-				float height = (float)value["height"].asDouble();
-
-				FVec2 pivot{ 0.f, 0.f };
-
-				if (value.has("pivot")) {
-					pivot.x = (float)value["pivot"]["x"].asDouble();
-					pivot.y = (float)value["pivot"]["y"].asDouble();
-				}
-
-				float rotation = 0.f;
-
-				if (value.has("rotation"))
-					float rotation = (float)value["rotation"].asDouble();
-
-				handle.attachComponent<TransformComponent>(FVec2{ x, y }, FVec2{ width, height }, pivot, rotation);
-			});
-
-		registerComponent<SpriteComponent>(registry, "sprite",
-			[](EntityHandle& handle, const ComponentProperties& properties)
-			{
-			},
-			[&](EntityHandle& handle, const JsonValue& value)
-			{
-				std::string id = value["id"].asString();
-
-				// [[consider]] if better to store only id at this point, and not reference any manager?
-				const auto atlasHandle = assetManager.getAssetHandle<TextureAtlas>(id); // pass in id?
-				AtlasRegion region; // TODO; fix!
-				region.x = 0;
-				region.y = 0;
-				region.w = 700;
-				region.h = 700;
-
-				std::array<float, 4> color{ 1.f, 1.f, 1.f, 1.f };
-
-				float zOrder = 1.f; 
-
-				// Figue out...
-				// Treat background images and texture alias the same? or solve with union/variant?
-
-
-				/*
-					AssetHandle atlasHandle; // Handle to texture atlas
-					AtlasRegion region;
-					float colors[4];
-					float zOrder;
-				*/
-
-				handle.attachComponent<SpriteComponent>(atlasHandle, region, color, zOrder);
-			});
-
-
-		/*registerComponent<InputComponent>(registry, "input",
-			[](EntityHandle& handle, const ComponentProperties& properties)
-			{},
-			[](EntityHandle& handle, const JsonValue& value)
-			{
-			});*/
-
-		// TODO; interaction component instead???
-		registerComponent<ButtonComponent>(registry, "button",
-			[](EntityHandle& handle, const ComponentProperties& properties)
-			{
-			},
-			[](EntityHandle& handle, const JsonValue& value)
-			{
-				std::string action = value["action"].asString();
-				std::string val = value["value"].asString(); // asAny?
-
-				handle.attachComponent<ButtonComponent>(action, val);
-			});
-
-
-		registerComponent<BoundingBox>(registry, "bounding_box",
-			[](EntityHandle& handle, const ComponentProperties& properties)
-			{
-
-			},
-			[](EntityHandle& handle, const JsonValue& value) 
-			{
-				int xOffset = value["offset"]["x"].asInt();
-				int yOffset = value["offset"]["y"].asDouble();
-
-				int width = value["size"]["width"].asInt(); // TODO; use halfextent instead!
-				int height = value["size"]["height"].asInt(); // TODO; decide if float or int...
-
-				handle.attachComponent<BoundingBox>(FVec2{ (float)xOffset, (float)yOffset }, FVec2{ (float)width, (float)height });
-			});
-
-		registerComponent<TextComponent>(registry, "text",
-			[](EntityHandle& handle, const ComponentProperties& properties)
-			{
-
-			},
-			[&](EntityHandle& handle, const JsonValue& value)
-			{
-				//std::string id; // no way of knowing the id...
-
-
-				auto id = value["text_id"].asString();
-
-				std::string fontType = value["font"].asString();
-
-				// maybe just store id?
-				auto fontHandle = engineResources.fontManager.getHandle({ fontType, 20 });
-				//localization.getText(id);
-				
-				if (!fontHandle.isValid())
-				{
-					int x = 20;
-				}
-				
-				//auto handle = engineResources.getHandle<Texture>(id);
-
-				handle.attachComponent<TextComponent>(id, fontHandle);
-
-				// store lockup table id to text (and perhaps text to id)
-
-				//auto handle = engineResources.getHandle<Texture>(id); // WIll this load the resource? probably not
-
-				// safe to pass localization? OR handle in TextSystem?
-
-			});
-	}
-
-	void registerSystems(SystemManager& systemManager, Renderer& renderer, EngineResources& resources, AssetManager& assetManager, InputHandler& inputHandler, Localization& localization, EventBus& eventBus)
-	{
-		systemManager.emplace<RenderSystem>(renderer, resources, assetManager);
-		//systemManager.emplace<InputSystem>(inputHandler);
-		systemManager.emplace<InteractionSystem>();
-		systemManager.emplace<UISystem>(inputHandler, eventBus);
-		systemManager.emplace<TextSystem>(resources.textManager, localization);
 	}
 }

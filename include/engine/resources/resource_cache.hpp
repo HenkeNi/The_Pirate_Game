@@ -59,7 +59,7 @@ namespace cursed_engine
 			T resource;
 			uint32_t generation = 1;
 			mutable uint64_t lastFrameUsed = 0;
-			bool isAlive = true;
+			bool isAlive = true; 
 		};
 
 		// ==================== Helpers ====================
@@ -199,7 +199,7 @@ namespace cursed_engine
 				resetEntry(entry);
 				m_freeList.push_back(i);
 
-				Logger::logInfo("Offloaded resource");
+				//Logger::logInfo("Offloaded resource");
 			}
 		}
 	}

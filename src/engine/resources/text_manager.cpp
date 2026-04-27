@@ -36,7 +36,7 @@ namespace cursed_engine
 	{
 		using TextureHandle = ResourceHandle<Texture>;
 
-		if (!fontHandle.isValid() || !m_fontManager.isValidHandle(fontHandle)) // check all in manager??
+		if (!fontHandle.isValid() || !m_fontManager.isValid(fontHandle)) // check all in manager??
 		{
 			Logger::logError("Invalid font handle!");
 
@@ -45,11 +45,17 @@ namespace cursed_engine
 		}
 
 
-		auto font = m_fontManager.get(fontHandle);
+		auto* font = m_fontManager.get(fontHandle); // valid check!
 
-		auto texture = createTexture(text.c_str(), font, color);
+		if (!font)
+		{
+			Logger::logError("Failed to get font!");
+			return TextureHandle::invalid();
+		}
 
-		auto textureHandle = m_textureManager.insertResource(TextureKey{ id + std::to_string(fontSize) }, std::move(texture));
+		auto texture = createTexture(text.c_str(), *font, color);
+
+		auto textureHandle = m_textureManager.insert(TextureKey{ id + std::to_string(fontSize) }, std::move(texture));
 		return textureHandle;
 
 		// check if font is loaded => else load it... (should text manager handle this?)
@@ -75,17 +81,18 @@ namespace cursed_engine
 
 	bool TextManager::isConstructed(const std::string& id, int fontSize) const noexcept
 	{
-		return m_textureManager.isLoaded(TextureKey{ id + std::to_string(fontSize) });
+		// TODO; make sure this is correct!
+		return m_textureManager.contains(TextureKey{ id + std::to_string(fontSize) });
 	}
 
-	std::unique_ptr<Texture> TextManager::createTexture(const char* text, Font& font, const Color& color) const
+	Texture TextManager::createTexture(const char* text, Font& font, const Color& color) const
 	{
 		SDL_Surface* surface = TTF_RenderText_Blended(font.get(), text, 0, { color.r, color.g, color.b, color.a });
 
 		if (!surface)
 		{
 			Logger::logError(std::format("Failed to generate surface for text! Error: {}", SDL_GetError()));
-			return nullptr;
+			return Texture{};
 		}
 
 		SDL_Texture* texture = SDL_CreateTextureFromSurface(m_renderer.getRenderer(), surface);
@@ -93,9 +100,9 @@ namespace cursed_engine
 		if (!texture)
 		{
 			Logger::logError(std::format("Failed to create texture from surface! Error: {}", SDL_GetError()));
-			return nullptr;
+			return Texture{};
 		}
 
-		return std::make_unique<Texture>(texture);
+		return Texture{ texture };
 	}
 }

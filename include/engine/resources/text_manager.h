@@ -1,6 +1,8 @@
 #pragma once
-#include "engine/resources/texture_manager.h"
-#include "engine/resources/font_manager.h"
+#include "engine/rendering/texture.h"
+#include "engine/rendering/font.h"
+//#include "engine/resources/texture_manager.h"
+//#include "engine/resources/font_manager.h"
 
 //#include "engine/resources/resource_cache.hpp"
 //#include "engine/rendering/render_types.h"
@@ -37,7 +39,7 @@ namespace cursed_engine
 		// ResourceHandle<Texture> acquireOrCreate(const std::string& id, ResourceHandle<Font> fontHandle, const Color& color, int fontSize);
 
 	private:
-		std::unique_ptr<Texture> createTexture(const char* text, Font& font, const Color& color) const;
+		Texture createTexture(const char* text, Font& font, const Color& color) const;
 
 		TextureManager& m_textureManager;
 		FontManager& m_fontManager;

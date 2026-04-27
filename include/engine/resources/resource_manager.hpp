@@ -96,7 +96,7 @@ namespace cursed_engine
 
 		if (auto it = paths.find(id); it != paths.end())
 		{
-			Key key{ it->second, std::forward<Args>()... };
+			Key key{ it->second, std::forward<Args>(args)... };
 
 			return getHandle(key);
 		}
