@@ -44,12 +44,11 @@ namespace cursed_engine
 		}
 	};
 
-
+	// AssetStore, AssetRegistry?
 	class AssetManager : public Subsystem
 	{
 	public:
-
-		// make private? do in Engine? - load all? (remove unload)?
+		// void preload?
 		template <typename Asset> // Dont use nodiscard here? 
 		[[nodiscard]] AssetHandle loadAsset(const std::filesystem::path& path); // Return optional handle? take in name insteaD?
 

@@ -1,4 +1,4 @@
-#include "engine/assets/asset_loaders.h"
+#include "engine/assets/asset_loader.h"
 #include "engine/utils/json/json_document.h"
 #include "engine/utils/json/json_value.h"
 #include "engine/core/logger.h"
