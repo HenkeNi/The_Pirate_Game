@@ -6,6 +6,8 @@
 
 namespace cursed_engine
 {
+	// Maybe more overloads should use 'template <Numeric T, Numeric U>'?
+
 	template <Numeric T>
 	struct Vec2
 	{
@@ -52,14 +54,14 @@ namespace cursed_engine
 		return { lhs.x - rhs.x, lhs.y - rhs.y };
 	}
 		
-	template <Numeric T>
-	constexpr Vec2<T> operator*(const Vec2<T>& vec, T scalar) noexcept
+	template <Numeric T, Numeric U>
+	constexpr Vec2<T> operator*(const Vec2<T>& vec, U scalar) noexcept
 	{
 		return { vec.x * scalar, vec.y * scalar };
 	}
 
-	template <Numeric T>
-	constexpr Vec2<T> operator*(T scalar, const Vec2<T>& vec) noexcept
+	template <Numeric T, Numeric U>
+	constexpr Vec2<T> operator*(U scalar, const Vec2<T>& vec) noexcept
 	{
 		return vec * scalar;
 	}
@@ -70,8 +72,8 @@ namespace cursed_engine
 		return { lhs.x * rhs.x, lhs.y * rhs.y };
 	}
 		
-	template <Numeric T>
-	constexpr Vec2<T> operator/(const Vec2<T>& vec, T scalar)
+	template <Numeric T, Numeric U>
+	constexpr Vec2<T> operator/(const Vec2<T>& vec, U scalar)
 	{
 		assert(scalar != T{ 0 });
 		return { vec.x / scalar, vec.y / scalar };
@@ -97,8 +99,8 @@ namespace cursed_engine
 		return lhs;
 	}
 	
-	template <Numeric T>
-	constexpr Vec2<T>& operator*=(Vec2<T>& vec, T scalar) noexcept
+	template <Numeric T, Numeric U>
+	constexpr Vec2<T>& operator*=(Vec2<T>& vec, U scalar) noexcept
 	{
 		vec.x *= scalar;
 		vec.y *= scalar;
@@ -115,8 +117,8 @@ namespace cursed_engine
 		return lhs;
 	}
 
-	template <Numeric T>
-	constexpr Vec2<T>& operator/=(Vec2<T>& vec, T scalar)
+	template <Numeric T, Numeric U>
+	constexpr Vec2<T>& operator/=(Vec2<T>& vec, U scalar)
 	{
 		assert(scalar != T{ 0 });
 
