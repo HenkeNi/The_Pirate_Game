@@ -6,6 +6,7 @@
 #include "engine/core/logger.h"
 #include "ecs_types.h"
 
+#include <array>
 #include <unordered_map>
 #include <memory>
 #include <string>
@@ -115,7 +116,8 @@ Mark the cache dirty if so.
 		template<typename T>
 		using DecayComponentT = std::remove_cvref_t<T>;
 
-		using ComponentManagers = std::vector<std::unique_ptr<class IComponentManager>>; // USe array instead?
+		using ComponentManagers = std::array<std::unique_ptr<class IComponentManager>, MAX_COMPONENTS>;
+		//using ComponentManagers = std::vector<std::unique_ptr<class IComponentManager>>; // USe array instead?
 		using QueryCacheStorage = std::unordered_map<EntitySignature, QueryCache>;
 
 		EntityManager m_entityManager;
@@ -304,10 +306,10 @@ Mark the cache dirty if so.
 	{
 		ComponentID id = getComponentID<T>();
 
-		if (id >= m_componentManagers.size())
+		/*if (id >= m_componentManagers.size())
 		{
 			m_componentManagers.resize(id + 1);
-		}
+		}*/
 
 		if (!m_componentManagers[id])
 		{

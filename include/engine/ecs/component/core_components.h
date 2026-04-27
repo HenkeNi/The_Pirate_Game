@@ -1,14 +1,24 @@
 #pragma region
 #include "engine/math/vec2.h"
 #include "engine/assets/asset_types.h"
-#include "engine/assets/asset_manager.h" // TODO; put in asset handle file instead?
+#include "engine/assets/asset_manager.h" // remove include?
 #include "engine/rendering/animation_types.h"
 #include "engine/rendering/render_types.h"
-#include <unordered_map>
+#include <optional>
 #include <array>
+#include <unordered_map>
 
 namespace cursed_engine
 {
+	class ComponentRegistry; 
+	class EngineResources;
+	struct ResourceConfig;
+
+	namespace core_components
+	{
+		void registerAll(ComponentRegistry& registry, AssetManager& assetManager, EngineResources& engineResources, const ResourceConfig& resourceConfig);
+	}
+
 	struct TransformComponent
 	{
 		// TODO; add 2 constructors? one for each individual argument?
@@ -46,8 +56,11 @@ namespace cursed_engine
 
 		AssetHandle atlasHandle; // Handle to texture                   --- better than storing id to atlas handle? (maybe to much indirection)
 		AtlasRegion atlasRegion;
-		std::array<float, 4> color;
+		std::array<float, 4> color; // use COlor instead?
 		//float colors[4]; // create type or type alias for color!
+
+		// store texture handle? if invalid, overwrite with new one from getHandle...
+
 		float zOrder;
 	};
 
@@ -80,7 +93,15 @@ namespace cursed_engine
 	struct BoundingBox
 	{
 		FVec2 offset;
-		FVec2 halfExtents;
+		FVec2 halfSize;
+
+		//Vec2 center;
+		//Vec2 halfSize;
+
+		//Vec2 min() const { return center - halfSize; }
+		//Vec2 max() const { return center + halfSize; }
+		//Vec2 size() const { return halfSize * 2.0f; }
+
 		//FVec2 position;
 		//int xOffset, yOffset;
 		//float x, y; // or offset instead?
@@ -96,23 +117,29 @@ namespace cursed_engine
 		// onPress or onClick
 	};
 
+
 	// interactable?
 	struct ButtonComponent
 	{
 		using ActionValue = std::variant<std::string, int, double, bool>;
 
 		ButtonComponent() = default;
-
-		ButtonComponent(std::string _action, const ActionValue& _value)
-			: action{ _action }, actionValue{ _value }
+		ButtonComponent(std::string action, ActionValue value, Color defaultColor, std::optional<Color> hoverColor = std::nullopt, std::optional<Color> pressedColor = std::nullopt)
+			: action{ action }, actionValue{ value }, defaultColor{ defaultColor }, hoverColor{ hoverColor }, pressedColor{ pressedColor }
 		{
 		}
 
 		enum class State{ Normal, Hovered, Pressed };
-		State state = State::Normal;
+		State currentState = State::Normal;
+		State previousState = State::Normal;
 
-		std::string action;
-		ActionValue actionValue; 
+		std::string action; // dont use string?
+		ActionValue actionValue;
+
+		Color defaultColor;
+		std::optional<Color> hoverColor;
+		std::optional<Color> pressedColor;
+
 		// on click...? function pointer? or send event?
 	};
 	
@@ -130,11 +157,17 @@ namespace cursed_engine
 
 		std::string text = "";
 		ResourceHandle<Texture> textureHandle; // Test...
-		ResourceHandle<Font> fontHandle;
+		ResourceHandle<Font> fontHandle; // Store handles?? or just raw data (id, font type, size)? handles invalidated -> but genrated again in text system
 		Color color = Color::black;
 		int fontSize = 12;
 		bool isDirty = true; // false;
 
 		// could store a Texture here.... 
+	};
+
+	struct AudioComponent
+	{
+		ResourceHandle<Audio> audioHandle;
+		bool isLooping;
 	};
 }

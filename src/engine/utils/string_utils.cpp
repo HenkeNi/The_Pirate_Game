@@ -4,7 +4,7 @@
 
 namespace cursed_engine::helpers
 {
-	std::string toLowercase(std::string str)
+	constexpr std::string toLowercase(std::string str)
 	{
 		std::transform(str.begin(), str.end(), str.begin(),
 			[](unsigned char c) { return std::tolower(c); });

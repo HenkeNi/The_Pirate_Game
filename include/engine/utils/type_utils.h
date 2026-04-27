@@ -3,6 +3,8 @@
 
 namespace cursed_engine
 {
+	// TODO; mark constexpr?
+
 	template <typename T>
 	[[nodiscard]] inline std::type_index getTypeIndex() noexcept
 	{

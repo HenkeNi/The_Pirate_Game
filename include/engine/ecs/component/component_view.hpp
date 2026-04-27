@@ -310,8 +310,9 @@ namespace cursed_engine
 		return std::tie(std::get<ComponentContainer<Ts>*>(m_components)->at(id)...); // Use at instead?
 	}
 
+#pragma endregion
 
-	// ==================== Iterator ====================
+#pragma region Iterator
 
 	template <ComponentType ...Ts>
 	ComponentView<Ts...>::Iterator::Iterator(ComponentView* view, std::size_t index)

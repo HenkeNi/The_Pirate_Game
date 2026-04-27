@@ -3,11 +3,12 @@
 
 namespace cursed_engine::helpers
 {
-	std::string toLowercase(std::string str);
+	// constexpr? and noexcept?
+	[[nodiscard]] constexpr std::string toLowercase(std::string str);
 
-	std::string remove(std::string str, const std::string& substr);
+	[[nodiscard]] std::string remove(std::string str, const std::string& substr);
 
-	std::string removeLast(std::string str, const std::string& substr);
+	[[nodiscard]] std::string removeLast(std::string str, const std::string& substr);
 
-	std::string removeSuffix(std::string str, const std::string& suffix);
-}
+	[[nodiscard]] std::string removeSuffix(std::string str, const std::string& suffix);
+	}

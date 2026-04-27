@@ -19,7 +19,7 @@ namespace cursed_engine
 	{
 	public:
 		JsonDocument();
-		JsonDocument(const fs::path& path); // make sure works!!
+		JsonDocument(const fs::path& path); // make sure works!! or dont? no way of knowing if succesful or not,..
 		~JsonDocument();
 
 		JsonResult loadFromFile(const fs::path& path);
