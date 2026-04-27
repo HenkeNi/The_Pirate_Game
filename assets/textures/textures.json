@@ -1,0 +1,26 @@
+{
+  "textures": {
+    "hero_character": {
+      "path": "hero.png",
+      "offload": {
+        "mode": "manual"
+      }
+    },
+    "background_mountains": {
+      "path": "mountains.png",
+      "offload": {
+        "mode": "automatic",
+        "timeout_seconds": 10.0,
+        "priority": "low"
+      }
+    },
+    "ui_button": {
+      "path": "button.png",
+      "offload": {
+        "mode": "automatic",
+        "timeout_seconds": 30.0,
+        "priority": "high"
+      }
+    }
+  }
+}
