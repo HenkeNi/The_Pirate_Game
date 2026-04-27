@@ -1,6 +1,8 @@
 #include "engine/window/window.h"
-#include "engine/config/config_types.h"
+//#include "engine/config/config_types.h" or use this?!
+#include "engine/config/config_manager.h"
 #include "engine/core/logger.h"
+#include "engine/resources/surface.h"
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_events.h>
 
@@ -17,20 +19,22 @@ namespace cursed_engine
 			shutdown();
 	}
 
-	void Window::init(const char* title, const WindowConfig& config)
+	void Window::create(const char* title, const WindowConfig& config)
 	{
-		m_window = SDL_CreateWindow(title, config.width, config.height, SDL_WINDOW_RESIZABLE);
-
-		if (!m_window)
+		if (m_window)
 		{
-			//Logger::logError("Failed to create window. Reason: " + SDL_GetError());
+			Logger::logWarning("Valid window already exists, closing down current");
+			shutdown();
 		}
-		else
+
+		if (m_window = SDL_CreateWindow(title, config.width, config.height, SDL_WINDOW_RESIZABLE))
 		{
 			m_size.x = config.width;
 			m_size.y = config.height;
-
-			m_shouldClose = false;
+		}
+		else
+		{
+			Logger::logError(std::format("Failed to create window. Reason: {}", SDL_GetError()));
 		}
 	}
 
@@ -70,22 +74,9 @@ namespace cursed_engine
 		SDL_SetWindowTitle(m_window, title);
 	}
 	
-	void Window::setIcon(SDL_Surface* surface)
+	void Window::setIcon(Surface surface)
 	{
-		SDL_SetWindowIcon(m_window, surface);
-	}
-
-	void Window::setIcon(const std::filesystem::path& path)
-	{
-		auto* surface = SDL_LoadBMP(path.string().c_str());
-		if (!surface)
-		{
-			Logger::logError("Failed to load icon: " + path.string());
-			return;
-		}
-
-		SDL_SetWindowIcon(m_window, surface);
-		SDL_DestroySurface(surface);
+		SDL_SetWindowIcon(m_window, surface.surface);
 	}
 
 	void Window::handleResize(int width, int height)

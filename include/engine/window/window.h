@@ -4,13 +4,14 @@
 #include <filesystem>
 
 typedef struct SDL_Window SDL_Window;
-struct SDL_Surface;
-
 union SDL_Event;
 
 namespace cursed_engine
 {
 	struct WindowConfig;
+	struct Surface;
+
+	// window builder?
 
 	class Window : public Subsystem
 	{
@@ -19,15 +20,14 @@ namespace cursed_engine
 		Window();
 		~Window();
 
-		void init(const char* title, const WindowConfig& config);	// or rename: applyConfig();
-
-		void shutdown(); // or destroy?
+		void create(const char* title, const WindowConfig& config);	// or rename: applyConfig();
+		void shutdown() override; // or destroy? or both?
 
 		// ==================== Event Handling ====================
 		void processEvent(const SDL_Event& event);
 		
 		// ==================== Queries ====================
-		[[nodiscard]] inline SDL_Window* getHandle() const noexcept { return m_window; }
+		[[nodiscard]] inline SDL_Window* getHandle() const noexcept { return m_window; } // rename?
 
 		[[nodiscard]] inline int getWidth() const noexcept { return m_size.x; }
 
@@ -46,10 +46,8 @@ namespace cursed_engine
 
 		void setTitle(const char* title);
 
-		void setIcon(SDL_Surface* surface);
-
-		void setIcon(const std::filesystem::path& path);
-
+		void setIcon(Surface surface); // best way of passing it?
+		
 	private:
 		// ==================== Interal Helpers ====================
 		void handleResize(int width, int height);
