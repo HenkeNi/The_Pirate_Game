@@ -6,6 +6,8 @@
 #include "engine/rendering/texture.h"
 #include "engine/rendering/render_types.h" // Put in renderer.h? to avoid including it
 
+#include <source_location>
+#include <iostream>
 namespace cursed_engine
 {
 	RenderSystem::RenderSystem(Renderer& renderer, EngineResources& engineResources, AssetManager& assetManager)
@@ -25,18 +27,19 @@ namespace cursed_engine
 		const auto componentView = registry.view<SpriteComponent, TransformComponent>();
 		componentView.forEach([&](const SpriteComponent& spriteComponent, const TransformComponent& transformComponent)
 			{
-
 				const auto& textureAtlas = m_assetManager.getAsset<TextureAtlas>(spriteComponent.atlasHandle); // no asset stored AND invalid index!
 
-				const auto& textureHandle = textureManager.getHandle(TextureKey{ textureAtlas.textureID });
-				auto& texture = textureManager.get(textureHandle);
+				const auto& textureHandle = textureManager.getHandleById(textureAtlas.textureID);
+				
+				if (auto* texture = textureManager.get(textureHandle))
+				{
+					// TODO; handle invalid/not loaded texture!
 
-				// TODO; handle invalid/not loaded texture!
+					const auto& pos = transformComponent.position;
+					const auto& scale = transformComponent.scale;
 
-				const auto& pos = transformComponent.position;
-				const auto& scale = transformComponent.scale;
-
-				m_renderer.renderTexture(pos.x, pos.y, scale.x, scale.y, texture);
+					m_renderer.renderTexture(pos.x, pos.y, scale.x, scale.y, *texture);
+				}
 			});
 
 		// ################### TEST #########################
@@ -47,12 +50,14 @@ namespace cursed_engine
 
 #endif
 
-		auto textureHandleTest = textureManager.getHandle(TextureKey{ "test3" }); // pass in "coordinates"? or do that in texture?
-		auto& testTexture = textureManager.get(textureHandleTest);
-
-		m_renderer.renderTexture(10, 10, 10, 10, testTexture);
+		auto textureHandleTest = textureManager.getHandleById("test3"); // pass in "coordinates"? or do that in texture?
+		
+		if (auto* testTexture = textureManager.get(textureHandleTest))
+		{
+			m_renderer.renderTexture(10, 10, 10, 10, *testTexture);
+		}
+		
 		m_renderer.renderLine(0, 0, 100, 100, Color{ 123, 21, 32, 255 });
-
 
 		renderText(registry);
 		//m_renderer.present(); // Here or in main loop?
@@ -64,6 +69,10 @@ namespace cursed_engine
 	{
 		auto view = registry.view<TransformComponent, TextComponent>();
 		
+		//Logger::logInfoExtended("HELLO");
+		//Logger::logWarningExtended("Bye");
+		//Logger::logErrorExtended("farewell");
+
 		// TODO; check if possible to have one argument const ref and one argument just ref...
 		view.forEach([&](const TransformComponent& transformComponent, TextComponent& textComponent)
 			{
@@ -71,16 +80,20 @@ namespace cursed_engine
 				
 				if (!textureHandle.isValid())
 				{
-					// log warning/error?
+					Logger::logError("[RenderSystem::renderText] - Invalid texture handle");
+					//(false && "Invalid (text) texture handle"); // allow since text system generates new handle...
+
 					return;
 				}
 
-				auto& texture = m_engineResources.textureManager.get(textureHandle);
+				if (auto* texture = m_engineResources.textureManager.get(textureHandle))
+				{
+					const auto& position = transformComponent.position;
+					const auto& size = transformComponent.scale; // this?
+					m_renderer.renderTexture(position, size, *texture);
+				}
 
-				const auto& position = transformComponent.position;
-				const auto& size = transformComponent.scale; // this?
 
-				m_renderer.renderTexture(position, size, texture);
 				//m_renderer.renderTexture(position, 300.f, 100.f, texture);
 
 				// here or in text system?
@@ -94,7 +107,7 @@ namespace cursed_engine
 			});
 	}
 
-	void RenderSystem::renderDebug(ECSRegistry& registry)
+	void RenderSystem::renderDebug(ECSRegistry& registry) // rename render colliders?
 	{
 		// TODO; use RenderRects and batch the call, rather than passing each individual rects!
 
@@ -103,30 +116,14 @@ namespace cursed_engine
 		view.forEach([&](TransformComponent& transformComponent, BoundingBox& boundingBox)
 			{
 				// pos 
-				auto position = transformComponent.position;
-				auto offset = boundingBox.offset;
-				auto halfExtent = boundingBox.halfExtents;
-				/*min.x += boundingBox.offset.x;
-				min.y += boundingBox.offset.y;
+				//FVec2 min = transformComponent.position + boundingBox.offset;
+				//FVec2 max = min + boundingBox.halfExtents;
 
-				FVec2 max;
-				max.x = min.x + boundingBox.halfExtents.x * 2;
-				max.y = min.y + boundingBox.halfExtents.y * 2;
-				*/
-				FVec2 p1{ position.x + offset.x, position.y + offset.y };
-				FVec2 p2{ p1.x, p1.y + halfExtent.y }; // halfextent is width?
-				FVec2 p3{ p1.x + halfExtent.x, p1.y };
-				FVec2 p4{ p3.x, p2.y };
-				
-				Color color{ 0, 0, 0, 0 };
-
-				m_renderer.renderOutlineRect(FRect{ p1.x, p2.y, p3.x, p4.x }, Color::black);
-				m_renderer.renderFillRect(FRect{ position.x, position.y, 100, 100 }, Color::red);
-
-				/*m_renderer.renderLine(p1, p2, color);
-				m_renderer.renderLine(p1, p3, color);
-				m_renderer.renderLine(p2, p4, color);
-				m_renderer.renderLine(p3, p4, color);*/
+				FVec2 position = transformComponent.position + boundingBox.offset;
+				FVec2 size = boundingBox.halfSize * 2.f;
+							
+				m_renderer.renderOutlineRect(position.x, position.y, size.x, size.y, Color::red);
+				//m_renderer.renderFillRect(FRect{ position.x, position.y, 100, 100 }, Color::red);
 			});
 	}
 }
