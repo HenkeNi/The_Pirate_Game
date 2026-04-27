@@ -88,6 +88,7 @@ namespace cursed_engine
 
 	JsonValue JsonDocument::operator[](const char* key) const
 	{
+		assert(m_impl->document.HasMember(key) && "JsonDocument::operator[] - Member not found!");
 		return JsonValue{ &m_impl->document[key]};
 	}
 }
