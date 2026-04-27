@@ -5,8 +5,8 @@
 
 
 #include <engine/ecs/entity/entity_factory.h>
-#include <engine/core/type_registry.hpp>
-#include <engine/core/types.h>
+//#include <engine/core/type_registry.hpp>
+#include <engine/ecs/component/component_registry.h>
 
 void SceneLoader::loadAssets(Scene& scene, const std::filesystem::path& path) const
 {
@@ -19,11 +19,11 @@ void SceneLoader::loadAssets(Scene& scene, const std::filesystem::path& path) co
 		return;
 	}
 
-	auto* componentRegistry = scene.m_context.componentData;
+	auto* componentRegistry = scene.m_context.componentRegistry;
 	
 	if (!componentRegistry)
 	{
-		cursed_engine::Logger::logError("Invalid Component Data!");
+		cursed_engine::Logger::logError("Invalid Component registry!");
 		return;
 	}
 

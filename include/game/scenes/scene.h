@@ -1,7 +1,8 @@
 #pragma once
-#include "engine/ecs/ecs_registry.h"
-#include "engine/core/registry_aliases.h"
+#include <engine/ecs/ecs_registry.h>
 #include <vector>
+
+#include <engine/ecs/component/component_registry.h>
 
 namespace cursed_engine
 {
@@ -11,13 +12,14 @@ namespace cursed_engine
 	//template <typename T, typename ID>
 	//class TypeRegistry; // TODO; replace with type alias for ComponentInfo instead!!
 
+	struct ComponentInfo;
 	//struct ComponentInfo;
 }
 
 struct SceneContext
 {
-	SceneContext(cursed_engine::SystemManager* manager, cursed_engine::EntityFactory* factory, cursed_engine::ComponentRegistry* componentData_, cursed_engine::EventBus* _eventBus)
-		: systemManager{ manager }, entityFactory{ factory }, componentData{ componentData_ }, eventBus{ _eventBus }
+	SceneContext(cursed_engine::SystemManager* manager, cursed_engine::EntityFactory* factory, cursed_engine::ComponentRegistry* componentRegistry, cursed_engine::EventBus* eventBus)
+		: systemManager{ manager }, entityFactory{ factory }, componentRegistry{ componentRegistry }, eventBus{ eventBus }
 	{
 	}
 
@@ -27,7 +29,10 @@ struct SceneContext
 	cursed_engine::SystemManager* systemManager;// Or each scene stores its own system manager??
 	cursed_engine::EntityFactory* entityFactory;
 	cursed_engine::EventBus* eventBus;
-	cursed_engine::TypeRegistry<cursed_engine::ComponentInfo, uint32_t>* componentData; //  todo, accept this in constructor...
+
+	cursed_engine::ComponentRegistry* componentRegistry;
+
+	//cursed_engine::TypeRegistry<cursed_engine::ComponentInfo, uint32_t>* componentData; //  todo, accept this in constructor...
 	//Todo, store meta registry (component data)
 };
 
