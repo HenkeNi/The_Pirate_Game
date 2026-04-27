@@ -2,7 +2,7 @@
 #include "engine/utils/non_copyable.h"
 #include <filesystem>
 
-#include "engine/core/registry_aliases.h"
+// #include "engine/core/registry_aliases.h"
 
 namespace cursed_engine
 { 
@@ -18,7 +18,7 @@ namespace cursed_engine
 		class Renderer& renderer;
 		class Window& window;
 		class EventBus& eventBus;
-		ComponentRegistry& componentData;
+		class ComponentRegistry& componentRegistry;
 		const std::filesystem::path& assetRoot;
 		
 		// ecs registry?
