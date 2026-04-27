@@ -1,0 +1,29 @@
+{
+  "name": "The Cursed Pirate",
+  "version": "1.0.0-beta",
+  "identifier": "cursed_ones.the_cursed_pirate",
+  "audio": {
+    "master_volume": 1.0,
+    "music_volume": 0.8,
+    "sfx_volume": 0.9
+  },
+  "input": {
+    "mouse_sensitivity": 1.0
+  },
+  "renderer": {
+    "brightness": 1.0,
+    "contrast": 1.0
+  },
+  "resource": {
+    "supported_image_formats": [ ".png", ".jpeg", ".jpg", ".bmp" ],
+    "supported_audio_formats": [ ".wav" ],
+    "supported_font_formats": [ ".ttf" ]
+  },
+  "window": {
+    "width": 1280,
+    "height": 720,
+    "vsync": true,
+    "fullscreen": false,
+    "icon_path": "../assets/textures/test3.bmp"
+  }
+}
