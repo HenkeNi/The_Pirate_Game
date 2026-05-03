@@ -1,7 +1,9 @@
 #include "engine/input/input_handler.h"
-#include "engine/config/config_types.h"
+//#include "engine/config/config_types.h"
+#include "engine/config/config_manager.h"
 #include "engine/core/logger.h"
 #include "engine/events/event_bus.h"
+#include "engine/events/events.h"
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <functional>
@@ -90,10 +92,14 @@ namespace cursed_engine
 
 	bool InputHandler::isMouseBtnPressed(MouseButton button) const
 	{
-		if (button != MouseButton::Count)
-			return m_mouseState.buttons[(std::size_t)button].inputState == InputState::Pressed;
+		auto mouseState = SDL_GetMouseState(nullptr, nullptr);
+	
+		return mouseState & SDL_BUTTON_LMASK;
 
-		return false;
+		//if (button != MouseButton::Count)
+		//	return m_mouseState.buttons[(std::size_t)button].inputState == InputState::Pressed;
+
+		//return false;
 	}
 
 	bool InputHandler::isMouseBtnHeld(MouseButton button) const
@@ -114,7 +120,19 @@ namespace cursed_engine
 
 	InputState InputHandler::getMouseInputState(MouseButton button) const
 	{
-		return m_mouseState.buttons[(std::size_t)button].inputState;
+		const auto& mouseButton = m_mouseState.buttons[(std::size_t)button];
+
+		if (mouseButton.wasDown && mouseButton.isDown)
+			return InputState::Held;
+		else if (mouseButton.wasDown && !mouseButton.isDown)
+			return InputState::Released;
+		else if (!mouseButton.wasDown && mouseButton.isDown)
+			return InputState::Pressed;
+
+		return InputState::None;
+
+
+		//return m_mouseState.buttons[(std::size_t)button].inputState;
 	}
 
 	FVec2 InputHandler::getMousePosition() const
@@ -152,13 +170,44 @@ namespace cursed_engine
 		uint8_t button = event.button.button;
 		auto& mouseButton = m_mouseState.buttons[button];
 
-		//mouseButton.wasDown = mouseButton.isDown;
+		mouseButton.wasDown = mouseButton.wasDown;
 		mouseButton.isDown = (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN);
 
-		if (!mouseButton.wasDown && mouseButton.isDown)
-			m_eventBus.publishInstantly<MouseBtnPressedEvent>((MouseButton)button);
-		else if (mouseButton.wasDown && !mouseButton.isDown)
-			m_eventBus.publishInstantly<MouseBtnReleasedEvent>((MouseButton)button);
+		//auto previousState = mouseButton.currentState;
+
+		//bool isDown = event.type == SDL_EVENT_MOUSE_BUTTON_DOWN;
+
+		//if (previousState == InputState::Held && isDown)
+		//{
+		//	// held
+		//}
+		//else if (previousState == InputState::None && isDown)
+		//{
+		//	// pressed
+		//}
+
+
+
+		//mouseButton.previousState = mouseButton.currentState;
+
+
+
+		//bool isDown = event.type == SDL_EVENT_MOUSE_BUTTON_DOWN;
+
+		//if (isDown)
+		//{
+		//	//mouseButton.inputState = InputState::Pressed;
+		//	//mouseButton.inputState =
+		//}
+
+
+		//mouseButton.wasDown = mouseButton.isDown;
+		//mouseButton.isDown = (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN);
+
+		//if (!mouseButton.wasDown && mouseButton.isDown)
+		//	m_eventBus.publishInstantly<MouseBtnPressedEvent>((MouseButton)button);
+		//else if (mouseButton.wasDown && !mouseButton.isDown)
+		//	m_eventBus.publishInstantly<MouseBtnReleasedEvent>((MouseButton)button);
 
 		/*switch (event.button.button)
 		{

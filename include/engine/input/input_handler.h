@@ -33,30 +33,11 @@ namespace cursed_engine
 		Count
 	};
 
-	struct MouseBtnPressedEvent // Shared events mouse btn and key?
-	{
-		MouseButton button;
-	};
-
-	struct MouseBtnReleasedEvent
-	{
-		MouseButton button;
-	};
-
-	struct KeyPressedEvent
-	{
-		SDL_Scancode key;
-	};
-
-	struct KeyReleasedEvent
-	{
-		SDL_Scancode key;
-	};
-
 	struct InputInfo
 	{
-		InputState inputState = InputState::None; // all three needed? or remove this?
-
+		InputState inputState = InputState::None; // Union? or remove?
+		//InputState currentState = InputState::None; // all three needed? or remove this?
+		//InputState previousState = InputState::None;
 		bool isDown = false;
 		bool wasDown = false;
 	};
