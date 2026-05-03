@@ -6,8 +6,6 @@
 #include "engine/rendering/texture.h"
 #include "engine/rendering/render_types.h" // Put in renderer.h? to avoid including it
 
-#include <source_location>
-#include <iostream>
 namespace cursed_engine
 {
 	RenderSystem::RenderSystem(Renderer& renderer, EngineResources& engineResources, AssetManager& assetManager)
@@ -30,7 +28,7 @@ namespace cursed_engine
 				const auto& textureAtlas = m_assetManager.getAsset<TextureAtlas>(spriteComponent.atlasHandle); // no asset stored AND invalid index!
 
 				const auto& textureHandle = textureManager.getHandleById(textureAtlas.textureID);
-				
+
 				if (auto* texture = textureManager.get(textureHandle))
 				{
 					// TODO; handle invalid/not loaded texture!
@@ -50,13 +48,6 @@ namespace cursed_engine
 
 #endif
 
-		auto textureHandleTest = textureManager.getHandleById("test3"); // pass in "coordinates"? or do that in texture?
-		
-		if (auto* testTexture = textureManager.get(textureHandleTest))
-		{
-			m_renderer.renderTexture(10, 10, 10, 10, *testTexture);
-		}
-		
 		m_renderer.renderLine(0, 0, 100, 100, Color{ 123, 21, 32, 255 });
 
 		renderText(registry);
@@ -68,7 +59,7 @@ namespace cursed_engine
 	void RenderSystem::renderText(ECSRegistry& registry)
 	{
 		auto view = registry.view<TransformComponent, TextComponent>();
-		
+
 		//Logger::logInfoExtended("HELLO");
 		//Logger::logWarningExtended("Bye");
 		//Logger::logErrorExtended("farewell");
@@ -77,7 +68,7 @@ namespace cursed_engine
 		view.forEach([&](const TransformComponent& transformComponent, TextComponent& textComponent)
 			{
 				auto textureHandle = textComponent.textureHandle;
-				
+
 				if (!textureHandle.isValid())
 				{
 					Logger::logError("[RenderSystem::renderText] - Invalid texture handle");
@@ -111,19 +102,33 @@ namespace cursed_engine
 	{
 		// TODO; use RenderRects and batch the call, rather than passing each individual rects!
 
-		// TODO; wrap in "limited" scope if multiple...
-		auto view = registry.view<TransformComponent, BoundingBox>();
-		view.forEach([&](TransformComponent& transformComponent, BoundingBox& boundingBox)
+		auto view = registry.view<TransformComponent, BoundingBoxComponent>();
+		view.forEach([&](Entity entity, TransformComponent& transformComponent, BoundingBoxComponent& boundingBoxComponent)
 			{
-				// pos 
-				//FVec2 min = transformComponent.position + boundingBox.offset;
-				//FVec2 max = min + boundingBox.halfExtents;
+				FVec2 position = transformComponent.position + boundingBoxComponent.offset;
+				FVec2 size = boundingBoxComponent.halfSize * 2.f;
 
-				FVec2 position = transformComponent.position + boundingBox.offset;
-				FVec2 size = boundingBox.halfSize * 2.f;
-							
-				m_renderer.renderOutlineRect(position.x, position.y, size.x, size.y, Color::red);
-				//m_renderer.renderFillRect(FRect{ position.x, position.y, 100, 100 }, Color::red);
+				Color color = Color::black;
+
+				if (auto* buttonComponent = registry.tryGetComponent<ButtonComponent>(entity))
+				{
+					switch (buttonComponent->currentState)
+					{
+					case ButtonComponent::State::Normal:
+						color = Color::green;
+						break;
+
+					case ButtonComponent::State::Hovered:
+						color = Color::yellow;
+						break;
+
+					case ButtonComponent::State::Pressed:
+						color = Color::red;
+						break;
+					}
+				}
+
+				m_renderer.renderOutlineRect(position.x, position.y, size.x, size.y, color);
 			});
 	}
 }

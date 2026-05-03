@@ -65,8 +65,8 @@
             "y": 0
           },
           "size": {
-            "width": 50,
-            "height": 25
+            "width": 100,
+            "height": 50
           }
         }
       }
@@ -75,13 +75,13 @@
       "id": "settings_button",
       "components": {
         "transform": {
-          "x": 600,
-          "y": 20,
-          "width": 200,
-          "height": 100
+          "x": 1220,
+          "y": 10,
+          "width": 50,
+          "height": 50
         },
         "sprite": {
-          "id": "pirate-flag"
+          "id": "cog"
         },
         "button": {
           "action": "LoadScene",
@@ -93,7 +93,7 @@
             "y": 0
           },
           "size": {
-            "width": 100,
+            "width": 50,
             "height": 50
           }
         }
