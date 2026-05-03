@@ -118,14 +118,19 @@ Mark the cache dirty if so.
 
 		using ComponentManagers = std::array<std::unique_ptr<class IComponentManager>, MAX_COMPONENTS>;
 		//using ComponentManagers = std::vector<std::unique_ptr<class IComponentManager>>; // USe array instead?
-		using QueryCacheStorage = std::unordered_map<EntitySignature, QueryCache>;
+		using QueryCacheStorage = std::unordered_map<EntitySignature, QueryCache>; // cahcedQueries? cachedEntitiesWithSignature?
 
 		EntityManager m_entityManager;
 		ComponentManagers m_componentManagers;
-		QueryCacheStorage m_queryCacheStorage;
+		//QueryCacheStorage m_queryCacheStorage; // NOT USED?
 
 		std::unordered_map<EntitySignature, QueryCache> m_cachedQueries;
+
+
+
 		// std::unordered_map<EntitySignature, ComponentView m_cachedComponentViews... OR chache matchin entities?
+	
+		// TODO; store entity handles here??
 	};
 
 #pragma region Methods
@@ -173,6 +178,7 @@ Mark the cache dirty if so.
 		}
 
 		auto entities = m_entityManager.getEntities(signature);
+
 		auto [it, success] = m_cachedQueries.insert({ signature, QueryCache{ std::move(entities), false } });
 
 		//if (it == m_cachedQueries.end()) HANDLE OR NOT???
@@ -265,7 +271,7 @@ Mark the cache dirty if so.
 	{
 		if (!m_entityManager.isAlive(entity))
 		{
-			Logger::LogWarning("[ECS::TryGetComponent] - Tried access component with an invalid entity!");
+			Logger::logWarning("[ECS::TryGetComponent] - Tried access component with an invalid entity!");
 			return nullptr;
 		}
 
@@ -273,7 +279,7 @@ Mark the cache dirty if so.
 
 		if (!componentManager) [[unlikely]]
 		{
-			Logger::LogWarning("[ECS::TryGetComponent] - ComponentManager for type not found!");
+			Logger::logWarning("[ECS::TryGetComponent] - ComponentManager for type not found!");
 			return nullptr;
 		}
 

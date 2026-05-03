@@ -19,6 +19,8 @@ namespace cursed_engine
 		void registerAll(ComponentRegistry& registry, AssetManager& assetManager, EngineResources& engineResources, const ResourceConfig& resourceConfig);
 	}
 
+	// Separet ui transform and world transform? or screen space / world space?
+
 	struct TransformComponent
 	{
 		// TODO; add 2 constructors? one for each individual argument?
@@ -90,10 +92,10 @@ namespace cursed_engine
 	//	FVec2 mousePosition;
 	//};
 
-	struct BoundingBox
+	struct BoundingBoxComponent
 	{
 		FVec2 offset;
-		FVec2 halfSize;
+		FVec2 halfSize; // figure out a good way where you dont have to specify bounding box size in json (if change transform size, you need to remebe to update bounding box as well)
 
 		//Vec2 center;
 		//Vec2 halfSize;
@@ -129,7 +131,7 @@ namespace cursed_engine
 		{
 		}
 
-		enum class State{ Normal, Hovered, Pressed };
+		enum class State{ Normal, Hovered, Pressed }; // replace with input state instead?
 		State currentState = State::Normal;
 		State previousState = State::Normal;
 

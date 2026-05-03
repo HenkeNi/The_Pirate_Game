@@ -13,6 +13,9 @@ namespace cursed_engine
 	class EntityFactory // TODO; accept asset mangaer instead!
 	{
 	public:
+		EntityFactory();
+		~EntityFactory() = default;
+
 		void init(AssetManager* assetManager);
 		void setEcsRegistry(ECSRegistry* ecsRegistry);
 
