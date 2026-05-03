@@ -92,19 +92,7 @@ namespace cursed_engine
 			}
 		}
 
-
-		// Opt 1 - return m_alive.getDense();
-
-		// Opt 2 - filter here...
-
-		// Opt 3 - store ref to sparse set in view and iterate (when needed) it... 
-
 		return matches;
-
-		//assert(false && "NOT IMPLEMTENED");
-		// sparse set
-
-		//return std::span<const Entity>();
 	}
 
 	void EntityManager::initializeAvailableIDs()
