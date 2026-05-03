@@ -28,7 +28,7 @@ namespace cursed_engine
 
 	JsonResult JsonDocument::loadFromFile(const fs::path& path)
 	{
-		constexpr std::string_view logPrefix = "[JsonParser::loadFromFile] ";
+		constexpr std::string_view logPrefix = "[JsonDocument::loadFromFile] ";
 
 		if (!fs::exists(path))
 		{
