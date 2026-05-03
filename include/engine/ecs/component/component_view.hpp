@@ -77,14 +77,14 @@ namespace cursed_engine
 
 		[[nodiscard]] std::size_t size() const noexcept;
 
-		[[nodiscard]] inline const std::span<Entity> getEntities() const { return m_entities; }
+		[[nodiscard]] inline const std::span<Entity> getEntities() const { return m_entities; } // return vector? or remove?
 
 		// ==================== Search ====================
 		template <typename Predicate> // template <Callable Func>
-		[[nodiscard]] std::optional<Entity> findIf(Predicate&& predicate) const;
+		[[nodiscard]] std::optional<Entity> findIf(Predicate&& predicate) const; // findFirst?
 
 		template <typename Predicate>
-		[[nodiscard]] std::vector<Entity> findAllIf(Predicate&& predicate) const;
+		[[nodiscard]] std::vector<Entity> findAllIf(Predicate&& predicate) const; // findAll?
 
 		// ==================== Iterator ====================
 		class Iterator
@@ -96,9 +96,9 @@ namespace cursed_engine
 
 			bool operator!=(const Iterator& other) const;
 
-			const std::tuple<Ts*...> operator*() const;
+			const std::tuple<Entity, Ts*...> operator*() const;
 
-			std::tuple<Ts*...> operator*();
+			std::tuple<Entity, Ts*...> operator*();
 
 		private:
 			ComponentView* m_view;
@@ -114,7 +114,7 @@ namespace cursed_engine
 
 		std::tuple<Ts&...> getComponents(EntityID id);
 
-		std::span<const Entity> m_entities; // TODO; or handles?
+		std::span<const Entity> m_entities;
 		std::tuple<ComponentContainer<Ts>*...> m_components;
 	};
 
@@ -334,15 +334,28 @@ namespace cursed_engine
 	}
 
 	template <ComponentType... Ts>
-	const std::tuple<Ts*...> ComponentView<Ts...>::Iterator::operator*() const
+	const std::tuple<Entity, Ts*...> ComponentView<Ts...>::Iterator::operator*() const
 	{
-		return m_view->GetComponents(m_view->m_entities[m_index]);
+		const auto& entity = m_view->m_entities[m_index];
+		auto combined = std::tuple_cat(std::make_tuple(entity, m_view->getComponents(entity.id)));
+
+		return combined;
+
+		//return m_view->GetComponents(m_view->m_entities[m_index]);
 	}
 
 	template <ComponentType... Ts>
-	std::tuple<Ts*...> ComponentView<Ts...>::Iterator::operator*()
+	std::tuple<Entity, Ts*...> ComponentView<Ts...>::Iterator::operator*()
 	{
-		return m_view->GetComponents(m_view->m_entities[m_index]);
+		// TODO; return const cast?
+
+		const auto& entity = m_view->m_entities[m_index];
+		auto combined = std::tuple_cat(std::make_tuple(entity, m_view->getComponents(entity.id)));
+
+		return combined;
+
+		//return m_view->GetComponents(m_view->m_entities[m_index]);
+		
 	}
 
 #pragma endregion
