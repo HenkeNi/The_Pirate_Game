@@ -3,13 +3,17 @@
 
 namespace cursed_engine
 {
+	// Repsonsibilities; should determine/calculate final position, anchors, etc...
+	// set state?
+	// update visual state...
+
 	class InputHandler;
-	class EventBus;
+	class ActionRegistry;
 
 	class UISystem : public System
 	{
 	public:
-		UISystem(InputHandler& inputHandler, EventBus& eventBus);
+		UISystem(InputHandler& inputHandler, ActionRegistry& actionRegistry);
 
 		void update(SystemContext& context) override;
 
@@ -20,6 +24,7 @@ namespace cursed_engine
 		//void handleMouseBtnPressed(MouseButton button);
 
 		InputHandler& m_inputHandler;
-		EventBus& m_eventBus;
+		ActionRegistry& m_actionRegistry;
+		//EventBus& m_eventBus;
 	};
 }
