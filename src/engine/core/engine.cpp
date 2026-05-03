@@ -10,10 +10,12 @@
 #include <SDL3/SDL.h>
 
 
-
+#include <SDL3_image/SDL_image.h>
 
 #include "engine/assets/asset_loader.h"
 #include "engine/audio/audio_controller.h"
+
+#include "engine/action/actions.h"
 
 #include "engine/ecs/system/system_manager.h"
 #include "engine/ecs/entity/entity_factory.h"
@@ -29,6 +31,8 @@
 
 #include "engine/config/config_types.h" // remove later...
 #include "engine/config/config_loader.h"
+
+#include "engine/action/action_registry.h"
 
 // REMOEV
 
@@ -58,11 +62,14 @@ namespace cursed_engine
 		{
 		}
 	
+		// A GameContext in applicaiton (or Applicaiton Context, that stores certain "systems")
+
 		SubsystemRegistry subsystemRegistry;
 		SystemManager systemManager;
 		FrameTimer timer;
 		MetaStorage metaStorage;
 		EntityFactory entityFactory; // pass in assetmanager, set ecs registry...
+		ActionRegistry actionRegistry;
 		std::filesystem::path assetRoot; // ??
 
 		Application& application;
@@ -145,15 +152,16 @@ namespace cursed_engine
 		loadAssets(); // HERE? Dont do in init? also maybe dont do in Engine?
 
 		core_components::registerAll(m_impl->metaStorage.componentData, assetManager, engineResources, configManager.getResourceConfig());
+		core_actions::registerAll(m_impl->actionRegistry, eventBus);
 
 		// Move to other part of code base?
 		auto& systemManager = m_impl->systemManager;
 		systemManager.emplace<RenderSystem>(renderer, engineResources, assetManager);
 		//systemManager.emplace<InputSystem>(inputHandler);
 		systemManager.emplace<InteractionSystem>();
-		systemManager.emplace<UISystem>(inputHandler, eventBus);
+		systemManager.emplace<UISystem>(inputHandler, m_impl->actionRegistry);
 		systemManager.emplace<TextSystem>(engineResources.textManager, localization);
-		systemManager.emplace<AudioSystem>(engineResources.audioManager, audioController);
+		systemManager.emplace<AudioSystem>(engineResources.audioManager, audioController, eventBus);
 
 		m_impl->application.onCreated({
 			m_impl->systemManager,
