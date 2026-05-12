@@ -101,12 +101,12 @@ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT G
 
 # Filters
 # Engine
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src/engine" PREFIX "Engine" FILES ${Engine_SOURCES})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src/engine" PREFIX "Engine\\Source" FILES ${Engine_SOURCES})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/include/engine" PREFIX "Engine\\Include"
     FILES ${Engine_HEADERS})  # only headers here
 
 # Game
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src/game" PREFIX "Game" FILES ${Game_SOURCES})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src/game" PREFIX "Game\\Source" FILES ${Game_SOURCES})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/include/game" PREFIX "Game\\Include"
     FILES ${Game_HEADERS})    # only headers here (Do i need to create same separation of 'File' as engine?
 
