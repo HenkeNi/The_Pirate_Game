@@ -11,22 +11,38 @@
 
 namespace cursed_engine
 {
-	TextManager::TextManager(TextureManager& textureManager, FontManager& fontManager, Renderer& renderer)
-		: m_textureManager{ textureManager }, m_fontManager{ fontManager }, m_renderer{ renderer }
+	TextManager::TextManager(FontManager& fontManager, Renderer& renderer)
+		: m_fontManager{ fontManager }, m_renderer{ renderer }, m_cache{ 10'000 } // TODO; fix! frames before eviction
 	{
 	}
+
+	//TextManager::TextManager(TextureManager& textureManager, FontManager& fontManager, Renderer& renderer)
+	//	: m_textureManager{ textureManager }, m_fontManager{ fontManager }, m_renderer{ renderer }
+	//{
+	//}
 
 
 	ResourceHandle<Texture> TextManager::getHandle(const std::string& id, int fontSize)
 	{
 		using TextureHandle = ResourceHandle<Texture>;
 
-		TextureHandle textureHandle = m_textureManager.getHandle(TextureKey{ id + std::to_string(fontSize) });
-
-		if (textureHandle.isValid())
+		TextKey key{ id, fontSize }; // accept id by value and move=
+		if (auto it = m_keyToHandle.find(key); it != m_keyToHandle.end())
 		{
-			return textureHandle;
+			if (m_cache.isValid(it->second))
+				return it->second;
 		}
+
+		// TODO; create texture here???? 
+
+		//TextureHandle textureHandle = m_cache.
+		//TextureHandle textureHandle = m_textureManager.getHandleById(id + std::to_string(fontSize));
+		//TextureHandle textureHandle = m_textureManager.getHandle(TextureDescriptor{ id + std::to_string(fontSize) });
+
+		//if (textureHandle.isValid())
+		//{
+		//	return textureHandle;
+		//}
 
 		return TextureHandle::invalid();
 	}
@@ -55,15 +71,21 @@ namespace cursed_engine
 
 		auto texture = createTexture(text.c_str(), *font, color);
 
-		auto textureHandle = m_textureManager.insert(TextureKey{ id + std::to_string(fontSize) }, std::move(texture));
-		return textureHandle;
+		if (texture.isLoaded())
+		{
+			auto textureHandle = m_cache.store(std::move(texture));
+			m_keyToHandle.insert_or_assign(TextKey{ id, fontSize }, textureHandle); // CORRECT???
+			return textureHandle;
+		}
+
+		return ResourceHandle<Texture>::invalid();
 
 		// check if font is loaded => else load it... (should text manager handle this?)
 
 
 
 
-		//TextureKey key{ id + std::to_string(fontSize) };
+		//TextureDescriptor key{ id + std::to_string(fontSize) };
 		//if (m_textureManager.isLoaded(key))
 		//{
 		//	int x = 20;
@@ -82,12 +104,12 @@ namespace cursed_engine
 	bool TextManager::isConstructed(const std::string& id, int fontSize) const noexcept
 	{
 		// TODO; make sure this is correct!
-		return m_textureManager.contains(TextureKey{ id + std::to_string(fontSize) });
+		return m_keyToHandle.contains(TextKey{ id, fontSize });
 	}
 
 	Texture TextManager::createTexture(const char* text, Font& font, const Color& color) const
 	{
-		SDL_Surface* surface = TTF_RenderText_Blended(font.get(), text, 0, { color.r, color.g, color.b, color.a });
+		SDL_Surface* surface = TTF_RenderText_Blended(font.getInternal(), text, 0, { color.r, color.g, color.b, color.a });
 
 		if (!surface)
 		{

@@ -5,6 +5,7 @@
 #include "engine/localization/localization.h"
 #include "engine/input/input_handler.h"
 #include "engine/rendering/renderer.h"
+#include "engine/rendering/text_renderer.h"
 #include "engine/resources/surface.h"
 #include "engine/window/window.h"
 #include <SDL3/SDL.h>
@@ -133,10 +134,13 @@ namespace cursed_engine
 		auto& renderer = subsystemRegistry.add<Renderer>();
 		renderer.init(window);
 
+		auto& textRenderer = subsystemRegistry.add<TextRenderer>();
+		textRenderer.init(renderer);
+
 		auto& audioController = subsystemRegistry.add<AudioController>();
 		audioController.init();
 
-		auto& engineResources = subsystemRegistry.add<EngineResources>(configManager.getResourceConfig(), renderer);
+		auto& engineResources = subsystemRegistry.add<EngineResources>(configManager.getResourceConfig(), renderer, textRenderer);
 		
 		subsystemRegistry.add<Physics>();
 		//subsystemRegistry.add<ECSRegistry>();
@@ -151,16 +155,16 @@ namespace cursed_engine
 
 		loadAssets(); // HERE? Dont do in init? also maybe dont do in Engine?
 
-		core_components::registerAll(m_impl->metaStorage.componentData, assetManager, engineResources, configManager.getResourceConfig());
+		core_components::registerAll(m_impl->metaStorage.componentData, assetManager, engineResources, configManager.getResourceConfig(), engineResources.textFactory, localization);
 		core_actions::registerAll(m_impl->actionRegistry, eventBus);
 
 		// Move to other part of code base?
 		auto& systemManager = m_impl->systemManager;
-		systemManager.emplace<RenderSystem>(renderer, engineResources, assetManager);
+		systemManager.emplace<RenderSystem>(engineResources, assetManager, renderer, textRenderer);
 		//systemManager.emplace<InputSystem>(inputHandler);
 		systemManager.emplace<InteractionSystem>();
 		systemManager.emplace<UISystem>(inputHandler, m_impl->actionRegistry);
-		systemManager.emplace<TextSystem>(engineResources.textManager, localization);
+		systemManager.emplace<TextSystem>(engineResources.textManager, engineResources.textFactory, localization);
 		systemManager.emplace<AudioSystem>(engineResources.audioManager, audioController, eventBus);
 
 		m_impl->application.onCreated({
@@ -180,6 +184,7 @@ namespace cursed_engine
 
 	void Engine::shutdown()
 	{
+		m_impl->application.onDestroyed();
 		m_impl->subsystemRegistry.forEach([](auto& subsystem) { subsystem->shutdown(); });
 		SDL_Quit();
 
@@ -317,7 +322,7 @@ namespace cursed_engine
 		//		auto id = extractResourceID(path);
 		//		registry.fontIdToPath.insert_or_assign(std::move(id), path); // move here?
 
-		//		//engineResources.fontManager.insertPath(FontKey{ id, 20 }, path);
+		//		//engineResources.fontManager.insertPath(FontDescriptor{ id, 20 }, path);
 		//		//engineResources.insertPath<Font>(path.filename().stem().string(), path); // auto generate id?
 		//	}
 		//}

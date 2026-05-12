@@ -4,12 +4,13 @@
 #include "engine/rendering/font.h"
 #include "engine/resources/engine_resources.h"
 #include "engine/config/config_manager.h"
+#include "engine/localization/localization.h"
 
 namespace cursed_engine
 {
 	namespace core_components
 	{
-		void registerAll(ComponentRegistry& registry, AssetManager& assetManager, EngineResources& engineResources, const ResourceConfig& resourceConfig)
+		void registerAll(ComponentRegistry& registry, AssetManager& assetManager, EngineResources& engineResources, const ResourceConfig& resourceConfig, TextFactory& textFactory, const Localization& localization)
 		{
 			// TODO; use config to check which subsystems are active, only register if active? (physics -> physicsComponent)
 
@@ -67,7 +68,19 @@ namespace cursed_engine
 					region.w = 700;
 					region.h = 700;
 
-					std::array<float, 4> color{ 1.f, 1.f, 1.f, 1.f };
+					//std::array<float, 4> color{ 1.f, 1.f, 1.f, 1.f };
+
+					Color color = Color::white;
+
+					if (value.has("color"))
+					{
+						color.r = value["color"]["r"].asInt();
+						color.g = value["color"]["g"].asInt();
+						color.b = value["color"]["b"].asInt();
+
+						if (value["color"].has("a"))
+							color.a = value["color"]["a"].asInt();
+					}
 
 					float zOrder = 1.f;
 
@@ -111,7 +124,7 @@ namespace cursed_engine
 						defaultColor.g = value["default_color"]["g"].asInt();
 						defaultColor.b = value["default_color"]["b"].asInt();
 						defaultColor.a = value["default_color"]["a"].asInt();
-					} 
+					}
 					else
 					{
 						defaultColor = Color::white;
@@ -123,7 +136,7 @@ namespace cursed_engine
 					if (value.has("hover_color"))
 					{
 						optHoverColor = Color{};
-						
+
 						auto& hoverColor = optHoverColor.value();
 						hoverColor.r = value["hover_color"]["r"].asInt();
 						hoverColor.g = value["hover_color"]["g"].asInt();
@@ -171,28 +184,83 @@ namespace cursed_engine
 				},
 				[&](EntityHandle& handle, const JsonValue& value)
 				{
-					//std::string id; // no way of knowing the id...
-
-					auto id = value["text_id"].asString();
-
 					std::string fontType = value["font"].asString();
-
 					int fontSize = value["size"].asInt();
+
 					// maybe just store id?
 
 					//const auto& resourceIdToPath = resourceConfig.resourceIdToPath;
 
-					auto fontHandle = engineResources.fontManager.getHandleById(fontType, fontSize);
+					
+
+					static const std::unordered_map<std::string, FontStyle> fontStyles =
+					{
+						{ "Normal", FontStyle::Normal },
+						{ "Bold", FontStyle::Bold },
+						{ "Italic", FontStyle::Italic },
+						{ "Underline", FontStyle::Underline },
+						{ "Strikethrough", FontStyle::Strikethrough },
+					};
+
+
+					FontStyle fontStyle = FontStyle::Normal;
+					if (value.has("font_style"))
+					{
+						std::string style = value["font_style"].asString();
+
+						if (auto it = fontStyles.find(style); it != fontStyles.end())
+						{
+							fontStyle = it->second;
+						}
+						else
+						{
+							Logger::logWarning("Unknown font specified in JSON: " + it->first);
+						}
+					}
+
+
+					// style.. 
+					//int size;
+
+					//int outline;
+					int outline = value.has("outline") ? value["outline"].asInt() : 0;
+
+					//bool kerning
+					bool kerning = value.has("kerning") ? value["kerning"].asBool() : true;
+
+					std::string textId = value["text_id"].asString();
+
+					auto fontHandle = engineResources.fontManager.getHandleById(fontType, fontStyle, fontSize, outline, kerning);
+					auto textObj = textFactory.createText(localization.getText(textId), fontHandle);
+
+					{
+						// TEST
+						//auto* font = engineResources.fontManager.get(fontHandle);
+						//font.set
+					}
 
 					if (fontHandle.isValid())
 					{
-						handle.attachComponent<TextComponent>(id, fontHandle); // Only if suceesful??
+						Color textColor = Color::black;
+
+						if (value.has("color"))
+						{
+							textColor.r = value["color"]["r"].asInt();
+							textColor.g = value["color"]["g"].asInt();
+							textColor.b = value["color"]["b"].asInt();
+							textColor.a = value["color"]["a"].asInt();
+						}
+
+						textObj.setTextColor(textColor); // TODO: do in factory? or use abuilder....
+
+						handle.attachComponent<TextComponent>(textId, fontHandle, std::move(textObj), textColor); // Only if suceesful??
 					}
-					else 
+					else
 					{
-						Logger::logWarning(std::format("[Constructing TextComponent from Json] - Failed to find path for font with id: {}", id));
+						Logger::logWarning(std::format("[Constructing TextComponent from Json] - Failed to find path for font with id: {}", textId));
 						assert(false && "Invalid font handle!");
 					}
+
 
 					//if (auto it = resourceIdToPath.find(fontType); it != resourceIdToPath.end())
 					//{

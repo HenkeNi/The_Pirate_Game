@@ -4,6 +4,7 @@
 #include "engine/assets/asset_manager.h" // remove include?
 #include "engine/rendering/animation_types.h"
 #include "engine/rendering/render_types.h"
+#include "engine/rendering/text.h"
 #include <optional>
 #include <array>
 #include <unordered_map>
@@ -12,11 +13,12 @@ namespace cursed_engine
 {
 	class ComponentRegistry; 
 	class EngineResources;
+	class Localization;
 	struct ResourceConfig;
 
 	namespace core_components
 	{
-		void registerAll(ComponentRegistry& registry, AssetManager& assetManager, EngineResources& engineResources, const ResourceConfig& resourceConfig);
+		void registerAll(ComponentRegistry& registry, AssetManager& assetManager, EngineResources& engineResources, const ResourceConfig& resourceConfig, TextFactory& textFactory, const Localization& localization);
 	}
 
 	// Separet ui transform and world transform? or screen space / world space?
@@ -27,7 +29,7 @@ namespace cursed_engine
 
 		FVec2 position{ 0.f, 0.f };
 		FVec2 scale{ 1.f, 1.f };
-		FVec2 pivot{ 0.f, 0.f };
+		FVec2 pivot{ 0.f, 0.f }; // helper functions or add funct in struct?
 		float rotation = 0.f;
 	};
 
@@ -58,8 +60,10 @@ namespace cursed_engine
 
 		AssetHandle atlasHandle; // Handle to texture                   --- better than storing id to atlas handle? (maybe to much indirection)
 		AtlasRegion atlasRegion;
-		std::array<float, 4> color; // use COlor instead?
+		Color color = Color::white;
+		//std::array<float, 4> color; // use COlor instead?
 		//float colors[4]; // create type or type alias for color!
+
 
 		// store texture handle? if invalid, overwrite with new one from getHandle...
 
@@ -150,8 +154,8 @@ namespace cursed_engine
 
 	struct TextComponent 
 	{
-		TextComponent(std::string id, ResourceHandle<Font> fontHandle)
-			: textID{ std::move(id) }, fontHandle{ fontHandle }
+		TextComponent(std::string id, ResourceHandle<Font> fontHandle, Text text, Color color = Color::black)
+			: textID{ std::move(id) }, fontHandle{ fontHandle }, textObj{ std::move(text) }, color{ color }
 		{
 		}
 
@@ -160,9 +164,12 @@ namespace cursed_engine
 		std::string text = "";
 		ResourceHandle<Texture> textureHandle; // Test...
 		ResourceHandle<Font> fontHandle; // Store handles?? or just raw data (id, font type, size)? handles invalidated -> but genrated again in text system
-		Color color = Color::black;
+		Color color = Color::black; // store here??? or always have a sprite component to texts?
 		int fontSize = 12;
 		bool isDirty = true; // false;
+
+
+		Text textObj;
 
 		// could store a Texture here.... 
 	};

@@ -8,11 +8,12 @@ namespace cursed_engine
 
 	class AssetManager;
 	class Renderer;
+	class TextRenderer;
 
 	class RenderSystem : public System
 	{
 	public:
-		RenderSystem(Renderer& renderer, EngineResources& engineResources, AssetManager& assetManager);
+		RenderSystem(EngineResources& engineResources, AssetManager& assetManager, Renderer& renderer, TextRenderer& textRenderer);
 
 		void update(SystemContext& context) override;
 	
@@ -20,8 +21,9 @@ namespace cursed_engine
 		void renderText(ECSRegistry& registry);
 		void renderDebug(ECSRegistry& registry);
 
-		Renderer& m_renderer;
 		EngineResources& m_engineResources;
 		AssetManager& m_assetManager;
+		TextRenderer& m_textRenderer;
+		Renderer& m_renderer;
 	};
 }

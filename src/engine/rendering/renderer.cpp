@@ -50,19 +50,21 @@ namespace cursed_engine
 		SDL_RenderPresent(m_renderer);
 	}
 
-	void Renderer::renderTexture(FRect rect, Texture& texture)
+	void Renderer::renderTexture(FRect rect, Texture& texture, Color color)
 	{
 		assert(false && "Not implemented!");
 	}
 
-	void Renderer::renderTexture(FVec2 pos, FVec2 size, Texture& texture)
+	void Renderer::renderTexture(FVec2 pos, FVec2 size, Texture& texture, Color color)
 	{
-		renderTexture(pos.x, pos.y, size.x, size.y, texture);
+		renderTexture(pos.x, pos.y, size.x, size.y, texture, color);
 	}
 
-	void Renderer::renderTexture(float x, float y, float width, float height, Texture& texture)
+	void Renderer::renderTexture(float x, float y, float width, float height, Texture& texture, Color color)
 	{
 		SDL_FRect dstRect{ x, y, width, height };
+
+		SDL_SetTextureColorMod(texture.getTexture(), color.r, color.g, color.b);
 
 		//SDL_FRect dstRect{ x, y, (float)texture.getWidth(), (float)texture.getHeight() };
 		SDL_RenderTexture(m_renderer, texture.getTexture(), nullptr, &dstRect);
@@ -112,7 +114,7 @@ namespace cursed_engine
 	{
 		const SDL_FRect sdlRect{ x, y, w, h };
 		SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
-		SDL_RenderFillRect(m_renderer, &sdlRect);
+		SDL_RenderFillRect(m_renderer, &sdlRect);	
 	}
 
 	void Renderer::renderLine(FVec2 start, FVec2 end, Color color)

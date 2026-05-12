@@ -3,11 +3,12 @@
 #include "engine/ecs/component/core_components.h"
 #include "engine/localization/localization.h"
 #include "engine/resources/text_manager.h"
+#include "engine/rendering/text_factory.h"
 
 namespace cursed_engine
 {
-	TextSystem::TextSystem(TextManager& textManager, Localization& localization)
-		: m_textManager{ textManager }, m_localization{ localization }
+	TextSystem::TextSystem(TextManager& textManager, TextFactory& textFactory, Localization& localization)
+		: m_textManager{ textManager }, m_textFactory{ textFactory }, m_localization{ localization }
 	{
 	}
 
@@ -17,12 +18,41 @@ namespace cursed_engine
 
 		// TODO; read static text's from json (in Scene)... 
 
-		auto view = registry.view<TextComponent>();
-		view.forEach([&](TextComponent& textComponent)
+		//auto view = registry.view<TextComponent>();
+		//view.forEach([&](TextComponent& textComponent)
+		//	{
+		//		if (textComponent.isDirty)
+		//		{
+		//			auto fontHandle = textComponent.fontHandle;
+
+		//			if (!fontHandle.isValid())
+		//			{
+		//				Logger::logWarning("Failed to find font");
+		//				return;
+		//			}
+
+		//			const std::string& text = m_localization.getText(textComponent.textID);
+
+		//			if (!m_textManager.isConstructed(textComponent.textID, textComponent.fontSize))
+		//			{
+		//				textComponent.textureHandle = m_textManager.create(textComponent.textID, text, fontHandle, textComponent.color, textComponent.fontSize);
+		//			}
+		//			else
+		//			{
+		//				textComponent.textureHandle = m_textManager.getHandle(textComponent.textID, textComponent.fontSize); //Y TODO pass in path?
+		//			}
+
+		//			textComponent.isDirty = false;
+		//		}
+		//	});
+
+		auto textView = registry.view<TextComponent>();
+		textView.forEach([&](TextComponent& textComponent)
 			{
-				if (textComponent.isDirty)
+				if (!textComponent.textObj.isValid())
 				{
 					auto fontHandle = textComponent.fontHandle;
+
 
 					if (!fontHandle.isValid())
 					{
@@ -32,17 +62,10 @@ namespace cursed_engine
 
 					const std::string& text = m_localization.getText(textComponent.textID);
 
-					if (!m_textManager.isConstructed(textComponent.textID, textComponent.fontSize))
-					{
-						textComponent.textureHandle = m_textManager.create(textComponent.textID, text, fontHandle, textComponent.color, textComponent.fontSize);
-					}
-					else
-					{
-						textComponent.textureHandle = m_textManager.getHandle(textComponent.textID, textComponent.fontSize); //Y TODO pass in path?
-					}
-
-					textComponent.isDirty = false;
+					m_textFactory.createText(text, fontHandle);
 				}
+
+				// try use text in text component... (no handle) store directly in component...
 			});
 	}
 }

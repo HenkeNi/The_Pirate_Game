@@ -28,9 +28,9 @@ namespace cursed_engine
 		void present(); // rename?
 
 		// are these safe to mark const?
-		void renderTexture(FRect rect, Texture& texture);
-		void renderTexture(FVec2 pos, FVec2 size, Texture& texture);
-		void renderTexture(float x, float y, float width, float height, Texture& texture);
+		void renderTexture(FRect rect, Texture& texture, Color color = Color::white);
+		void renderTexture(FVec2 pos, FVec2 size, Texture& texture, Color color = Color::white);
+		void renderTexture(float x, float y, float width, float height, Texture& texture, Color color = Color::white);
 
 		// TODO; add renderRects
 
