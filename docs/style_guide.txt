@@ -9,6 +9,7 @@ constructors:
 
 * explicit
 * constexpr
+* mark move constructor/assignment noexcept 
 
 if statements:
 
