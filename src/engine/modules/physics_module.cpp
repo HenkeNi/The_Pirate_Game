@@ -10,8 +10,8 @@ namespace cursed_engine
 
 	bool PhysicsModule::init()
 	{
-		if (!m_physics.init())
-			return false;
+		//if (!m_physics.init())
+		//	return false;
 
 		Logger::logInfo("-> PhysicsModule: Success");
 		return true;
@@ -19,7 +19,7 @@ namespace cursed_engine
 
 	void PhysicsModule::shutdown()
 	{
-
+		//m_physics.shutdown(); Destroy all worlds? store them in physics?
 	}
 
 	//PhysicsServices PhysicsModule::getServices() noexcept
