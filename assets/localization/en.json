@@ -2,7 +2,8 @@
   "language": "english",
   "texts": [
     {
-      "title_text": "The Cursed Pirate"
+      "title_text": "The Cursed Pirate",
+      "settings_header": "Settings"
     }
   ],
   "numbers": [0, 1, 2, 3, 4, 5, 6 ]

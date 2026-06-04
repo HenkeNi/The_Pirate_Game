@@ -1,5 +1,5 @@
 {
-  "identifier": "title_scene",
+  "identifier": "settings_scene",
   "entities": [
     {
       "id": "background",
@@ -11,7 +11,7 @@
           "height": 720
         },
         "sprite": {
-          "id": "title_background"
+          "id": "settings_screen"
         }
       }
     },
@@ -29,13 +29,13 @@
           }
         },
         "text": {
-          "text_id": "title_text",
+          "text_id": "settings_header",
           "font": "JackPirate_PERSONAL_USE_ONLY",
           "size": 100,
           "color": {
-            "r": 8,
-            "g": 8,
-            "b": 8,
+            "r": 255,
+            "g": 255,
+            "b": 255,
             "a": 255
           },
           "outline": 0
@@ -43,74 +43,21 @@
       }
     },
     {
-      "id": "play_button",
+      "id": "back_button",
       "components": {
         "transform": {
-          "x": 640,
-          "y": 360,
-          "width": 200,
-          "height": 200,
-          "pivot": {
-            "x": 0.5,
-            "y": 0.5
-          }
-        },
-        "sprite": {
-          "id": "play-button"
-        },
-        "button": {
-          "action": "NewGame",
-          "args": {
-            "scene": "game_scene"
-          },
-          "default_color": {
-            "r": 0,
-            "g": 170,
-            "b": 170,
-            "a": 255
-          },
-          "hover_color": {
-            "r": 0,
-            "g": 210,
-            "b": 200,
-            "a": 255
-          },
-          "pressed_color": {
-            "r": 0,
-            "g": 140,
-            "b": 135,
-            "a": 255
-          }
-        },
-        "bounding_box": {
-          "offset": {
-            "x": 0,
-            "y": 0
-          },
-          "size": {
-            "width": 200,
-            "height": 200
-          }
-        }
-      }
-    },
-    {
-      "id": "settings_button",
-      "components": {
-        "transform": {
-          "x": 1220,
+          "x": 10,
           "y": 10,
           "width": 50,
           "height": 50
         },
         "sprite": {
-          "id": "cog"
+          "id": "sideswipe"
         },
         "button": {
           "action": "SceneTransition",
           "args": {
-            "scene": "settings_scene",
-            "transition": "push"
+            "transition": "pop"
           },
           "default_color": {
             "r": 211,
@@ -140,15 +87,6 @@
             "width": 50,
             "height": 50
           }
-        }
-      }
-    },
-    {
-      "id": "background_music",
-      "components": {
-        "audio": {
-          "should_loop": true,
-          "sound": "707884__dave4884__pirates-song"
         }
       }
     }
