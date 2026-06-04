@@ -1,7 +1,6 @@
 #pragma once
 #include "engine/rendering/render_api.h"
 #include "engine/rendering/renderer.h"
-#include "engine/rendering/text_renderer.h"
 #include <functional>
 
 namespace cursed_engine
