@@ -7,8 +7,9 @@
 #include <engine/ecs/entity/entity_factory.h>
 //#include <engine/core/type_registry.hpp>
 #include <engine/ecs/component/component_registry.h>
+#include <engine/core/application.h>
 
-void SceneLoader::loadAssets(Scene& scene, const std::filesystem::path& path) const
+void SceneLoader::loadAssets(Scene& scene, const std::filesystem::path& path, const cursed_engine::ComponentInitContext& ctx) const
 {
 	cursed_engine::JsonDocument document;
 	auto [success, message] = document.loadFromFile(path);
@@ -40,7 +41,7 @@ void SceneLoader::loadAssets(Scene& scene, const std::filesystem::path& path) co
 				assert(componentRegistry->isValid(name) && "[SceneLoader::loadAssets] - Component Type not registered!"); // TODO; make sure program doesnt crahs if not registered
 
 				const auto& componentData = componentRegistry->get(name);
-				componentData.deserialize(entityHandle, value);
+				componentData.deserialize(entityHandle, value, ctx);
 			});
 	}
 }

@@ -1,8 +1,14 @@
 #pragma once
-#include <engine/core/application.h>
 #include "game/scenes/scene_stack.h"
+#include "game/scenes/scene_factory.h"
+#include <engine/core/application.h>
 
-using cursed_engine::AppContext;
+namespace cursed_engine
+{
+	class EventBus;
+}
+
+using cursed_engine::EngineContext;
 
 class Game : public cursed_engine::Application
 {
@@ -12,11 +18,14 @@ public:
 
 	void onUpdate(float deltaTime) override;
 	
-	void onCreated(const AppContext& context) override;
+	void onCreated(const EngineContext& context) override; // pass by value?
 	void onDestroyed() override;
 
 private:
 	void setupScenes();
 
+	// Pimpl??
+	SceneFactory m_sceneFactory;
 	SceneStack m_sceneStack;
+	//cursed_engine::EventBus* m_eventBus;
 };

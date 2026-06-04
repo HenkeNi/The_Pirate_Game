@@ -1,5 +1,7 @@
 #include "game/scenes/title_scene.h"
+#include <engine/core/logger.h>
 
+using namespace cursed_engine;
 
 TitleScene::TitleScene(cursed_engine::SystemManager* systemManager, cursed_engine::EntityFactory* entityFactory, cursed_engine::ComponentRegistry* componentData, cursed_engine::EventBus* eventBus)
 	: Scene{ systemManager, entityFactory, componentData, eventBus, "TitleScene" }
@@ -8,11 +10,12 @@ TitleScene::TitleScene(cursed_engine::SystemManager* systemManager, cursed_engin
 
 void TitleScene::onUpdate(float deltaTime)
 {
+	int x = 20;
 }
 
 void TitleScene::onEnter()
 {
-	int x = 20;
+	Logger::logInfo("Entering Title Scene...");
 }
 
 void TitleScene::onExit() 

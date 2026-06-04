@@ -12,9 +12,14 @@ namespace cursed_engine
 	//template <typename T, typename ID>
 	//class TypeRegistry; // TODO; replace with type alias for ComponentInfo instead!!
 
-	struct ComponentInfo;
+	class ComponentRegistry;
 	//struct ComponentInfo;
 }
+
+struct SceneData
+{
+
+};
 
 struct SceneContext
 {

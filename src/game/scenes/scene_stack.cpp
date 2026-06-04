@@ -1,13 +1,51 @@
 #include "game/scenes/scene_stack.h"
 #include "game/scenes/scene.h"
+#include "game/events/events.h"
+#include <engine/core/events/event_bus.h>
+#include <engine/core/logger.h>
 //#include <algorithm>
 
 SceneStack::SceneStack()
+	: m_pendingTransition{ std::nullopt }
 {
 }
 
 SceneStack::~SceneStack()
 {
+}
+
+void SceneStack::setPending(PendingSceneChange sceneChange)
+{
+	m_pendingTransition = std::move(sceneChange);
+}
+
+void SceneStack::applyPendingChanges()
+{
+	if (!m_pendingTransition.has_value())
+		return;
+
+	auto& pendingChange = m_pendingTransition.value();
+
+	if (pendingChange.scene == nullptr)
+	{
+		if (pendingChange.transition == SceneTransitionType::Pop)
+		{
+			pop();
+		}
+		else
+		{
+			cursed_engine::Logger::logError("Error occured when transitioning to new scene. Not a valid scene!");
+		}
+	} else if (pendingChange.transition == SceneTransitionType::Push)
+	{
+		push(std::move(pendingChange.scene));
+	}
+	else if (pendingChange.transition == SceneTransitionType::Swap)
+	{
+		replace(std::move(pendingChange.scene));
+	}
+
+	m_pendingTransition = std::nullopt;
 }
 
 void SceneStack::addPath(std::string sceneID, std::filesystem::path path)
@@ -20,17 +58,18 @@ void SceneStack::push(std::unique_ptr<Scene> scene)
 	if (!m_stack.empty())
 		m_stack.back()->onExit();
 
-	if (auto it = m_idToPaths.find(std::string(scene->id())); it != m_idToPaths.end())
-	{
-		m_sceneLoader.loadAssets(*scene, it->second);
-	}
-	else 
-	{
-		cursed_engine::Logger::logError("Path not registered!");
-		assert(false);
+	//loads assets here?!?!
+	//if (auto it = m_idToPaths.find(std::string(scene->id())); it != m_idToPaths.end())
+	//{
+	//	m_sceneLoader.loadAssets(*scene, it->second);
+	//}
+	//else 
+	//{
+	//	cursed_engine::Logger::logError("Path not registered!");
+	//	assert(false);
 
-		return;
-	}
+	//	return;
+	//}
 
 	// m_sceneLoader.loadAssets(scene, ) get type index from scene? (type to paths)?
 	//auto type = std::type_index(typeid(*scene)); // WORKS?
@@ -60,6 +99,12 @@ void SceneStack::pop()
 	{
 		m_stack.back()->onEnter();
 	}
+}
+
+void SceneStack::replace(std::unique_ptr<Scene> scene)
+{
+	pop();
+	push(std::move(scene));
 }
 
 void SceneStack::update(float deltaTime)
