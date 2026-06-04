@@ -5,6 +5,7 @@ namespace cursed_engine
 	void InteractionSystem::update(SystemContext& context)
 	{
 		// TODO; get interaction component?
+		int x = 20;
 
 	}
 }

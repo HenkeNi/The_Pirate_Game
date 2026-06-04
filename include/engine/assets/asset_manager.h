@@ -1,10 +1,8 @@
 #pragma once
 #include "engine/assets/asset_loader.h"
 #include "engine/utils/type_traits.h"
-#include "engine/utils/type_utils.h"
-#include "engine/core/subsystem.h"
+#include "engine/utils/utils.h"
 #include "engine/core/logger.h"
-#include "engine/utils/path_utils.h"
 #include <cstdint>
 #include <filesystem>
 #include <limits>
@@ -45,7 +43,7 @@ namespace cursed_engine
 	};
 
 	// AssetStore, AssetRegistry?
-	class AssetManager : public Subsystem
+	class AssetManager
 	{
 	public:
 		// void preload?
@@ -104,7 +102,7 @@ namespace cursed_engine
 		mutable std::mutex m_mutex; // put in archive?
 	};
 
-#pragma region Methods
+#pragma region Definitions
 
 	template <typename Asset>
 	[[nodiscard]] AssetHandle AssetManager::loadAsset(const std::filesystem::path& path)
@@ -128,7 +126,7 @@ namespace cursed_engine
 		if (!assetLoader)
 		{
 			Logger::logError("No asset loader for type found!");
-			return AssetHandle{ AssetHandle::INVALID_INDEX, 0, getTypeIndex<Asset>() }; // TODO; throw instead!?
+			return AssetHandle{ AssetHandle::INVALID_INDEX, 0, utils::getTypeIndex<Asset>() }; // TODO; throw instead!?
 		}
 
 		auto assetOpt = assetLoader->load(keyPath);
@@ -136,16 +134,16 @@ namespace cursed_engine
 		if (!assetOpt.has_value())
 		{
 			Logger::logError("Failed to load asset!");
-			return AssetHandle{ AssetHandle::INVALID_INDEX, 0, getTypeIndex<Asset>() }; // TODO; throw instead!?
+			return AssetHandle{ AssetHandle::INVALID_INDEX, 0, utils::getTypeIndex<Asset>() }; // TODO; throw instead!?
 		}
 
 		auto& storage = getOrCreateCache<Asset>().storage;
 		storage.push_back(std::move(assetOpt.value()));
 
-		AssetHandle handle{ (uint32_t)storage.size() - 1, 0, getTypeIndex<Asset>() };
+		AssetHandle handle{ (uint32_t)storage.size() - 1, 0, utils::getTypeIndex<Asset>() };
 		m_pathToHandles.insert({ keyPath, handle });
 
-		m_idsToPaths.insert({ extractAssetID(path), path});
+		m_idsToPaths.insert({ utils::extractAssetID(path), path});
 		//m_idsToPaths.insert({ extractIdentifier(path), path});
 
 		return handle;
@@ -161,7 +159,7 @@ namespace cursed_engine
 		}
 
 		assert(false && "Asset not loaded");
-		return AssetHandle(-1, -1, getTypeIndex<Asset>()); // FIX!
+		return AssetHandle(-1, -1, utils::getTypeIndex<Asset>()); // FIX!
 	}
 
 	template <typename Asset>
@@ -191,7 +189,7 @@ namespace cursed_engine
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 		//m_loadersByType.insert({ getTypeIndex<typename Loader::AssetType>(), nullptr });
-		m_loadersByType.insert({ getTypeIndex<typename Loader::AssetType>(), std::make_unique<Loader>(std::forward<Args>(args)...) });
+		m_loadersByType.insert({ utils::getTypeIndex<typename Loader::AssetType>(), std::make_unique<Loader>(std::forward<Args>(args)...) });
 	}
 
 	template <typename Asset>
@@ -203,19 +201,19 @@ namespace cursed_engine
 		//auto type = getTypeIndex<int>(); // if works, dont have to pass asset
 		//auto type = getTypeIndex<typename loader::AssetType>(); // if works, dont have to pass asset
 
-		m_loadersByType.insert({ getTypeIndex<Asset>(), std::move(loader) });
+		m_loadersByType.insert({ utils::getTypeIndex<Asset>(), std::move(loader) });
 	}
 
 	template <typename Asset>
 	[[nodiscard]] bool AssetManager::isLoaderRegistered() const
 	{
-		return m_loadersByType.contains(getTypeIndex<Asset>());
+		return m_loadersByType.contains(utils::getTypeIndex<Asset>());
 	}
 
 	template <typename Asset>
 	AssetManager::AssetCache<Asset>& AssetManager::getOrCreateCache()
 	{
-		auto typeIndex = getTypeIndex<Asset>();
+		auto typeIndex = utils::getTypeIndex<Asset>();
 
 		if (!m_cachesByType.contains(typeIndex))
 			m_cachesByType[typeIndex] = std::make_unique<AssetCache<Asset>>();
@@ -226,7 +224,7 @@ namespace cursed_engine
 	template <typename Asset>
 	[[nodiscard]] AssetLoader<Asset>* AssetManager::getLoader()
 	{
-		auto typeIndex = getTypeIndex<Asset>();
+		auto typeIndex = utils::getTypeIndex<Asset>();
 
 		if (auto it = m_loadersByType.find(typeIndex); it != m_loadersByType.end())
 		{
@@ -293,7 +291,7 @@ namespace cursed_engine
 		mutable std::mutex m_mutex;
 	};
 
-#pragma region Methods
+#pragma region Definitions
 
 	template <typename Handle>
 	[[nodiscard]] Handle AssetManager::load(const std::filesystem::path& path)

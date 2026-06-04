@@ -21,7 +21,7 @@ namespace cursed_engine
 	};
 
 	template <ComponentType T>
-	using ComponentContainer = sparse_set<std::decay_t<T>, EntityID>;
+	using ComponentContainer = sparse_set<std::decay_t<T>, EntityID>; // Rename component storage?
 
 	template <ComponentType T>
 	class ComponentManager : public IComponentManager, private NonCopyable
@@ -52,7 +52,7 @@ namespace cursed_engine
 		[[nodiscard]] T* tryGet(EntityID id);
 
 		// ==================== Container Access ====================
-		[[nodiscard]] const ComponentContainer<T>& getContainer() const;
+		[[nodiscard]] const ComponentContainer<T>& getContainer() const; // make view friend class instead? 
 		[[nodiscard]] ComponentContainer<T>& getContainer();
 
 		// ==================== Capacity Management ====================
@@ -66,7 +66,7 @@ namespace cursed_engine
 		ComponentContainer<T> m_components;
 	};
 
-#pragma region Methods
+#pragma region Definitions
 
 	template <ComponentType T>
 	template <typename... Args>

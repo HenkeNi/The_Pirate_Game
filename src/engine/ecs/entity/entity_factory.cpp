@@ -13,10 +13,10 @@ namespace cursed_engine
 	{
 	}*/
 
-	EntityFactory::EntityFactory()
-		: m_ecsRegistry{ nullptr }, m_assetManager{ nullptr }
-	{
-	}
+	//EntityFactory::EntityFactory(AssetManager* assetManager)
+	//	: m_ecsRegistry{ nullptr }, m_assetManager{ assetManager }
+	//{
+	//}
 
 	void EntityFactory::init(AssetManager* assetManager)
 	{

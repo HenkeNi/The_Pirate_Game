@@ -2,10 +2,12 @@
 #include "engine/core/logger.h"
 #include <SDL3/SDL_audio.h>
 #include <format>
+//#include <SDL3_mixer/SDL_mixer.h>
 
 namespace cursed_engine
 {
 	AudioController::AudioController()
+		: m_audioStream{ nullptr }, m_deviceID{ 0 }
 	{
 	}
 
@@ -33,6 +35,12 @@ namespace cursed_engine
 		m_deviceID = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
 
 		SDL_ResumeAudioStreamDevice(m_audioStream);
+		return true;
+	}
+
+	void AudioController::shutdown()
+	{
+		// TODO!
 	}
 
 	void AudioController::playSound(SDL_AudioStream* stream, uint8_t* buffer, uint32_t length)

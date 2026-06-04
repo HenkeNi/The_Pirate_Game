@@ -8,11 +8,6 @@ namespace cursed_engine
 {
 	PropertyValue parsePropertyValue(const JsonValue& value); // In this file?
 
-	TextureAtlasLoader::TextureAtlasLoader(EngineResources& resources)
-		: m_resources{ resources }
-	{
-	}
-
 	std::optional<TextureAtlas> cursed_engine::TextureAtlasLoader::load(const std::filesystem::path& path) const
 	{
 		JsonDocument document;
@@ -28,11 +23,6 @@ namespace cursed_engine
 		textureAtlas.textureID = document["texture_id"].asString();
 
 		return textureAtlas;
-	}
-
-	SpriteSheetLoader::SpriteSheetLoader(EngineResources& resources)
-		: m_resources{ resources }
-	{
 	}
 
 	std::optional<SpriteSheet> SpriteSheetLoader::load(const std::filesystem::path& path) const

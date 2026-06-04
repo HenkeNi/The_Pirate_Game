@@ -2,32 +2,9 @@
 #include "engine/utils/non_copyable.h"
 #include <filesystem>
 
-// #include "engine/core/registry_aliases.h"
-
 namespace cursed_engine
-{ 
-	template <typename T, typename ID>
-	class TypeRegistry;
-
-	struct AppContext
-	{
-		class SystemManager& systemManager;
-		class InputHandler& inputHandler;
-		class AssetManager& assetManager;
-		class EntityFactory& entityFactory;
-		class Renderer& renderer;
-		class Window& window;
-		class EventBus& eventBus;
-		class ComponentRegistry& componentRegistry;
-		const std::filesystem::path& assetRoot;
-		
-		// ecs registry?
-		// entity factory? or store EntityFactory as protected in Application class?
-
-		// event system;
-		// audio audio;
-		// frame timer?
-	};
+{
+	struct EngineContext;
 
 	class Application : private NonCopyable
 	{
@@ -40,7 +17,7 @@ namespace cursed_engine
 
 		virtual void onUpdate(float deltaTime) = 0;
 
-		virtual void onCreated(const AppContext& context) {};
+		virtual void onCreated(const EngineContext& context) {}; // NOTE, context will go out of scope... maybe pass copy or pass m_impl directly?
 		virtual void onDestroyed() {};
 	};
 }

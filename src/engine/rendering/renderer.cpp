@@ -1,17 +1,17 @@
 #include "engine/rendering/renderer.h"
-#include "engine/rendering/texture.h"
-#include "engine/rendering/render_types.h"
-#include "engine/rendering/font.h"
-#include "engine/window/window.h"
+#include "engine/resources/texture/texture.h"
+#include "engine/resources/text/text.h"
+#include "engine/platform/window/window.h"
 #include "engine/core/logger.h"
-#include <SDL3/SDL.h>
 #include <SDL3/SDL_render.h>
+#include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
+#include <cassert>
 
 namespace cursed_engine
 {
 	Renderer::Renderer()
-		: m_renderer{ nullptr }
+		: m_renderer{ nullptr }, m_textEngine{ nullptr }
 	{
 	}
 
@@ -27,7 +27,16 @@ namespace cursed_engine
 
 		if (!TTF_Init())
 		{
-			Logger::logError(std::string("Failed to init TTF: ") + SDL_GetError());
+			Logger::logError(std::format("Failed to initialize TTF! Error: {}", SDL_GetError()));
+			return false;
+		}
+
+		m_textEngine = TTF_CreateRendererTextEngine(m_renderer);
+
+		if (!m_textEngine)
+		{
+			Logger::logError(std::format("Failed to create a TextEngine. Error: {}", SDL_GetError()));
+			return false;
 		}
 
 		return true;
@@ -36,7 +45,11 @@ namespace cursed_engine
 	void Renderer::shutdown()
 	{
 		SDL_DestroyRenderer(m_renderer);
+	
+		TTF_DestroyRendererTextEngine(m_textEngine);
 		TTF_Quit();
+
+		m_textEngine = nullptr;
 	}
 
 	void Renderer::clearScreen()
@@ -48,16 +61,6 @@ namespace cursed_engine
 	void Renderer::present()
 	{
 		SDL_RenderPresent(m_renderer);
-	}
-
-	void Renderer::renderTexture(FRect rect, Texture& texture, Color color)
-	{
-		assert(false && "Not implemented!");
-	}
-
-	void Renderer::renderTexture(FVec2 pos, FVec2 size, Texture& texture, Color color)
-	{
-		renderTexture(pos.x, pos.y, size.x, size.y, texture, color);
 	}
 
 	void Renderer::renderTexture(float x, float y, float width, float height, Texture& texture, Color color)
@@ -93,11 +96,6 @@ namespace cursed_engine
 			static_cast<int>(rects.size()));
 	}
 
-	void Renderer::renderOutlineRect(FRect rect, Color color)
-	{
-		renderOutlineRect(rect.x, rect.y, rect.w, rect.h, std::move(color));
-	}
-
 	void Renderer::renderOutlineRect(float x, float y, float w, float h, Color color)
 	{
 		const SDL_FRect sdlRect{ x, y, w, h };
@@ -105,21 +103,11 @@ namespace cursed_engine
 		SDL_RenderRect(m_renderer, &sdlRect);
 	}
 
-	void Renderer::renderFillRect(FRect rect, Color color)
-	{
-		renderFillRect(rect.x, rect.y, rect.w, rect.h, std::move(color));
-	}
-
 	void Renderer::renderFillRect(float x, float y, float w, float h, Color color)
 	{
 		const SDL_FRect sdlRect{ x, y, w, h };
 		SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
 		SDL_RenderFillRect(m_renderer, &sdlRect);	
-	}
-
-	void Renderer::renderLine(FVec2 start, FVec2 end, Color color)
-	{
-		renderLine(start.x, start.y, end.x, end.y, color);
 	}
 
 	void Renderer::renderLine(float startX, float startY, float endX, float endY, Color color)
@@ -132,5 +120,11 @@ namespace cursed_engine
 	{
 		SDL_SetRenderDrawColor(m_renderer, Color::white.r, Color::white.g, Color::white.b, Color::white.a);
 		SDL_RenderDebugText(m_renderer, x, y, str);
+	}
+
+	void Renderer::renderText(Text& text, int x, int y)
+	{
+		assert(text.isValid() && "Not a valid text");
+		TTF_DrawRendererText(text.get(), x, y);
 	}
 }

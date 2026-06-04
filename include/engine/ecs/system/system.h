@@ -2,10 +2,13 @@
 
 namespace cursed_engine
 {
+	class ECSRegistry;
+	class EventBus;
+
 	struct SystemContext
 	{
-		class ECSRegistry& registry;
-		class EventBus& eventBus;
+		ECSRegistry& registry;
+		EventBus& eventBus;
 		float deltaTime;
 	};
 
@@ -14,6 +17,6 @@ namespace cursed_engine
 	public:
 		virtual ~System() = default;
 		virtual void configure(ECSRegistry& registry) {};
-		virtual void update(SystemContext& context) = 0; // render and update functions?? or different base classes?
+		virtual void update(SystemContext& context) {}; // render and update functions?? or different base classes?
 	};
 }

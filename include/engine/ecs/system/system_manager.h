@@ -46,7 +46,7 @@ namespace cursed_engine
 		Systems m_systems;
 	};
 
-#pragma region Methods
+#pragma region Definitions
 
 	template <DerivedFrom<System> T, typename... Args>
 	T& SystemManager::emplace(Args&&... args)

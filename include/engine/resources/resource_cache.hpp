@@ -77,7 +77,7 @@ namespace cursed_engine
 		const uint32_t m_elapsedFramesBeforeEviction;
 	};
 
-#pragma region Methods
+#pragma region Definitions
 
 	template <typename T>
 	ResourceCache<T>::ResourceCache(uint32_t framesBeforeEvict, std::size_t initialSize)

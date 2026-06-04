@@ -118,7 +118,7 @@ namespace cursed_engine
 		std::tuple<ComponentContainer<Ts>*...> m_components;
 	};
 
-#pragma region Methods
+#pragma region Definitions
 
 	template <ComponentType... Ts>
 	ComponentView<Ts...>::ComponentView()

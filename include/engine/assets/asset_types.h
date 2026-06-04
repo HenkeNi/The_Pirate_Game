@@ -1,6 +1,6 @@
 #pragma once
 #include "engine/resources/resource_handle.h"
-#include "engine/math/vec2.h"
+#include "engine/math/vec2.hpp"
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -17,7 +17,7 @@ namespace cursed_engine
 		std::string name; // rename texture id?
 		IVec2 pivot;
 		IVec2 size;
-		int x, y, w, h;
+		int x{}, y{}, w{}, h{};
 	};
 
 	struct SpriteDefinition

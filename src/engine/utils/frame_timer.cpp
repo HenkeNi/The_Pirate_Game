@@ -5,6 +5,7 @@ namespace cursed_engine
 {
 	void FrameTimer::tick()
 	{
+		++m_currentFrame;
 		m_totalTime += SDL_GetPerformanceCounter();
 	}
 

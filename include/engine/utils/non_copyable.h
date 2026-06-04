@@ -2,6 +2,7 @@
 
 namespace cursed_engine
 {
+	// Inherit privately!
 	class NonCopyable
 	{
 	protected:

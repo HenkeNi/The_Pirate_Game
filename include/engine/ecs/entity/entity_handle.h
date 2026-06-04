@@ -7,6 +7,7 @@
 namespace cursed_engine
 {
 	// TODO; add hash?
+	// Rename Entity? stores entity id and generation... and pointer to registry?
 
 	class EntityHandle : private NonCopyable
 	{
@@ -41,14 +42,24 @@ namespace cursed_engine
 		template <ComponentType... Ts>
 		[[nodiscard]] bool hasComponents() const;
 
-		[[nodiscard]] inline Entity GetEntity() const noexcept { return m_entity; }
+		// add destroy...
+
+		[[nodiscard]] inline Entity getEntity() const noexcept { return m_entity; } // remove
 
 	private:
 		ECSRegistry* m_registry;
 		Entity m_entity;
 	};
 
-#pragma region Methods
+	/*struct EntityHash
+	{
+		size_t operator()(const Entity& e) const noexcept
+		{
+			return (size_t(e.id) << 32) | e.generation;
+		}
+	};*/
+
+#pragma region Definitions
 
 	template <ComponentType T, typename... Args>
 	void EntityHandle::attachComponent(Args&&... args)

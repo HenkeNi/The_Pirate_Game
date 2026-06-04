@@ -4,6 +4,7 @@
 namespace cursed_engine
 {
 	class Application;
+	struct EngineContext;
 
 	class Engine
 	{
@@ -16,7 +17,7 @@ namespace cursed_engine
 		void run();
 
 	private:
-		void loadAssets();
+		EngineContext context() const;
 
 		struct Impl;
 		std::unique_ptr<Impl> m_impl;

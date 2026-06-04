@@ -1,62 +1,58 @@
 #pragma once
-#include "engine/core/subsystem.h"
-#include "engine/math/vec2.h" // TODO; put in pch...
 #include "engine/rendering/render_types.h"
+#include "engine/math/vec2.hpp" // TODO; put in pch...
 #include <span>
 
-// TODO; handle metadata?? objects rendered, etc...
-
 struct SDL_Renderer;
+struct TTF_TextEngine;
 
 namespace cursed_engine
 {
 	class Window;
 	class Texture;
 	struct FRect;
-	class Font;
-	//struct Color;
+	class Text;
+	
+	class IRenderer
+	{
+	public:
+		virtual ~IRenderer() = default;
 
-	class Renderer : public Subsystem
+		//virtual void beginFrame() = 0;
+		//virtual void endFrame() = 0;
+
+	};
+
+	// Rename SDLREnderer?
+	class Renderer : public IRenderer
 	{
 	public:
 		Renderer();
 
-		bool init(Window& window);
+		bool init(Window& window); // window capabilities instead?
 		void shutdown();
 
 		void clearScreen();
 		void present(); // rename?
 
 		// are these safe to mark const?
-		void renderTexture(FRect rect, Texture& texture, Color color = Color::white);
-		void renderTexture(FVec2 pos, FVec2 size, Texture& texture, Color color = Color::white);
 		void renderTexture(float x, float y, float width, float height, Texture& texture, Color color = Color::white);
-
-		// TODO; add renderRects
-
+		void renderOutlineRects(std::span<FRect> rects); // renderRectsBashed? use rects??? color?
+		void renderOutlineRect(float x, float y, float w, float h, Color color = Color::black);
+		void renderFillRect(float x, float y, float w, float h, Color color = Color::black);
+		void renderLine(float startX, float startY, float endX, float endY, Color color = Color::black); // replace with Line struct?
+		void renderDebugText(float x, float y, const char* str);
+		void renderText(Text& text, int x, int y);
 		// renderFillRect
-		// renderOutlineRect`?
-
 		// renderFillRects
 		// renderLines
 		// point points
 
-		void renderOutlineRects(std::span<FRect> rects); // renderRectsBashed? use rects??? color?
-
-		void renderOutlineRect(FRect rect, Color color = Color::black);
-		void renderOutlineRect(float x, float y, float w, float h, Color color = Color::black);
-
-		void renderFillRect(FRect rect, Color color = Color::black);
-		void renderFillRect(float x, float y, float w, float h, Color color = Color::black);
-
-		void renderLine(FVec2 start, FVec2 end, Color color = Color::black);
-		void renderLine(float startX, float startY, float endX, float endY, Color color = Color::black); // replace with Line struct?
-
-		void renderDebugText(float x, float y, const char* str);
-
 		[[nodiscard]] inline SDL_Renderer* getRenderer() noexcept { return m_renderer; }
+		[[nodiscard]] inline TTF_TextEngine* getTextEngine() noexcept { return m_textEngine; }
 
 	private:
 		SDL_Renderer* m_renderer;
+		TTF_TextEngine* m_textEngine;
 	};
 }

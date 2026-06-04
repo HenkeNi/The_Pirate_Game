@@ -1,17 +1,17 @@
 #pragma once
-#include "engine/core/subsystem.h"
 
 typedef uint32_t SDL_AudioDeviceID;
 struct SDL_AudioStream;
 
 namespace cursed_engine
 {
-	class AudioController : public Subsystem
+	class AudioController
 	{
 	public:
 		AudioController();
 
 		bool init();
+		void shutdown();
 
 		void playSound(SDL_AudioStream* stream, uint8_t * buffer, uint32_t length); // or accept audio?
 		//SDL_AudioSpec getSpecs();

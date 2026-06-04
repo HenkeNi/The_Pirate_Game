@@ -165,7 +165,7 @@ namespace cursed_engine
 	template <typename Value, typename Key = std::size_t>
 	using SparseSet = sparse_set<Value, Key>;
 
-#pragma region Methods
+#pragma region Definitions
 
 	template <typename Value, Integral Key>
 	sparse_set<Value, Key>::sparse_set(std::size_t capacity)

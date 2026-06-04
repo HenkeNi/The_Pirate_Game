@@ -133,7 +133,7 @@ Mark the cache dirty if so.
 		// TODO; store entity handles here??
 	};
 
-#pragma region Methods
+#pragma region Definitions
 
 	template <ComponentType... Ts>
 	[[nodiscard]] ComponentView<Ts...> ECSRegistry::view() const

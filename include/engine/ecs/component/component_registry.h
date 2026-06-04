@@ -3,12 +3,31 @@
 #include "engine/ecs/entity/entity_handle.h"
 #include <engine/assets/asset_types.h>
 
+
+//#include "engine/rendering/render_api.h"
+//#include "engine/rendering/render_types.h" // Needed??
+
+#include "engine/resources/resource_types.h"
+
 #include "engine/core/type_registry.hpp"
 #include <functional>
 
 namespace cursed_engine
 {
 	class JsonValue;
+
+	struct ComponentInitContext
+	{
+		class AssetManager* assetManager{};
+		class Localization* localization{};
+		class RenderAPI* renderer{};
+
+		AudioManager* audioManager{};
+		FontManager* fontManager{};
+		TextureManager* textureManager{};
+		class TextManager* textManager{};
+		class TextFactory* textFactory{};
+	};
 
 	struct ComponentInfo
 	{
@@ -18,7 +37,7 @@ namespace cursed_engine
 		std::size_t size;
 
 		// TODO; find a better name
-		using Deserialization = std::function<void(EntityHandle& handle, const JsonValue& value)>;
+		using Deserialization = std::function<void(EntityHandle& handle, const JsonValue& value, const ComponentInitContext& context)>;
 		using PrefabInstantiation = std::function<void(EntityHandle& handle, const ComponentProperties& properties)>; // prefabInstance
 
 		PrefabInstantiation instantation;
@@ -44,12 +63,12 @@ namespace cursed_engine
 	//}
 
 
-	class JsonValue;
+	
 
 	class ComponentRegistry
 	{
 	public:
-		template <ComponentType T, Callable<EntityHandle&, const ComponentProperties&> PrefabInstantiation, Callable<EntityHandle&, const JsonValue&> Deserialize> // better name than initfunc? use from componentinfo instead?
+		template <ComponentType T, Callable<EntityHandle&, const ComponentProperties&> PrefabInstantiation, Callable<EntityHandle&, const JsonValue&, const ComponentInitContext&> Deserialize> // better name than initfunc? use from componentinfo instead?
 		void registerComponent(const std::string& name, PrefabInstantiation&& instantation, Deserialize&& deserialization)
 		{
 			const ComponentID id = getComponentID<T>();

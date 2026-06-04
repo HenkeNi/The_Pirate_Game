@@ -1,8 +1,10 @@
 #pragma once
 #include "engine/assets/asset_types.h"
-#include "engine/resources/engine_resources.h"
 #include <filesystem>
 #include <optional>
+
+// [Consider] - instead of returning optionals, allow assets to be invalid
+// [Consider] - make loaders struct? don't use inheritance?
 
 namespace cursed_engine
 {
@@ -25,22 +27,14 @@ namespace cursed_engine
 	class TextureAtlasLoader : public AssetLoader<TextureAtlas>
 	{
 	public:
-		TextureAtlasLoader(EngineResources& resources);
 		[[nodiscard]] std::optional<TextureAtlas> load(const std::filesystem::path& path) const override;
-
-	private:
-		EngineResources& m_resources;
 	};
 
 
 	class SpriteSheetLoader : public AssetLoader<SpriteSheet>
 	{
 	public:
-		SpriteSheetLoader(EngineResources& resources);
 		[[nodiscard]] std::optional<SpriteSheet> load(const std::filesystem::path& path) const override;
-
-	private:
-		EngineResources& m_resources;
 	};
 
 

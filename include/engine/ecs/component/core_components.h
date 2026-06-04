@@ -1,27 +1,37 @@
 #pragma region
-#include "engine/math/vec2.h"
+#include "engine/math/vec2.hpp"
 #include "engine/assets/asset_types.h"
 #include "engine/assets/asset_manager.h" // remove include?
 #include "engine/rendering/animation_types.h"
+#include "engine/core/action/action_registry.h" // or put type alisas in action.h?
 #include "engine/rendering/render_types.h"
-#include "engine/rendering/text.h"
+#include "engine/resources/text/text.h"
 #include <optional>
 #include <array>
 #include <unordered_map>
 
 namespace cursed_engine
 {
-	class ComponentRegistry; 
+	/*class ComponentRegistry; 
 	class EngineResources;
 	class Localization;
 	struct ResourceConfig;
-
-	namespace core_components
-	{
-		void registerAll(ComponentRegistry& registry, AssetManager& assetManager, EngineResources& engineResources, const ResourceConfig& resourceConfig, TextFactory& textFactory, const Localization& localization);
-	}
+*/
 
 	// Separet ui transform and world transform? or screen space / world space?
+
+	//struct TransformComponent
+	//{
+	//	// TODO; add 2 constructors? one for each individual argument?
+
+	//	FVec2 localPosition{ 0.f, 0.f };
+	//	FVec2 localScale{ 1.f, 1.f };
+	//	float localRotation = 0.f;
+	//	
+	//	FVec2 pivot{ 0.f, 0.f }; // helper functions or add funct in struct?
+	//
+	//	mat4 worldTransform; // dont store? compute?
+	//};
 
 	struct TransformComponent
 	{
@@ -31,6 +41,9 @@ namespace cursed_engine
 		FVec2 scale{ 1.f, 1.f };
 		FVec2 pivot{ 0.f, 0.f }; // helper functions or add funct in struct?
 		float rotation = 0.f;
+
+
+		float zIndex = 0.f;
 	};
 
 	struct VelocityComponent
@@ -86,6 +99,13 @@ namespace cursed_engine
 		bool isLooping = false;
 	};
 
+	class Audio;
+	struct AudioComponent
+	{
+		ResourceHandle<Audio> audioHandle;
+		bool isLooping;
+	};
+
 	// Not needed? maybe dont make any sense? (in menu, where to attach to?)
 	//struct InputComponent
 	//{
@@ -116,22 +136,26 @@ namespace cursed_engine
 		// rotation?
 	};
 
-
-	struct ButtonAction
+	struct HierarchyComponent
 	{
-		// onHover
-		// onPress or onClick
+		Entity parent;
 	};
+
+	//struct ButtonAction
+	//{
+	//	// onHover
+	//	// onPress or onClick
+	//};
 
 
 	// interactable?
 	struct ButtonComponent
 	{
-		using ActionValue = std::variant<std::string, int, double, bool>;
+		//using ActionValue = std::variant<std::string, int, double, bool>;
 
 		ButtonComponent() = default;
-		ButtonComponent(std::string action, ActionValue value, Color defaultColor, std::optional<Color> hoverColor = std::nullopt, std::optional<Color> pressedColor = std::nullopt)
-			: action{ action }, actionValue{ value }, defaultColor{ defaultColor }, hoverColor{ hoverColor }, pressedColor{ pressedColor }
+		ButtonComponent(std::string action, ActionArgs args, Color defaultColor, std::optional<Color> hoverColor = std::nullopt, std::optional<Color> pressedColor = std::nullopt)
+			: action{ action }, actionArgs{ std::move(args) }, defaultColor{defaultColor}, hoverColor{hoverColor}, pressedColor{pressedColor}
 		{
 		}
 
@@ -140,7 +164,8 @@ namespace cursed_engine
 		State previousState = State::Normal;
 
 		std::string action; // dont use string?
-		ActionValue actionValue;
+		ActionArgs actionArgs;
+		//ActionValue actionValue; // use vector of ActionParams?
 
 		Color defaultColor;
 		std::optional<Color> hoverColor;
@@ -149,6 +174,13 @@ namespace cursed_engine
 		// on click...? function pointer? or send event?
 	};
 	
+	struct SliderComponent
+	{
+		int minY;
+		int maxY; // or line?
+		int currentValue;
+	};
+
 	class Texture;
 	class Font;
 
@@ -174,9 +206,5 @@ namespace cursed_engine
 		// could store a Texture here.... 
 	};
 
-	struct AudioComponent
-	{
-		ResourceHandle<Audio> audioHandle;
-		bool isLooping;
-	};
+
 }

@@ -1,16 +1,18 @@
 #include "engine/ecs/system/render_system.h"
 #include "engine/ecs/ecs_registry.h"
 #include "engine/ecs/component/core_components.h"
-#include "engine/rendering/renderer.h"
-#include "engine/rendering/text_renderer.h"
+
 #include "engine/resources/resource_manager.hpp"
-#include "engine/rendering/texture.h"
+#include "engine/resources/resource_types.h"
+#include "engine/resources/texture/texture.h"
+
+#include "engine/rendering/render_api.h"
 #include "engine/rendering/render_types.h" // Put in renderer.h? to avoid including it
 
 namespace cursed_engine
 {
-	RenderSystem::RenderSystem(EngineResources& engineResources, AssetManager& assetManager, Renderer& renderer, TextRenderer& textRenderer)
-		: m_engineResources{ engineResources }, m_assetManager{ assetManager }, m_renderer{ renderer }, m_textRenderer{ textRenderer }
+	RenderSystem::RenderSystem(TextureManager* textureManager, AssetManager* assetManager, RenderAPI* renderer)
+		: m_textureManager{ textureManager }, m_assetManager{ assetManager }, m_renderer{ renderer }
 	{
 	}
 
@@ -18,19 +20,17 @@ namespace cursed_engine
 	{
 		// TODO; sort by handles? -> maybe sort using texture id (perhaps integer would be better than string?)
 
-		m_renderer.clearScreen(); // HERE or in main loop?
-
 		auto& registry = context.registry;
-		auto& textureManager = m_engineResources.textureManager;
+		//auto& textureManager = m_engineResources.textureManager;
 
 		const auto componentView = registry.view<SpriteComponent, TransformComponent>();
 		componentView.forEach([&](const SpriteComponent& spriteComponent, const TransformComponent& transformComponent)
 			{
-				const auto& textureAtlas = m_assetManager.getAsset<TextureAtlas>(spriteComponent.atlasHandle); // no asset stored AND invalid index!
+				const auto& textureAtlas = m_assetManager->getAsset<TextureAtlas>(spriteComponent.atlasHandle); // no asset stored AND invalid index!
 
-				const auto& textureHandle = textureManager.getHandleById(textureAtlas.textureID);
+				const auto& textureHandle = m_textureManager->getHandleById(textureAtlas.textureID);
 
-				if (auto* texture = textureManager.get(textureHandle))
+				if (auto* texture = m_textureManager->get(textureHandle))
 				{
 					// worldPos = transform.position 
 					// -(pivot * sprite.size * transform.scale)
@@ -44,7 +44,7 @@ namespace cursed_engine
 
 					position -= scale * transformComponent.pivot;
 
-					m_renderer.renderTexture(position.x, position.y, scale.x, scale.y, *texture, spriteComponent.color);
+					m_renderer->renderTexture(position.x, position.y, scale.x, scale.y, *texture, spriteComponent.color);
 				}
 			});
 
@@ -56,7 +56,7 @@ namespace cursed_engine
 
 #endif
 
-		m_renderer.renderLine(0, 0, 100, 100, Color{ 123, 21, 32, 255 });
+		m_renderer->renderLine(0, 0, 100, 100, Color{ 123, 21, 32, 255 });
 
 		renderText(registry);
 		//m_renderer.present(); // Here or in main loop?
@@ -78,7 +78,7 @@ namespace cursed_engine
 				position -= size * transformComponent.pivot;
 
 
-				m_textRenderer.renderText(textComponent.textObj, position.x, position.y);
+				m_renderer->renderText(textComponent.textObj, position.x, position.y);
 
 				return;
 
@@ -150,7 +150,7 @@ namespace cursed_engine
 				FVec2 size = boundingBoxComponent.halfSize * 2.f;
 				position -= size * transformComponent.pivot;
 
-				m_renderer.renderOutlineRect(position.x, position.y, size.x, size.y, color);
+				m_renderer->renderOutlineRect(position.x, position.y, size.x, size.y, color);
 			});
 	}
 }

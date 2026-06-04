@@ -1,6 +1,6 @@
 #pragma once
 #include "engine/core/logger.h"
-#include "engine/config/config_manager.h"
+#include "engine/core/config/config_manager.h"
 #include "resource_handle.h"
 #include "resource_cache.hpp"
 #include <algorithm>
@@ -15,25 +15,28 @@ namespace cursed_engine
 	// Handle if resource doesnt unload...
 	// Find better name; ResourceService, ResourceHandler? ResourceStore? ResourceAcessor? ResourceCache
 
-	template <typename Resource, typename Key, typename Loader>
+	template <typename Resource, typename Descriptor, typename Loader>
 	class ResourceManager final
 	{
 	public:
-		explicit ResourceManager(const ResourceConfig& resourceConfig, Loader loader);
+		ResourceManager();
+		explicit ResourceManager(const ResourceConfig* resourceConfig, std::unique_ptr<Loader> loader);
 		~ResourceManager() = default;
+
+		void init(const ResourceConfig* resourceConfig, std::unique_ptr<Loader> loader);
 
 		void update(uint64_t currentFrame, float deltaTime);
 
 		// ==================== Resource insertion ====================
-		ResourceHandle<Resource> insert(Key key, Resource resource);
+		ResourceHandle<Resource> insert(Descriptor descriptor, Resource resource);
 
 		// ==================== Handle acquisition ====================
-		[[nodiscard]] ResourceHandle<Resource> getHandle(const Key& key);
+		[[nodiscard]] ResourceHandle<Resource> getHandle(const Descriptor& descriptor);
 
 		template <typename... Args>
-		[[nodiscard]] ResourceHandle<Resource> getHandleById(const std::string& id, Args&&... args);
+		[[nodiscard]] ResourceHandle<Resource> getHandleById(const std::string& id, Args&&... args); // rename getHandleByDescriptor? or dont accept args? just return null...
 		
-		[[nodiscard]] ResourceHandle<Resource> findHandle(const Key& key) const;
+		[[nodiscard]] ResourceHandle<Resource> findHandle(const Descriptor& descriptor) const;
 
 		// ==================== Resource access ====================
 		[[nodiscard]] const Resource* get(ResourceHandle<Resource> handle) const;
@@ -43,71 +46,87 @@ namespace cursed_engine
 		[[nodiscard]] Resource& operator[](ResourceHandle<Resource> handle);
 
 		// ==================== Resource unloading / cleanup ====================
-		void unload(const Key& key); // release 
+		void unload(const Descriptor& descriptor); // release 
 		
-		void preload(const Key& key);
+		void preload(const Descriptor& descriptor);
 
 		void clear();
 
 		// ==================== Queries ====================
-		[[nodiscard]] bool contains(const Key& key) const noexcept;
+		[[nodiscard]] bool contains(const Descriptor& descriptor) const noexcept;
 
 		[[nodiscard]] bool isValid(ResourceHandle<Resource> handle) const noexcept;
 
 	private:	
 		// ==================== Type Alias ====================			
-		using HandleMap = std::unordered_map<Key, ResourceHandle<Resource>>;
+		using HandleMap = std::unordered_map<Descriptor, ResourceHandle<Resource>>;
 	
 		// ==================== Data Members ====================			
 		ResourceCache<Resource> m_cache;
-		const ResourceConfig& m_resourceConfig; // resource registry instead? (path, metadata, debug name)
-		HandleMap m_keyToHandle;
-		Loader m_loader;
+		const ResourceConfig* m_resourceConfig; // resource registry instead? (path, metadata, debug name)
+		HandleMap m_descriptorToHandle;
+		
+		std::unique_ptr<Loader> m_loader;
 	};
 
-#pragma region Methods
+#pragma region Definitions
 
-	template <typename Resource, typename Key, typename Loader>
-	ResourceManager<Resource, Key, Loader>::ResourceManager(const ResourceConfig& resourceConfig, Loader loader)
-		: m_cache{ resourceConfig.framesBeforeUnload }, m_resourceConfig{ resourceConfig }, m_loader{ std::move(loader) }
+	template <typename Resource, typename Descriptor, typename Loader>
+	ResourceManager<Resource, Descriptor, Loader>::ResourceManager()
+		: m_cache{ 4000 }, m_loader{ nullptr } // TODO; FIX THIS!
 	{
 	}
 
-	template <typename Resource, typename Key, typename Loader>
-	void ResourceManager<Resource, Key, Loader>::update(uint64_t currentFrame, float deltaTime)
+	template <typename Resource, typename Descriptor, typename Loader>
+	ResourceManager<Resource, Descriptor, Loader>::ResourceManager(const ResourceConfig* resourceConfig, std::unique_ptr<Loader> loader)
+		: m_cache{ resourceConfig->framesBeforeUnload }, m_resourceConfig{ resourceConfig }, m_loader{ std::move(loader) }
+	{
+	}
+
+	template <typename Resource, typename Descriptor, typename Loader>
+	void ResourceManager<Resource, Descriptor, Loader>::init(const ResourceConfig* resourceConfig, std::unique_ptr<Loader> loader)
+	{
+		m_resourceConfig = resourceConfig;
+		m_loader = std::move(loader);
+	}
+
+	template <typename Resource, typename Descriptor, typename Loader>
+	void ResourceManager<Resource, Descriptor, Loader>::update(uint64_t currentFrame, float deltaTime)
 	{
 		m_cache.update(currentFrame);
 	}
 	
-	template <typename Resource, typename Key, typename Loader>
-	ResourceHandle<Resource> ResourceManager<Resource, Key, Loader>::insert(Key key, Resource resource)
+	template <typename Resource, typename Descriptor, typename Loader>
+	ResourceHandle<Resource> ResourceManager<Resource, Descriptor, Loader>::insert(Descriptor descriptor, Resource resource)
 	{
 		auto handle = m_cache.store(std::move(resource));
-		m_keyToHandle.insert_or_assign(std::move(key), handle);
+		m_descriptorToHandle.insert_or_assign(std::move(descriptor), handle);
 	
 		return handle;
 	}
 	
-	template <typename Resource, typename Key, typename Loader>
+	template <typename Resource, typename Descriptor, typename Loader>
 	template <typename... Args>
-	ResourceHandle<Resource> ResourceManager<Resource, Key, Loader>::getHandleById(const std::string& id, Args&&... args)
+	ResourceHandle<Resource> ResourceManager<Resource, Descriptor, Loader>::getHandleById(const std::string& id, Args&&... args)
 	{
-		const auto& paths = m_resourceConfig.resourceIdToPath;
+		// TODO; assert is not path...
+
+		const auto& paths = m_resourceConfig->resourceIdToPath;
 
 		if (auto it = paths.find(id); it != paths.end())
 		{
-			Key key{ it->second, std::forward<Args>(args)... };
+			Descriptor descriptor{ it->second, std::forward<Args>(args)... }; // REQUIRES path to be first argument... use inheritance?
 
-			return getHandle(key);
+			return getHandle(descriptor); // map descriptors instead?
 		}
 
 		return ResourceHandle<Resource>::invalid();
 	}
 
-	template <typename Resource, typename Key, typename Loader>
-	ResourceHandle<Resource> ResourceManager<Resource, Key, Loader>::getHandle(const Key& key)
+	template <typename Resource, typename Descriptor, typename Loader>
+	ResourceHandle<Resource> ResourceManager<Resource, Descriptor, Loader>::getHandle(const Descriptor& descriptor)
 	{
-		if (auto it = m_keyToHandle.find(key); it != m_keyToHandle.end())
+		if (auto it = m_descriptorToHandle.find(descriptor); it != m_descriptorToHandle.end())
 		{
 			ResourceHandle<Resource> handle = it->second;
 
@@ -115,18 +134,18 @@ namespace cursed_engine
 				return handle;
 		}
 
-		Resource resource = m_loader(key);		
+		Resource resource = (*m_loader)(descriptor); // TODO; fix... bit awkward..
 
 		auto handle = m_cache.store(std::move(resource));
-		m_keyToHandle.insert_or_assign(key, handle);
+		m_descriptorToHandle.insert_or_assign(descriptor, handle);
 
 		return handle;	
 	}
 	
-	template <typename Resource, typename Key, typename Loader>
-	ResourceHandle<Resource> ResourceManager<Resource, Key, Loader>::findHandle(const Key& key) const
+	template <typename Resource, typename Descriptor, typename Loader>
+	ResourceHandle<Resource> ResourceManager<Resource, Descriptor, Loader>::findHandle(const Descriptor& descriptor) const
 	{
-		if (auto it = m_keyToHandle.find(key); it != m_keyToHandle.end())
+		if (auto it = m_descriptorToHandle.find(descriptor); it != m_descriptorToHandle.end())
 		{
 			ResourceHandle<Resource> handle = it->second;
 
@@ -137,36 +156,36 @@ namespace cursed_engine
 		return ResourceHandle<Resource>::invalid();
 	}
 
-	template <typename Resource, typename Key, typename Loader>
-	const Resource* ResourceManager<Resource, Key, Loader>::get(ResourceHandle<Resource> handle) const
+	template <typename Resource, typename Descriptor, typename Loader>
+	const Resource* ResourceManager<Resource, Descriptor, Loader>::get(ResourceHandle<Resource> handle) const
 	{
 		return m_cache.retrieve(handle);
 	}
 
-	template <typename Resource, typename Key, typename Loader>
-	Resource* ResourceManager<Resource, Key, Loader>::get(ResourceHandle<Resource> handle)
+	template <typename Resource, typename Descriptor, typename Loader>
+	Resource* ResourceManager<Resource, Descriptor, Loader>::get(ResourceHandle<Resource> handle)
 	{
 		return m_cache.retrieve(handle);
 	}
 
-	template <typename Resource, typename Key, typename Loader>
-	const Resource& ResourceManager<Resource, Key, Loader>::operator[](ResourceHandle<Resource> handle) const
+	template <typename Resource, typename Descriptor, typename Loader>
+	const Resource& ResourceManager<Resource, Descriptor, Loader>::operator[](ResourceHandle<Resource> handle) const
 	{
 		assert(m_cache.isValid(handle) && "ResourceManager::operator[] - not a valid handle");
 		return m_cache[handle];
 	}
 	
-	template <typename Resource, typename Key, typename Loader>
-	Resource& ResourceManager<Resource, Key, Loader>::operator[](ResourceHandle<Resource> handle)
+	template <typename Resource, typename Descriptor, typename Loader>
+	Resource& ResourceManager<Resource, Descriptor, Loader>::operator[](ResourceHandle<Resource> handle)
 	{
 		assert(m_cache.isValid(handle) && "ResourceManager::operator[] - not a valid handle");
 		return m_cache[handle];
 	}
 
-	template <typename Resource, typename Key, typename Loader>
-	void ResourceManager<Resource, Key, Loader>::unload(const Key& key)
+	template <typename Resource, typename Descriptor, typename Loader>
+	void ResourceManager<Resource, Descriptor, Loader>::unload(const Descriptor& descriptor)
 	{
-		if (auto it = m_keyToHandle.find(key); it != m_keyToHandle.end())
+		if (auto it = m_descriptorToHandle.find(descriptor); it != m_descriptorToHandle.end())
 		{
 			ResourceHandle<Resource>& handle = it->second;
 
@@ -177,31 +196,31 @@ namespace cursed_engine
 		}
 		else
 		{
-			Logger::logWarning("[ResourceCache::unload] - Key not found!");
+			Logger::logWarning("[ResourceCache::unload] - Descriptor not found!");
 		}
 	}
 
-	template <typename Resource, typename Key, typename Loader>
-	void ResourceManager<Resource, Key, Loader>::preload(const Key& key)
+	template <typename Resource, typename Descriptor, typename Loader>
+	void ResourceManager<Resource, Descriptor, Loader>::preload(const Descriptor& descriptor)
 	{
-		[[maybe_unusued]] auto handle = getHandle(key); // FIX!? needed??
+		[[maybe_unusued]] auto handle = getHandle(descriptor); // FIX!? needed??
 	}
 
-	template <typename Resource, typename Key, typename Loader>
-	void ResourceManager<Resource, Key, Loader>::clear()
+	template <typename Resource, typename Descriptor, typename Loader>
+	void ResourceManager<Resource, Descriptor, Loader>::clear()
 	{
-		m_keyToHandle.clear();
+		m_descriptorToHandle.clear();
 		m_cache.clear();
 	}
 
-	template <typename Resource, typename Key, typename Loader>
-	bool ResourceManager<Resource, Key, Loader>::contains(const Key& key) const noexcept
+	template <typename Resource, typename Descriptor, typename Loader>
+	bool ResourceManager<Resource, Descriptor, Loader>::contains(const Descriptor& descriptor) const noexcept
 	{
-		return m_keyToHandle.contains(key);
+		return m_descriptorToHandle.contains(descriptor);
 	}
 
-	template <typename Resource, typename Key, typename Loader>
-	bool ResourceManager<Resource, Key, Loader>::isValid(ResourceHandle<Resource> handle) const noexcept
+	template <typename Resource, typename Descriptor, typename Loader>
+	bool ResourceManager<Resource, Descriptor, Loader>::isValid(ResourceHandle<Resource> handle) const noexcept
 	{
 		return m_cache.isValid(handle);
 	}

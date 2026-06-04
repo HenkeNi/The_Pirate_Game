@@ -1,27 +1,28 @@
 #include "engine/ecs/system/audio_system.h"
 #include "engine/ecs/component/core_components.h"
 #include "engine/ecs/ecs_registry.h"
-#include "engine/events/event_bus.h"
-#include "engine/events/events.h"
+#include "engine/core/events/event_bus.h"
+#include "engine/core/events/events.h"
 #include "engine/audio/audio_controller.h"
+#include "engine/resources/resource_types.h"
+#include "engine/resources/audio/audio.h"
 
 namespace cursed_engine
 {
-	AudioSystem::AudioSystem(AudioManager& audioManager, AudioController& audioController, EventBus& eventBus)
+	AudioSystem::AudioSystem(AudioManager* audioManager, AudioController* audioController, EventBus* eventBus)
 		: m_audioManager{ audioManager }, m_audioController{ audioController }, m_eventBus{ eventBus }
 	{
-		m_eventBus.subscribe<PlaySoundEvent>(
+		m_eventBus->subscribe<PlaySoundEvent>(
 			[&](PlaySoundEvent e) 
 			{
 				// or put in queue?
-				auto audioHandle = m_audioManager.getHandleById("623175__aphom000__button-click-selection");
-				if (const auto* audio = m_audioManager.get(audioHandle))
+				auto audioHandle = m_audioManager->getHandleById("623175__aphom000__button-click-selection");
+				if (const auto* audio = m_audioManager->get(audioHandle))
 				{
-					m_audioController.playSound(audio->m_stream, audio->m_buffer, audio->m_length);
+					m_audioController->playSound(audio->m_stream, audio->m_buffer, audio->m_length);
 				}
-
-				int x = 20;
 			});
+
 		/*m_eventBus.subscribe<PlaySoundEvent>(
 			[](Entity e) 
 			{
@@ -33,7 +34,7 @@ namespace cursed_engine
 	{
 		// holds map of which sound id to sound?
 
-		auto audioHandle = m_audioManager.getHandleById("707884__dave4884__pirates-song");
+		auto audioHandle = m_audioManager->getHandleById("707884__dave4884__pirates-song");
 
 		if (audioHandle.isValid())
 		{
@@ -41,9 +42,9 @@ namespace cursed_engine
 		}
 
 		// How will this work when multiple components referes to the same audio?
-		if (const auto* audio = m_audioManager.get(audioHandle))
+		if (const auto* audio = m_audioManager->get(audioHandle))
 		{
-			m_audioController.playSound(audio->m_stream, audio->m_buffer, audio->m_length);
+			m_audioController->playSound(audio->m_stream, audio->m_buffer, audio->m_length);
 		}
 
 		////auto audioHandle = resourceManager.getHandle<Audio>("707884__dave4884__pirates-song.wav");

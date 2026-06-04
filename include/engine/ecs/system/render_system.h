@@ -1,19 +1,20 @@
 #pragma once
 #include "System.h"
-#include "engine/resources/engine_resources.h"
+#include "engine/resources/resource_types.h"
 
 namespace cursed_engine
 {
 	// TODO; fix render depth...
 
 	class AssetManager;
-	class Renderer;
-	class TextRenderer;
+	class RenderAPI;
+	//class TextureManager;
+	//class TextRenderer;
 
 	class RenderSystem : public System
 	{
 	public:
-		RenderSystem(EngineResources& engineResources, AssetManager& assetManager, Renderer& renderer, TextRenderer& textRenderer);
+		RenderSystem(TextureManager* textureManager, AssetManager* assetManager, RenderAPI* renderer);
 
 		void update(SystemContext& context) override;
 	
@@ -21,9 +22,8 @@ namespace cursed_engine
 		void renderText(ECSRegistry& registry);
 		void renderDebug(ECSRegistry& registry);
 
-		EngineResources& m_engineResources;
-		AssetManager& m_assetManager;
-		TextRenderer& m_textRenderer;
-		Renderer& m_renderer;
+		TextureManager* m_textureManager;
+		AssetManager* m_assetManager;
+		RenderAPI* m_renderer;
 	};
 }

@@ -42,7 +42,7 @@ static_cast<std::size_t>(id) will fail to compile or produce nonsense.
 		std::array<Signature, capacity> m_signatures;
 	};
 
-#pragma region Methods
+#pragma region Definitions
 
 	template <UnsignedIntegral Id, std::size_t signatureSize, std::size_t capacity>
 	const SignatureRegistry<Id, signatureSize, capacity>::Signature& SignatureRegistry<Id, signatureSize, capacity>::getSignature(Id id) const noexcept

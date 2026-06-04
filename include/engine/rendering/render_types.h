@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/math/vec2.h"
+#include "engine/math/vec2.hpp"
 #include <cstdint>
 
 namespace cursed_engine

@@ -1,7 +1,7 @@
 #include "engine/ecs/ecs_registry.h"
 #include "engine/ecs/component/core_components.h"
 #include "engine/ecs/system/input_system.h"
-#include "engine/input/input_handler.h"
+#include "engine/platform/input/input_handler.h"
 
 namespace cursed_engine
 {

@@ -8,6 +8,8 @@
 
 namespace cursed_engine
 {
+	// RENAME JUST REGISTRY?
+
 	// MetaDataBase? MetaStorage? DataStorage?
 	// TypeRegistry?
 	// Templated or non tempalted?
@@ -48,7 +50,7 @@ namespace cursed_engine
 		// mutex?
 	};
 
-#pragma region Methods
+#pragma region Definitions
 
 	template <typename T, typename ID>
 	template <typename Entry, typename... Args>
