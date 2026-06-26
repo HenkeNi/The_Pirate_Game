@@ -30,7 +30,6 @@ namespace cursed_engine
 		m_entityFactory.init(context.assets.assetManager);
 
 		registerCoreComponents();
-		insertCoreSystems(context);
 
 		Logger::logInfo("-> ECSModule: Success");
 		return true;
@@ -371,20 +370,36 @@ namespace cursed_engine
 
 				handle.attachComponent<AudioComponent>(audioHandle, isLooping);
 			});
-	}
 
-	void ECSModule::insertCoreSystems(const EngineContext& context)
-	{
-		auto& rendering = context.rendering;
-		auto& platform = context.platform;
-		auto& assets = context.assets;
-		auto& resources = context.resources;
+		m_componentRegistry.registerComponent<CheckboxComponent>("checkbox",
+			[](EntityHandle& handle, const ComponentProperties& properties)
+			{
+			},
+			[&](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+			{
+				bool isChecked = value["is_checked"].asBool();
+				handle.attachComponent<CheckboxComponent>(isChecked);
 
-		m_systemManager.emplace<RenderSystem>(resources.textureManager, assets.assetManager, rendering.rendererAPI);
-		//m_systemManager.emplace<InputSystem>(inputHandler);
-		m_systemManager.emplace<InteractionSystem>();
-		m_systemManager.emplace<UISystem>(platform.inputHandler, context.actionRegistry); // OR Accept action registry (and event bus) by pointer?
-		m_systemManager.emplace<TextSystem>(resources.textManager, resources.textFactory, assets.localization);
-		m_systemManager.emplace<AudioSystem>(resources.audioManager, context.audio.audioController, context.eventBus); // FIX eventbus ptr
+			});
+
+		m_componentRegistry.registerComponent<SliderComponent>("slider",
+			[](EntityHandle& handle, const ComponentProperties& properties)
+			{
+			},
+			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+			{
+
+			});
+
+		m_componentRegistry.registerComponent<ParentComponent>("parent",
+			[](EntityHandle& handle, const ComponentProperties& properties) 
+			{
+			},
+			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx) 
+			{
+				handle.attachComponent<ParentComponent>(value["parent_id"].asString());
+
+				//how to  find parent? -> send event "Entity Created"? let systme handle it?
+			});
 	}
 }

@@ -18,8 +18,12 @@ namespace cursed_engine
 			const EntityID id = m_available.front();
 			m_available.pop();
 
+			uint32_t& version = m_versions[id];
+			version = (version == INVALID_ENTITY_VERSION) ? ++version : version;
+
 			m_alive.emplace(id, id, m_versions[id]);
-			return Entity{ id, m_versions[id] };
+
+			return Entity{ id, version };
 		}
 
 		Logger::logWarning("[EntityManager] Maximum entity capacity reached!");
@@ -100,7 +104,7 @@ namespace cursed_engine
 		for (int i = 0; i < MAX_ENTITIES; ++i)
 		{
 			m_available.push(i);
-			m_versions[i] = 0;
+			m_versions[i] = INVALID_ENTITY_VERSION;
 		}
 	}
 

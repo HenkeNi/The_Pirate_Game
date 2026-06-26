@@ -4,6 +4,11 @@
 
 namespace cursed_engine
 {
+	EntityHandle::EntityHandle()
+		: m_entity{}, m_registry{ nullptr }
+	{
+	}
+
 	EntityHandle::EntityHandle(Entity entity, ECSRegistry* registry)
 		: m_entity{ entity }, m_registry{ registry }
 	{

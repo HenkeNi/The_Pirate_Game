@@ -1,5 +1,5 @@
 #include "engine/modules/platform_module.h"
-#include "engine/core/config/config_manager.h"
+#include "engine/core/settings/engine_config.h"
 #include "engine/core/logger.h"
 #include "engine/resources/texture/surface_loader.h"
 #include "engine/resources/texture/surface.h"
@@ -12,9 +12,9 @@ namespace cursed_engine
 	{
 	}
 
-	bool PlatformModule::init(const ConfigManager& config)
+	bool PlatformModule::init(const EngineConfig& config)
 	{
-		const auto& appInfo = config.getAppInfo();
+		const auto& appInfo = config.appInfo;
 		if (!SDL_SetAppMetadata(appInfo.name.c_str(), appInfo.version.c_str(), appInfo.identifier.c_str()))
 		{
 			Logger::logError(std::format("Failed to set app metadata. Error: {}", SDL_GetError()).c_str());
@@ -29,7 +29,7 @@ namespace cursed_engine
 		}
 
 		// Window creation
-		const auto& windowConfig = config.getWindowConfig();
+		const auto& windowConfig = config.window;
 
 		if (!m_window.create(appInfo.name.c_str(), windowConfig))
 		{

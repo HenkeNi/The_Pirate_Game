@@ -1,9 +1,8 @@
 #include "engine/platform/input/input_handler.h"
-//#include "engine/config/config_types.h"
-#include "engine/core/config/config_manager.h"
-#include "engine/core/logger.h"
+#include "engine/core/settings/engine_config.h"
 #include "engine/core/events/event_bus.h"
 #include "engine/core/events/events.h"
+#include "engine/core/logger.h"
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <functional>

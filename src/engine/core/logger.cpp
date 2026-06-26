@@ -4,6 +4,16 @@
 
 namespace cursed_engine
 {
+	void Logger::logVerbose(const std::string& msg)
+	{
+		SDL_LogVerbose(SDL_LOG_CATEGORY_APPLICATION, msg.c_str());
+	}
+
+	void Logger::logDebug(const std::string& msg)
+	{
+		SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, msg.c_str());
+	}
+
 	void Logger::logInfo(const std::string& msg)
 	{
 		SDL_Log(msg.c_str());

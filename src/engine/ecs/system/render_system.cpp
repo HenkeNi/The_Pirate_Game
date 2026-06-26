@@ -11,16 +11,27 @@
 
 namespace cursed_engine
 {
-	RenderSystem::RenderSystem(TextureManager* textureManager, AssetManager* assetManager, RenderAPI* renderer)
+	RenderSystem::RenderSystem(TextureManager* textureManager, AssetManager* assetManager, RenderAPI renderer)
 		: m_textureManager{ textureManager }, m_assetManager{ assetManager }, m_renderer{ renderer }
 	{
 	}
 
+	void renderTilemapTest(ECSRegistry& registry)
+	{
+
+
+	//	int tileIndex = x + y * chunkWidth;
+		//int baseVertex = tileIndex * 4;
+	}
+
 	void RenderSystem::update(SystemContext& context)
 	{
+		auto& registry = context.registry;
+		
+		renderTilemapTest(registry);
+
 		// TODO; sort by handles? -> maybe sort using texture id (perhaps integer would be better than string?)
 
-		auto& registry = context.registry;
 		//auto& textureManager = m_engineResources.textureManager;
 
 		const auto componentView = registry.view<SpriteComponent, TransformComponent>();
@@ -44,7 +55,7 @@ namespace cursed_engine
 
 					position -= scale * transformComponent.pivot;
 
-					m_renderer->renderTexture(position.x, position.y, scale.x, scale.y, *texture, spriteComponent.color);
+					m_renderer.drawTexture(position.x, position.y, scale.x, scale.y, *texture, spriteComponent.color);
 				}
 			});
 
@@ -56,7 +67,7 @@ namespace cursed_engine
 
 #endif
 
-		m_renderer->renderLine(0, 0, 100, 100, Color{ 123, 21, 32, 255 });
+		m_renderer.drawLine(0, 0, 100, 100, Color{ 123, 21, 32, 255 });
 
 		renderText(registry);
 		//m_renderer.present(); // Here or in main loop?
@@ -78,7 +89,7 @@ namespace cursed_engine
 				position -= size * transformComponent.pivot;
 
 
-				m_renderer->renderText(textComponent.textObj, position.x, position.y);
+				m_renderer.drawText(textComponent.textObj, position.x, position.y);
 
 				return;
 
@@ -126,7 +137,7 @@ namespace cursed_engine
 		auto view = registry.view<TransformComponent, BoundingBoxComponent>();
 		view.forEach([&](Entity entity, TransformComponent& transformComponent, BoundingBoxComponent& boundingBoxComponent)
 			{
-				Color color = Color::black;
+				Color color = Color::green;
 
 				if (auto* buttonComponent = registry.tryGetComponent<ButtonComponent>(entity))
 				{
@@ -150,7 +161,7 @@ namespace cursed_engine
 				FVec2 size = boundingBoxComponent.halfSize * 2.f;
 				position -= size * transformComponent.pivot;
 
-				m_renderer->renderOutlineRect(position.x, position.y, size.x, size.y, color);
+				m_renderer.drawOutlineRect(position.x, position.y, size.x, size.y, color);
 			});
 	}
 }

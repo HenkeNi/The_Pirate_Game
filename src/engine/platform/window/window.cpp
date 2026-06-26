@@ -8,7 +8,7 @@
 namespace cursed_engine
 {
 	Window::Window()
-		: m_window{ nullptr }, m_size{ 0, 0 }, m_isVSyncEnabled{ false }, m_isFullscreen{ false }, m_shouldClose{ false }
+		: m_window{ nullptr }, m_title{ "" }, m_position{ 0, 0 }, m_size{ 0, 0 }, m_isVSyncEnabled{ false }, m_alwaysOnTop{ false }, m_isFullscreen{ false }, m_shouldClose{ false }
 	{
 	}
 
@@ -30,7 +30,7 @@ namespace cursed_engine
 		{
 			m_size.x = config.width;
 			m_size.y = config.height;
-		
+
 			return true;
 		}
 		else
@@ -67,48 +67,125 @@ namespace cursed_engine
 		}
 	}
 
-	void Window::setAspectRatio(float width, float height)
+	bool Window::setAspectRatio(float width, float height)
 	{
-		SDL_SetWindowAspectRatio(m_window, width, height);
-		Logger::logDebub(std::format("Changed aspect ratio: {} x {}", width, height));
+		bool success = SDL_SetWindowAspectRatio(m_window, width, height);
+
+		if (success)
+		{
+			m_size.x = width;
+			m_size.y = height;
+
+			Logger::logDebug(std::format("Updated window aspect ratio to {}:{}", width, height));
+		}
+		else
+		{
+			Logger::logError(std::format("Failed to update window aspect ratio to {}:{}. Error: {}", width, height, SDL_GetError()));
+		}
+
+		return success;
 	}
 
-	void Window::setAlwaysOnTop(bool enable)
+	bool Window::setAlwaysOnTop(bool enable)
 	{
-		SDL_SetWindowAlwaysOnTop(m_window, enable);
-		Logger::logDebub(std::format("Window always on top changed to: {}", enable));
+		bool success = SDL_SetWindowAlwaysOnTop(m_window, enable);
+
+		if (success)
+		{
+			m_alwaysOnTop = enable;
+			Logger::logDebug(std::format("{} always-on-top mode for window", enable ? "Enabled" : "Disabled"));
+		}
+		else
+		{
+			Logger::logError(std::format("Failed to {} always-on-top mode for window. Error: {}", enable ? "enable" : "disable", SDL_GetError()));
+		}
+
+		return success;
 	}
 
-	void Window::setFullscreen(bool enable)
+	bool Window::setFullscreen(bool enable)
 	{
-		m_isFullscreen = enable;
-		SDL_SetWindowFullscreen(m_window, enable);
+		bool success = SDL_SetWindowFullscreen(m_window, enable);
 
-		Logger::logDebub(std::format("Fullscreen: {}", enable ? "enabled" : "disabled"));
+		if (success)
+		{
+			m_isFullscreen = enable;
+			Logger::logDebug(std::format("{} fullscreen mode", enable ? "Enabled" : "Disabled"));
+		}
+		else
+		{
+			Logger::logError(std::format("Failed to {} fullscreen mode. Error: {}", enable ? "enable" : "disable", SDL_GetError()));
+		}
+
+		return success;
 	}
 
-	void Window::setPosition(float x, float y)
+	bool Window::setPosition(int x, int y)
 	{
-		SDL_SetWindowPosition(m_window, x, y);
-		Logger::logDebub(std::format("Window position: {} {}", x, y));
+		bool success = SDL_SetWindowPosition(m_window, x, y);
+
+		if (success)
+		{
+			m_position.x = x;
+			m_position.y = y;
+			Logger::logDebug(std::format("Updated window position to ({}, {})", x, y));
+		}
+		else
+		{
+			Logger::logError(std::format("Failed to update window position to ({}, {}). Error: {}", x, y, SDL_GetError()));
+		}
+
+		return success;
 	}
 
-	void Window::setVSync(bool enable)
+	bool Window::setVSync(bool enable)
 	{
-		SDL_SetWindowSurfaceVSync(m_window, enable ? 1 : 0);
-		Logger::logDebub(std::format("Vsync: {}", enable ? "enabled" : "disabled"));
+		bool success = SDL_SetWindowSurfaceVSync(m_window, enable ? 1 : 0);
+
+		if (success)
+		{
+			m_isVSyncEnabled = enable;
+			Logger::logDebug(std::format("{} VSync", enable ? "Enabled" : "Disabled"));
+		}
+		else
+		{
+			Logger::logError(std::format("Failed to {} VSync. Error: {}", enable ? "enable" : "disable", SDL_GetError()));
+		}
+
+		return success;
 	}
 
-	void Window::setTitle(const char* title)
+	bool Window::setTitle(const char* title)
 	{
-		SDL_SetWindowTitle(m_window, title);
-		Logger::logDebub(std::format("Window title updated: {}", title));
+		bool success = SDL_SetWindowTitle(m_window, title);
+
+		if (success)
+		{
+			m_title = title;
+			Logger::logDebug(std::format("Updated window title to \"{}\"", title));
+		}
+		else
+		{
+			Logger::logError(std::format("Failed to update window title to \"{}\". Error: {}", title, SDL_GetError()));
+		}
+
+		return success;
 	}
-	
-	void Window::setIcon(Surface surface)
+
+	bool Window::setIcon(Surface surface)
 	{
-		SDL_SetWindowIcon(m_window, surface.surface);
-		Logger::logDebub("New window icon set!");
+		bool success = SDL_SetWindowIcon(m_window, surface.surface);
+
+		if (success)
+		{
+			Logger::logDebug("Updated window icon");
+		}
+		else
+		{
+			Logger::logError(std::format("Failed to update window icon. Error: {}", SDL_GetError()));
+		}
+
+		return success;
 	}
 
 	void Window::handleResize(int width, int height)

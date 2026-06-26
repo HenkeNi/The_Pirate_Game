@@ -6,10 +6,10 @@
 
 namespace cursed_engine
 {
-	RenderModule::RenderModule()
-		: m_renderAPI{ m_renderer }
-	{
-	}
+	//RenderModule::RenderModule()
+	//	: m_renderAPI{ m_renderer }
+	//{
+	//}
 
 	bool RenderModule::init(Window& window)
 	{
@@ -35,12 +35,12 @@ namespace cursed_engine
 
 	void RenderModule::beginFrame()
 	{
-		m_renderer.clearScreen();
+		m_renderer.beginFrame();
 	}
 	
 	void RenderModule::endFrame()
 	{
-		m_renderer.present();
+		m_renderer.endFrame();
 	}
 
 	/*RenderCapabilities RenderModule::getCapabilities() const noexcept

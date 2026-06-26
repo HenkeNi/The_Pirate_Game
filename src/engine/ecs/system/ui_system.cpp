@@ -5,9 +5,17 @@
 #include "engine/core/events/events.h"
 #include "engine/core/action/action_registry.h"
 #include "engine/platform/input/input_handler.h"
+#include "engine/math/vec2.hpp"
+// TODO; move boundingbox checks to an interaction system?
 
 namespace cursed_engine
 {
+	bool isInside(FVec2 min, FVec2 max, FVec2 point)
+	{
+		return point.x >= min.x && point.x <= max.x
+			&& point.y >= min.y && point.y <= max.y;
+	}
+
 	UISystem::UISystem(InputHandler* inputHandler, ActionRegistry* actionRegistry)
 		: m_inputHandler{ inputHandler }, m_actionRegistry{ actionRegistry }
 	{
@@ -28,14 +36,11 @@ namespace cursed_engine
 	void UISystem::update(SystemContext& systemContext)
 	{
 		handleButtonInteractions(systemContext.registry); // here or in an interaction system? might make more sense here?
+		handleCheckboxInteractions(systemContext.registry);
+		handleSlidersInteractions(systemContext.registry);
 	}
 
-	bool isInside(FVec2 min, FVec2 max, FVec2 point)
-	{
-		return point.x >= min.x && point.x <= max.x
-			&& point.y >= min.y && point.y <= max.y;
-	}
-
+	// TODO; pass mouse pos to each function?
 	void UISystem::handleButtonInteractions(ECSRegistry& registry)
 	{
 		FVec2 mousePosition = m_inputHandler->getMousePosition();
@@ -45,15 +50,18 @@ namespace cursed_engine
 			{
 				buttonComponent.previousState = buttonComponent.currentState;
 
+
 				// TODO, make into function? in component? static somewhere??
-				FVec2 buttonPosition = transformComponent.position + boundingBoxComponent.offset;						
+				/*FVec2 buttonPosition = transformComponent.position + boundingBoxComponent.offset;
 				FVec2 size = boundingBoxComponent.halfSize * 2.f;
-				buttonPosition -= size * transformComponent.pivot;
+				buttonPosition -= size * transformComponent.pivot;*/
 
 				auto& spriteComponent = registry.getComponent<SpriteComponent>(entity);
 
 				// TODO; make sure max is larger than min!
-				if (isInside(buttonPosition, buttonPosition + size, mousePosition))
+				bool isInside = isMouseInsideBoundingBox(transformComponent, boundingBoxComponent, mousePosition.x, mousePosition.y);
+
+				if (isInside)
 				{
 
 					switch (m_inputHandler->getMouseInputState(MouseButton::Left))
@@ -63,7 +71,7 @@ namespace cursed_engine
 
 						if (buttonComponent.hoverColor.has_value())
 							spriteComponent.color = buttonComponent.hoverColor.value();
-						
+
 						break;
 
 					case InputState::Pressed:
@@ -89,6 +97,53 @@ namespace cursed_engine
 					spriteComponent.color = buttonComponent.defaultColor;
 				}
 			});
+	}
+
+	void UISystem::handleCheckboxInteractions(ECSRegistry& registry)
+	{
+		// pass in mouse pos instead?
+		FVec2 mousePosition = m_inputHandler->getMousePosition();
+
+		// TODO; handle bounding box in physics or collision system?
+		auto view = registry.view<TransformComponent, CheckboxComponent, BoundingBoxComponent>();
+		view.forEach([&](Entity entity, TransformComponent& transformComponent, CheckboxComponent& checkboxComponent, BoundingBoxComponent& boundingBoxComponent)
+			{
+				bool isInside = isMouseInsideBoundingBox(transformComponent, boundingBoxComponent, mousePosition.x, mousePosition.y);
+
+				if (isInside)
+				{
+					switch (m_inputHandler->getMouseInputState(MouseButton::Left))
+					{
+						//case InputState::Pressed:
+					case InputState::Released:
+						checkboxComponent.isChecked = !checkboxComponent.isChecked;
+
+						if (auto* spriteComponent = registry.tryGetComponent<SpriteComponent>(entity))
+						{
+							// TODO; update texture
+						}
+
+
+					}
+				}
+			});
+	}
+
+	void UISystem::handleSlidersInteractions(ECSRegistry& registry)
+	{
+		// TODO; get all entities with a parent component, where parent has slider component?
+
+		auto view = registry.view<SliderComponent>();
+		view.forEach([&](Entity entity, SliderComponent& sliderComponent) 
+			{				
+				// "Thumb"...
+				if (registry.hasComponents<ParentComponent>(entity))
+				{
+					int x = 20; 
+				}
+			});
+
+
 	}
 
 	/*void UISystem::updateButtonColor(ButtonComponent::State buttonState, SpriteComponent& spriteComponent)
@@ -118,5 +173,15 @@ namespace cursed_engine
 	void UISystem::handleKeyPressed(const KeyPressedEvent& event)
 	{
 		int x = 20;
+	}
+
+	// TODO; fix this function...
+	bool UISystem::isMouseInsideBoundingBox(TransformComponent& transformComponent, BoundingBoxComponent& boundingBoxComponent, float mousePosX, float mousePosY) const noexcept
+	{
+		FVec2 buttonPosition = transformComponent.position + boundingBoxComponent.offset;
+		FVec2 size = boundingBoxComponent.halfSize * 2.f;
+		buttonPosition -= size * transformComponent.pivot;
+
+		return isInside(buttonPosition, buttonPosition + size, FVec2{ mousePosX, mousePosY });
 	}
 }

@@ -14,7 +14,7 @@ namespace cursed_engine
 			return EntityHandle{ entityOpt.value(), this };
 		}
 
-		return EntityHandle(Entity{ INVALID_ENTITY_ID, 0 }, this);
+		return EntityHandle(Entity{ INVALID_ENTITY_ID, INVALID_ENTITY_VERSION }, this);
 	}
 
 	bool ECSRegistry::destroyEntity(Entity entity)

@@ -6,6 +6,7 @@
 #include "engine/modules/asset_module.h"
 #include "engine/modules/audio_module.h"
 #include "engine/modules/ecs_module.h"
+#include "engine/modules/network_module.h"
 #include "engine/modules/platform_module.h"
 #include "engine/modules/render_module.h"
 #include "engine/modules/resource_module.h"
@@ -15,9 +16,7 @@
 #include "engine/core/events/event_bus.h" 
 #include "engine/core/settings/settings.h"
 #include "engine/core/action/action_registry.h"
-#include "engine/core/config/config_manager.h"
-#include "engine/core/config/config_types.h" // remove later...
-#include "engine/core/config/config_loader.h"
+//#include "engine/core/config/config_loader.h"
 #include <cassert>
 #include <string_view>
 
@@ -31,15 +30,14 @@ namespace cursed_engine
 	struct Engine::Impl
 	{
 		Impl(Application& app)
-			: application{ app }, platform{ eventBus }, settings{ configManager, platform.getWindow() }, assetRoot{ "../assets/" } // find root instead?
+			: application{ app }, platform{ eventBus }, settings{ eventBus }
 		{
 		}
 
 		// Core 
 		PlatformModule platform;
-		ConfigManager configManager;
-		Settings settings;
 		EventBus eventBus;
+		Settings settings;
 	
 		// Resource
 		AssetModule asset;
@@ -54,11 +52,15 @@ namespace cursed_engine
 		PhysicsModule physics;
 		ActionRegistry actionRegistry;
 
-		Application& application;
-		std::filesystem::path assetRoot; // ? 
+		// Network
+		NetworkModule network;
 
-		// Profiler
+		Application& application;
+
+		// LayerStack??? ImGuilayer? debug layer? ui layer? game layer?
+
 		// Task system/Thread pool
+		// Profiler
 	};
 
 	Engine::Engine(Application& app)
@@ -75,18 +77,20 @@ namespace cursed_engine
 		Logger::logInfo("############################ Starting engine initialization ############################");
 		assert(m_impl && "Engine::Impl is null!");
 
-		auto& configManager = m_impl->configManager;
+		auto& settings = m_impl->settings;
 
 		const char* configPath = "../assets/config/engine_config.json"; // TODO: store elsewhere..
 
-		if (!configManager.loadConfig(configPath))
+		if (!settings.loadConfig(configPath))
 		{
 			Logger::logError(std::format("Engine initialization aborted. Could not load configuration file {}", configPath));
 			return false;
 		}
 
+		const auto& configs = settings.getEngineConfig();
+
 		auto& platform = m_impl->platform;
-		if (!platform.init(configManager))
+		if (!platform.init(configs))
 		{
 			Logger::logError(std::format(initFailedMessage, "PlatformModule"));
 			return false;
@@ -121,7 +125,7 @@ namespace cursed_engine
 		}
 
 		auto& resource = m_impl->resource;
-		if (!resource.init(rendering.getRenderer(), configManager.getResourceConfig()))
+		if (!resource.init(rendering.getRenderer(), configs.resource))
 		{
 			Logger::logError(std::format(initFailedMessage, "ResourceModule"));
 			return false;
@@ -133,6 +137,13 @@ namespace cursed_engine
 		if (!ecs.init(ctx))
 		{
 			Logger::logError(std::format(initFailedMessage, "ECSModule"));
+			return false;
+		}
+
+		auto& network = m_impl->network;
+		if (!network.init())
+		{
+			Logger::logError(std::format(initFailedMessage, "NetworkModule"));
 			return false;
 		}
 
@@ -155,7 +166,7 @@ namespace cursed_engine
 		m_impl->physics.shutdown();
 		m_impl->resource.shutdown();
 		m_impl->rendering.shutdown();
-		m_impl->platform.shutdown(); // do last; calls SDL_Quit
+		m_impl->platform.shutdown(); // always last!
 
 		Logger::logInfo("Engine shutdown complete!");
 	}
@@ -206,15 +217,13 @@ namespace cursed_engine
 
 	EngineContext Engine::context() const
 	{
-
 		return EngineContext{
 			EngineContext::PlatformServices{
-				&m_impl->platform.getWindow(),
 				&m_impl->platform.getInputHandler(),
 				&m_impl->platform.getFrameTimer()
 			},
 			EngineContext::RenderingServices {
-				&m_impl->rendering.getRenderAPI()
+				m_impl->rendering.getRenderAPI()
 			},
 			EngineContext::AssetServices{
 				&m_impl->asset.getAssetManager(),
@@ -240,7 +249,7 @@ namespace cursed_engine
 			},
 			&m_impl->actionRegistry,
 			&m_impl->eventBus,
-			m_impl->assetRoot
+			&m_impl->settings
 		};
 	}
 }
