@@ -1,6 +1,6 @@
 #pragma once
 #include "engine/utils/non_copyable.h"
-#include "engine/utils/type_traits.h"
+#include "engine/utils/concepts.h"
 #include "engine/utils/utils.h"
 #include "game/scenes/scene_loader.h"
 #include <vector>
@@ -51,7 +51,7 @@ public:
 
 
 
-	void addPath(std::string sceneID, std::filesystem::path path); // TODO; maybe not here?!!!
+	//void addPath(std::string sceneID, std::filesystem::path path); // TODO; maybe not here?!!!
 
 	template <DerivedFrom<Scene> T, typename... Args>
 	void push(Args&&... args);
@@ -76,7 +76,7 @@ private:
 	std::vector<std::unique_ptr<Scene>> m_stack;
 	SceneLoader m_sceneLoader;
 
-	std::unordered_map<std::string, std::filesystem::path> m_idToPaths;
+	//std::unordered_map<std::string, std::filesystem::path> m_idToPaths;
 
 	//std::unordered_map<std::type_index, std::filesystem::path> m_typesToPaths; // use scene id instead?
 	//std::unordered_map<std::string, std::type_index> m_namesToTypes;

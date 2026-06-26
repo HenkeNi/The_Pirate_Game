@@ -15,4 +15,5 @@ class SceneLoader
 public:
 	// return future bool?
 	void loadAssets(Scene& scene, const std::filesystem::path& path, const cursed_engine::ComponentInitContext& ctx) const; // rename function?
+	//void createEntities(const class JsonArrayView& json, const cursed_engine::ComponentInitContext& ctx) const;
 };

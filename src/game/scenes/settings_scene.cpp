@@ -3,8 +3,8 @@
 
 using namespace cursed_engine;
 
-SettingsScene::SettingsScene(cursed_engine::SystemManager* systemManager, cursed_engine::EntityFactory* entityFactory, cursed_engine::ComponentRegistry* componentData, cursed_engine::EventBus* eventBus)
-	: Scene{ systemManager, entityFactory, componentData, eventBus, "SettingsScene" }
+SettingsScene::SettingsScene(SceneContext context)
+	: Scene{ std::move(context) }
 {
 }
 

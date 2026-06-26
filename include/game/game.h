@@ -1,6 +1,7 @@
 #pragma once
 #include "game/scenes/scene_stack.h"
 #include "game/scenes/scene_factory.h"
+#include "game/map/tile_registry.h"
 #include <engine/core/application.h>
 
 namespace cursed_engine
@@ -28,4 +29,6 @@ private:
 	SceneFactory m_sceneFactory;
 	SceneStack m_sceneStack;
 	//cursed_engine::EventBus* m_eventBus;
+
+	TileRegistry m_tileRegistry;
 };

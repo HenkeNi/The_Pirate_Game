@@ -20,11 +20,12 @@ SceneSystem::SceneSystem(const cursed_engine::ComponentInitContext& ctx, cursed_
 void SceneSystem::transitionToScene(const SceneTransitionEvent& e)
 {
 	// TODO; load and store somewhere...
-	static std::unordered_map<std::string, std::string> idToPaths
-	{
-		{ "title_scene", "../assets/scenes/title_scene.json"}, // Use assetRoot.string()
-		{ "settings_scene", "../assets/scenes/settings_scene.json"}
-	};
+	//static std::unordered_map<std::string, std::string> idToPaths
+	//{
+	//	{ "title_scene", "../assets/scenes/title_scene.json"}, // Use assetRoot.string()
+	//	{ "settings_scene", "../assets/scenes/settings_scene.json"},
+	//	{ "overworld_scene", "../assets/scenes/overworld_scene.json"}
+	//};
 
 	/*if (e.scene.empty() && e.transition == "pop")
 	{
@@ -36,20 +37,17 @@ void SceneSystem::transitionToScene(const SceneTransitionEvent& e)
 
 	if (!e.scene.empty())
 	{
-		std::string path = idToPaths.at(e.scene);
+		//std::string path = idToPaths.at(e.scene);
 
 		scene = m_sceneFactory.createScene(e.scene);
 		if (!scene)
 		{
 			// log...
 			return;
-
-
 		}
 
 		SceneLoader loader; // loads scene data?
-		loader.loadAssets(*scene, path, m_componentContext);
-
+		loader.loadAssets(*scene, m_sceneFactory.getFilePath(e.scene), m_componentContext);
 	}
 
 

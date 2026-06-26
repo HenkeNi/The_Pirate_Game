@@ -4,9 +4,8 @@
 
 #include <engine/ecs/system/system.h>
 
-
-Scene::Scene(cursed_engine::SystemManager* systemManager, cursed_engine::EntityFactory* entityFactory, cursed_engine::ComponentRegistry* componentData, cursed_engine::EventBus* eventBus, std::string id)
-	: m_context{ systemManager, entityFactory, componentData, eventBus }, m_id{ std::move(id) }
+Scene::Scene(SceneContext context)
+	: m_context{ std::move(context) }
 {
 }
 
@@ -16,6 +15,6 @@ void Scene::update(float deltaTime)
 
 	onUpdate(deltaTime);
 
-	cursed_engine::SystemContext systemContext{ m_context.registry, *m_context.eventBus, deltaTime };
+	cursed_engine::SystemContext systemContext{ m_registry, *m_context.eventBus, deltaTime };
 	m_context.systemManager->update(systemContext);
 }

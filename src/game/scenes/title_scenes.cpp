@@ -3,8 +3,8 @@
 
 using namespace cursed_engine;
 
-TitleScene::TitleScene(cursed_engine::SystemManager* systemManager, cursed_engine::EntityFactory* entityFactory, cursed_engine::ComponentRegistry* componentData, cursed_engine::EventBus* eventBus)
-	: Scene{ systemManager, entityFactory, componentData, eventBus, "TitleScene" }
+TitleScene::TitleScene(SceneContext context)
+	: Scene{ std::move(context) }
 {
 }
 

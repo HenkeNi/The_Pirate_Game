@@ -4,7 +4,7 @@
 class TitleScene : public Scene
 {
 public:
-	TitleScene(cursed_engine::SystemManager* systemManager, cursed_engine::EntityFactory* entityFactory, cursed_engine::ComponentRegistry* componentData, cursed_engine::EventBus* eventBus);
+	TitleScene(SceneContext context);
 	void onUpdate(float deltaTime) override;
 
 	void onEnter();

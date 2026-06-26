@@ -1,40 +1,50 @@
 #pragma once
-#include <engine/ecs/component/component_registry.h>
+#include "game/scenes/scene_types.h"
+#include <filesystem>
+#include <functional>
 #include <memory>
 #include <string>
-
-namespace cursed_engine
-{
-	//struct ComponentInitContext;
-
-	class SystemManager;
-	class EntityFactory;
-	class EventBus;
-	//class ComponentRegistry;
-}
+#include <unordered_map>
 
 class Scene;
-//struct SceneData;
 
 class SceneFactory
 {
 public:
+	SceneFactory() = default;
+	SceneFactory(SceneContext context);
+	
+	void init(SceneContext context);
 
-	// Function for creating contexts???? 
+	template <typename T>
+	bool registerScene(const std::string& name, const std::filesystem::path& path, T&& creatorFunc);
 
-	// LOOK OVER THESE PARAMS!!!!!!!!!!!!!
-	// accept context instead??
-	void init(cursed_engine::ComponentInitContext context, cursed_engine::SystemManager* systemManager, cursed_engine::EntityFactory* entityFactory, cursed_engine::ComponentRegistry* componentRegistry, cursed_engine::EventBus* eventBus);
-	//void init(cursed_engine::ComponentInitContext context, cursed_engine::ECSServices services, cursed_engine::EventBus* eventBus);
-	std::unique_ptr<Scene> createScene(const std::string& scene);
-	//std::unique_ptr<Scene> createScene(const char* scene, const SceneData& data);
+	[[nodiscard]] std::unique_ptr<Scene> createScene(const std::string& scene) const;
+
+	// here? or put meta data elsewhere?
+	std::filesystem::path getFilePath(const std::string& scene) const noexcept;
 
 private:
-	cursed_engine::ComponentInitContext m_context;
-
-	//cursed_engine::ECSServices m_services;
-	cursed_engine::EventBus* m_eventBus;
-	cursed_engine::SystemManager* m_systemManager;// Or each scene stores its own system manager??
-	cursed_engine::EntityFactory* m_entityFactory;
-	cursed_engine::ComponentRegistry* m_componentRegistry;
+	struct Meta
+	{
+		std::filesystem::path path;
+		std::function<std::unique_ptr<Scene>(SceneContext)> creator;
+	};
+	
+	std::unordered_map<std::string, Meta> m_registry;
+	SceneContext m_context;
 };
+
+#pragma region Methods
+
+template <typename T>
+bool SceneFactory::registerScene(const std::string& name, const std::filesystem::path& path, T&& creatorFunc)
+{
+	if (m_registry.contains(name))
+		return false;
+
+	auto [it, success] = m_registry.insert({ name, Meta{ path, std::move(creatorFunc) } });
+	return success;
+}
+
+#pragma endregion
