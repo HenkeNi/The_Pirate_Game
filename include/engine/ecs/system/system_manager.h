@@ -2,7 +2,7 @@
 #include "engine/ecs/system/system.h"
 #include "engine/ecs/ecs_types.h"
 #include "engine/utils/containers/sparse_set.hpp"
-#include "engine/utils/type_traits.h"
+#include "engine/utils/concepts.h"
 #include <memory>
 
 namespace cursed_engine
@@ -74,7 +74,7 @@ namespace cursed_engine
 	template <DerivedFrom<System> T>
 	T& SystemManager::getSystem()
 	{
-		return m_systems.at(getSystemID<T>());
+		return static_cast<T&>(*m_systems.at(getSystemID<T>())); // correct cast?
 	}
 
 	template <DerivedFrom<System> T>

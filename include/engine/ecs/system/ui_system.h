@@ -9,7 +9,7 @@ namespace cursed_engine
 
 	class InputHandler;
 	class ActionRegistry;
-
+	
 	class UISystem : public System
 	{
 	public:
@@ -20,10 +20,14 @@ namespace cursed_engine
 	private:
 		void handleButtonInteractions(ECSRegistry& registry); // renaeme func?
 		//void updateButtonColor(ButtonComponent::State buttonState, SpriteComponent& spriteComponent); // decide if should be func
+		void handleCheckboxInteractions(ECSRegistry& registry);
+		void handleSlidersInteractions(ECSRegistry& registry);
 
 		void handleMouseBtnPressed(const struct MouseBtnPressedEvent& event);
 		void handleKeyPressed(const struct KeyPressedEvent& event);
 		//void handleMouseBtnPressed(MouseButton button);
+
+		[[nodiscard]] bool isMouseInsideBoundingBox(struct TransformComponent& transformComponent, struct BoundingBoxComponent& boundingBoxComponent, float mousePosX, float mousePosY) const noexcept;
 
 		InputHandler* m_inputHandler;
 		ActionRegistry* m_actionRegistry;

@@ -1,6 +1,6 @@
 #pragma once
 #include "engine/ecs/ecs_types.h"
-#include "engine/utils/type_traits.h"
+#include "engine/utils/concepts.h"
 #include "engine/utils/non_copyable.h"
 #include "engine/utils/containers/sparse_set.hpp"
 

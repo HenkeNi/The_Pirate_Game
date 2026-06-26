@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/utils/type_traits.h"
+#include "engine/utils/concepts.h"
 #include "engine/utils/id_generator.h"
 #include <unordered_map>
 #include <string>
@@ -24,17 +24,17 @@ namespace cursed_engine
 
 		void insert(T entry);
 
-		const T& get(const char* name) const;
+		[[nodiscard]] const T& get(const char* name) const;
 		
-		const T* tryGet(const char* name) const;
+		[[nodiscard]] const T* tryGet(const char* name) const;
 
 		// getByname and get by id?!
 
-		size_t size() const;
+		[[nodiscard]] size_t size() const;
 
-		bool isValid(ID id) const;
+		[[nodiscard]] bool isValid(ID id) const;
 
-		bool isValid(const std::string& name) const;
+		[[nodiscard]] bool isValid(const std::string& name) const;
 
 	private:
 		struct Tag {};

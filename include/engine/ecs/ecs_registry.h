@@ -126,7 +126,7 @@ Mark the cache dirty if so.
 
 		std::unordered_map<EntitySignature, QueryCache> m_cachedQueries;
 
-
+		// Use Heirarchy structure?
 
 		// std::unordered_map<EntitySignature, ComponentView m_cachedComponentViews... OR chache matchin entities?
 	

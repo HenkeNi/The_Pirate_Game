@@ -2,6 +2,7 @@
 
 namespace cursed_engine
 {
+	// put all in a Time.h?
 	class Timer
 	{
 	public:

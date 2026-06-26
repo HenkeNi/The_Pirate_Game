@@ -1,5 +1,6 @@
 #pragma once
 #include "engine/resources/resource_types.h"
+#include "engine/rendering/render_api.h"
 
 namespace cursed_engine
 {
@@ -8,16 +9,14 @@ namespace cursed_engine
 	{
 		struct PlatformServices
 		{
-			class Window* window{};
 			class InputHandler* inputHandler{};
 			class FrameTimer* timer{};
 		} platform;
 
 		struct RenderingServices
 		{
-			class RenderAPI* rendererAPI{};
+			RenderAPI rendererAPI;
 			//class Renderer* renderer{};
-			//class TextRenderer* textRenderer{};
 		} rendering;
 
 		struct AssetServices
@@ -54,6 +53,6 @@ namespace cursed_engine
 
 		class ActionRegistry* actionRegistry;
 		class EventBus* eventBus;
-		const std::filesystem::path assetRoot;
+		class Settings* settings;
 	};
 }

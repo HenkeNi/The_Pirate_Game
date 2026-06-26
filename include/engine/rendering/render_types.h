@@ -1,10 +1,10 @@
 #pragma once
 #include "engine/math/vec2.hpp"
 #include <cstdint>
+#include <vector>
 
 namespace cursed_engine
 {
-
 	struct Color
 	{
 		constexpr Color()
@@ -57,6 +57,32 @@ namespace cursed_engine
 	inline const Color Color::orange{ 255, 208, 160, 255 };
 	inline const Color Color::brown{ 160, 128, 96, 255 };
 
+	struct Vertex
+	{
+		Vertex() = default;
+		Vertex(FVec2 position, FVec2 uv, Color color = Color::white)
+			: position{ position }, uv{ uv }, color{ color }
+		{
+		}
+
+		FVec2 position; // or structure same order as SDL_Vertex?
+		FVec2 uv; // or tex_coords?
+		Color color;
+	};
+
+	struct Geometry
+	{
+		std::vector<Vertex> vertices;
+		std::vector<int> indices;
+		//std::vector<uint32_t> indices;
+	};
+
+	enum class Orientation
+	{
+		Horizontal,
+		Vertical
+	};
+
 	// add constexpr constructor?
 	// TODO; put in math?
 	struct Rect
@@ -74,6 +100,14 @@ namespace cursed_engine
 		float w;
 		float h;
 	};
+
+	/*struct UVRect
+	{
+		float U0;
+		float V0;
+		float U1;
+		float V1;
+	};*/
 
 	struct Line
 	{

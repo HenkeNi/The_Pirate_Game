@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/utils/type_traits.h"
+#include "engine/utils/concepts.h"
 #include <cassert>
 #include <limits>
 #include <span>
@@ -15,6 +15,7 @@ namespace cursed_engine
 	// Iterator use key value pair instead?
 	// TODO; add nodiscard to iterator?
 	// TODO; remove constexpr from iterator?
+	// is m_reverse the correct type? (std::size_t?)
 
 	template <typename Value, Integral Key = std::size_t>
 	class sparse_set final
@@ -273,7 +274,8 @@ namespace cursed_engine
 			m_dense[indexToRemove] = std::move(m_dense[lastIndex]);
 
 			// Update the moved element's sparse index
-			const Key lastKey = m_reverse[lastIndex];
+			//const Key lastKey = m_reverse[lastIndex];
+			const Key lastKey = static_cast<Key>(m_reverse[lastIndex]);
 			m_sparse[lastKey] = indexToRemove;
 			m_reverse[indexToRemove] = lastKey;
 		}

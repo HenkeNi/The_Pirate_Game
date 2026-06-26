@@ -8,28 +8,33 @@ namespace cursed_engine
 	class Texture;
 	class Renderer;
 
+	// Put in Renderer.h?
 	// Consider having API push render commands to a queue instead...
 	class RenderAPI
 	{
 	public:
-		RenderAPI(Renderer& renderer);
+		RenderAPI() = default;
+		RenderAPI(Renderer* renderer);
 
-		void renderTexture(FRect rect, Texture& texture, Color color = Color::white);
-		void renderTexture(FVec2 pos, FVec2 size, Texture& texture, Color color = Color::white);
-		void renderTexture(float x, float y, float width, float height, Texture& texture, Color color = Color::white);
+		// rename to drawSprite?
+		void drawTexture(FRect rect, Texture& texture, Color color = Color::white);
+		void drawTexture(FVec2 pos, FVec2 size, Texture& texture, Color color = Color::white);
+		void drawTexture(float x, float y, float width, float height, Texture& texture, Color color = Color::white);
 
-		void renderOutlineRect(FRect rect, Color color = Color::black);
-		void renderOutlineRect(float x, float y, float w, float h, Color color = Color::black);
+		void drawGeometry(const Geometry& geometry, Texture& texture);
 
-		void renderFillRect(FRect rect, Color color = Color::black);
-		void renderFillRect(float x, float y, float w, float h, Color color = Color::black);
+		void drawOutlineRect(FRect rect, Color color = Color::black);
+		void drawOutlineRect(float x, float y, float w, float h, Color color = Color::black);
 
-		void renderLine(FVec2 start, FVec2 end, Color color = Color::black);
-		void renderLine(float startX, float startY, float endX, float endY, Color color = Color::black); // replace with Line struct?
+		void drawFillRect(FRect rect, Color color = Color::black);
+		void drawFillRect(float x, float y, float w, float h, Color color = Color::black);
 
-		void renderText(Text& text, int x, int y);
+		void drawLine(FVec2 start, FVec2 end, Color color = Color::black);
+		void drawLine(float startX, float startY, float endX, float endY, Color color = Color::black); // replace with Line struct?
+
+		void drawText(Text& text, int x, int y);
 
 	private:
-		Renderer& m_renderer;
+		Renderer* m_renderer;
 	};
 }

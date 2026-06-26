@@ -5,15 +5,15 @@
 
 namespace cursed_engine
 {
-	class ConfigManager;
-	class EventBus;
+	struct EngineConfig;
+	class EventBus; 
 
 	class PlatformModule
-	{
+	{  
 	public:
 		PlatformModule(EventBus& eventBus);
 
-		bool init(const ConfigManager& config);
+		bool init(const EngineConfig& config);
 		void shutdown();
 
 		void beginFrame();
@@ -37,8 +37,6 @@ namespace cursed_engine
 		[[nodiscard]] inline Window& getWindow() noexcept { return m_window; }
 
 		// get frame stats?
-
-		//[[nodiscard]] PlatformServices getServices() noexcept;
 
 	private:
 		InputHandler m_inputHandler;

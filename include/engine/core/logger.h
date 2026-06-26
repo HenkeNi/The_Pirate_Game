@@ -6,6 +6,10 @@ namespace cursed_engine
 	class Logger
 	{
 	public:
+		static void logVerbose(const std::string& msg); // TODO; needs to be enabled!
+		
+		static void logDebug(const std::string& msg);
+
 		static void logInfo(const std::string& msg);
 
 		static void logInfoExtended(const std::string& msg, const std::source_location& loc = std::source_location::current());

@@ -4,6 +4,7 @@
 #include "engine/assets/asset_manager.h" // remove include?
 #include "engine/rendering/animation_types.h"
 #include "engine/core/action/action_registry.h" // or put type alisas in action.h?
+#include "engine/ecs/entity/entity_handle.h"
 #include "engine/rendering/render_types.h"
 #include "engine/resources/text/text.h"
 #include <optional>
@@ -31,6 +32,20 @@ namespace cursed_engine
 	//	FVec2 pivot{ 0.f, 0.f }; // helper functions or add funct in struct?
 	//
 	//	mat4 worldTransform; // dont store? compute?
+	//};
+
+	//struct RenderLayer
+	//{
+	//	Texture* texture;
+	//	Vector2 offset;
+	//	float rotation = 0.0f;
+	//	Vector2 scale = { 1,1 };
+	//	int order = 0;
+	//};
+
+	//struct RenderComponent
+	//{
+	//	std::vector<RenderLayer> layers;
 	//};
 
 	struct TransformComponent
@@ -68,15 +83,38 @@ namespace cursed_engine
 
 	struct SpriteComponent
 	{
+		/*
+		* struct SpriteComponent
+			{
+				TextureHandle texture;
+				Rect sourceRect;
+
+				Vector2 pivot;
+			};
+		*/
+
+		/*
+		* struct SpriteComponent
+		* {
+		*	TextureHandle texture;
+		* vec2 uvTopLeft;
+		* vec2 uvBottomRight;
+		* };
+		*/
+
 		//SpriteComponent(AtlasH handle, AtlasRegion region, float color[4], float z)
 		//	: atlasH
 
+		// wrap in sprite struct?
 		AssetHandle atlasHandle; // Handle to texture                   --- better than storing id to atlas handle? (maybe to much indirection)
 		AtlasRegion atlasRegion;
+
 		Color color = Color::white;
+		
 		//std::array<float, 4> color; // use COlor instead?
 		//float colors[4]; // create type or type alias for color!
 
+		// std::variant<TextureHandle, AtlasSpriteHandle> source;
 
 		// store texture handle? if invalid, overwrite with new one from getHandle...
 
@@ -136,9 +174,28 @@ namespace cursed_engine
 		// rotation?
 	};
 
-	struct HierarchyComponent
+	//struct HierarchyComponent // or name ParentComponent
+	//{
+	//	Entity parent;
+	//	// also children?
+	//};
+
+	struct ParentComponent
 	{
-		Entity parent;
+		ParentComponent() = default;
+		
+		ParentComponent(std::string parentIdentifier)
+			: parentIdentifier{ std::move(parentIdentifier) }
+		{
+		}
+
+		ParentComponent(EntityHandle parent, std::string parentIdentifier)
+			: parent{ std::move(parent) }, parentIdentifier{ std::move(parentIdentifier) }
+		{
+		}
+
+		EntityHandle parent; // or just entity?
+		std::string parentIdentifier;
 	};
 
 	//struct ButtonAction
@@ -163,6 +220,7 @@ namespace cursed_engine
 		State currentState = State::Normal;
 		State previousState = State::Normal;
 
+		// Make into an Action (struct)?
 		std::string action; // dont use string?
 		ActionArgs actionArgs;
 		//ActionValue actionValue; // use vector of ActionParams?
@@ -174,13 +232,6 @@ namespace cursed_engine
 		// on click...? function pointer? or send event?
 	};
 	
-	struct SliderComponent
-	{
-		int minY;
-		int maxY; // or line?
-		int currentValue;
-	};
-
 	class Texture;
 	class Font;
 
@@ -206,5 +257,48 @@ namespace cursed_engine
 		// could store a Texture here.... 
 	};
 
+	struct CheckboxComponent
+	{
+		//ResourceHandle<Texture> uncheckedTexture;
+		//ResourceHandle<Texture> checkedTexture;
 
+		bool isChecked;
+	};
+
+	struct SliderComponent
+	{
+		/*SliderComponent(Orientation orientation, float minValue, float maxValue, float currentValue = 0.f)
+			: orientation{ orientation }, minValue{ minValue }, maxValue{ maxValue }, currentValue{ currentValue }
+		{
+		}*/
+	
+		// cant make const? needs to be able to be initialized form other 
+		Orientation orientation;
+		float minValue; // or line?
+		float maxValue;
+
+		float currentValue;
+	};
+
+	struct InputFieldComponent // or TextField
+	{
+
+	};
+
+	struct RadioButton
+	{
+
+	};
+
+	struct Dropdown
+	{
+
+	};
+
+	struct Switch // Or Toggle
+	{
+
+	};
+
+	// Tab? View? Tooltip? ProgressBar?
 }

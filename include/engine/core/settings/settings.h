@@ -1,30 +1,42 @@
 #pragma once
+#include "engine/core/settings/engine_config.h"
+#include <filesystem>
 
 namespace cursed_engine
 {
-	class ConfigManager;
-	class InputHandler;
-	class Window;
 	
-	// Renderer??
 	// SettingsChangedEvent?
 
 	// updates engine config?!
 	class Settings // listen to eevents?
 	{
 	public:
-		Settings(ConfigManager& config, Window& window);
+		Settings(EventBus& eventBus);
+
+		bool loadConfig(const std::filesystem::path& path);
+		void saveConfig(const std::filesystem::path& path);
+
+		void applySettings();
+
+		//[[nodiscard]] bool hasPendingChanges() const noexcept;
 
 		// Input
 
 
 		// Window
 		void setResolution();
+		// getResolution
+	//	settings provides and sets resolution ?
+
+		// get window resolution
 		
 		void enableVSync();
 		void disableVSync();
 		// toggle vsync...
+		
 		[[nodiscard]] bool isVSyncEnabled() const noexcept;
+
+		// Load and applies configs????
 
 		// Audio
 	
@@ -38,12 +50,11 @@ namespace cursed_engine
 		// load();
 
 
-		// Load and applies configs????
+
+		[[nodiscard]] inline const EngineConfig& getEngineConfig() const noexcept { return m_config; }
 
 	private:
-		ConfigManager& m_configManager;
-		Window& m_window;
-		// store all subsystems or just the ones needed 
-		
+		EngineConfig m_config;
+		EventBus& m_eventBus;
 	};
 }

@@ -19,7 +19,6 @@ namespace cursed_engine
 		
 	private:
 		void registerCoreComponents();
-		void insertCoreSystems(const EngineContext& context);
 
 		SystemManager m_systemManager;
 		EntityFactory m_entityFactory;

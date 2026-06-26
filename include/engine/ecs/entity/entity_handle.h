@@ -2,16 +2,17 @@
 #include "entity.h"
 #include "../ecs_registry.h"
 #include "engine/utils/non_copyable.h"
-#include "engine/utils/type_traits.h"
+#include "engine/utils/concepts.h"
 
 namespace cursed_engine
 {
 	// TODO; add hash?
 	// Rename Entity? stores entity id and generation... and pointer to registry?
 
-	class EntityHandle : private NonCopyable
+	class EntityHandle // : private NonCopyable
 	{
 	public:
+		EntityHandle();
 		EntityHandle(Entity entity, ECSRegistry* registry);
 		~EntityHandle() = default;
 
@@ -42,9 +43,9 @@ namespace cursed_engine
 		template <ComponentType... Ts>
 		[[nodiscard]] bool hasComponents() const;
 
-		// add destroy...
+		// add destroy... (cant store as const then)? - strore bool 'alive'?
 
-		[[nodiscard]] inline Entity getEntity() const noexcept { return m_entity; } // remove
+		[[nodiscard]] inline const Entity getEntity() const noexcept { return m_entity; } // remove
 
 	private:
 		ECSRegistry* m_registry;
@@ -71,36 +72,42 @@ namespace cursed_engine
 	template <ComponentType T>
 	void EntityHandle::detachComponent()
 	{
+		assert(m_registry && "Invalid ECSRegistry!");
 		m_registry->detachComponent<T>(m_entity);
 	}
 
 	template <ComponentType T>
 	[[nodiscard]] const T& EntityHandle::getComponent() const
 	{
+		assert(m_registry && "Invalid ECSRegistry!");
 		return m_registry->getComponent<T>(m_entity);
 	}
 
 	template <ComponentType T>
 	[[nodiscard]] T& EntityHandle::getComponent()
 	{
+		assert(m_registry && "Invalid ECSRegistry!");
 		return m_registry->getComponent<T>(m_entity);
 	}
 
 	template <ComponentType T>
 	[[nodiscard]] const T* EntityHandle::tryGetComponent() const
 	{
+		assert(m_registry && "Invalid ECSRegistry!");
 		return m_registry->tryGetComponent<T>(m_entity);
 	}
 
 	template <ComponentType T>
 	[[nodiscard]] T* EntityHandle::tryGetComponent()
 	{
+		assert(m_registry && "Invalid ECSRegistry!");
 		return m_registry->tryGetComponent<T>(m_entity);
 	}
 
 	template <ComponentType ...Ts>
 	bool EntityHandle::hasComponents() const
 	{
+		assert(m_registry && "Invalid ECSRegistry!");
 		return m_registry->hasComponents<Ts...>(m_entity.id);
 	}
 

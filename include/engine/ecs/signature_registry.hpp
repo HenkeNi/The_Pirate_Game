@@ -1,6 +1,6 @@
 #pragma once
 //#include "ecs_types.h"
-#include "engine/utils/type_traits.h"
+#include "engine/utils/concepts.h"
 #include <array>
 #include <bitset>
 #include <ranges>

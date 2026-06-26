@@ -41,4 +41,9 @@ namespace cursed_engine
 		std::string sound;
 		// entity?
 	};
+
+	struct SettingsChangedEvent
+	{
+
+	};
 }

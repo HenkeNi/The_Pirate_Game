@@ -16,7 +16,6 @@ namespace cursed_engine
 	{
 	public:
 		// ==================== Construction/Destruction ====================
-
 		EntityManager();
 		~EntityManager() = default;
 

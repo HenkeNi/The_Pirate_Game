@@ -1,6 +1,6 @@
 #pragma once
 #include "engine/core/logger.h"
-#include "engine/core/config/config_manager.h"
+#include "engine/core/settings/engine_config.h"
 #include "resource_handle.h"
 #include "resource_cache.hpp"
 #include <algorithm>

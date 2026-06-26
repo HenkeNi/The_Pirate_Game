@@ -23,7 +23,6 @@ namespace cursed_engine
 		std::optional<EntityHandle> createFromPrefab(const std::string& prefabID); // TODO; return EntityBuilder instead??? createEntity.withComponent<Transform>(data).withComponent().withTag("Player"´).build();
 		//std::optional<EntityHandle> instantiate(ECSRegistry& ecsRegistry, std::string_view prefab);
 
-
 	private:
 		friend class Engine;
 

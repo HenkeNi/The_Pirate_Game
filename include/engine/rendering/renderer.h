@@ -1,6 +1,6 @@
 #pragma once
 #include "engine/rendering/render_types.h"
-#include "engine/math/vec2.hpp" // TODO; put in pch...
+//#include "engine/math/vec2.hpp" // TODO; put in pch...
 #include <span>
 
 struct SDL_Renderer;
@@ -31,18 +31,27 @@ namespace cursed_engine
 
 		bool init(Window& window); // window capabilities instead?
 		void shutdown();
+		 
+		void beginFrame(); // make private? make module friend class? rename being fame instead?
+		void endFrame(); // rename? endFrame?
 
-		void clearScreen();
-		void present(); // rename?
-
+		// rename all draw()!
 		// are these safe to mark const?
-		void renderTexture(float x, float y, float width, float height, Texture& texture, Color color = Color::white);
-		void renderOutlineRects(std::span<FRect> rects); // renderRectsBashed? use rects??? color?
-		void renderOutlineRect(float x, float y, float w, float h, Color color = Color::black);
-		void renderFillRect(float x, float y, float w, float h, Color color = Color::black);
-		void renderLine(float startX, float startY, float endX, float endY, Color color = Color::black); // replace with Line struct?
-		void renderDebugText(float x, float y, const char* str);
-		void renderText(Text& text, int x, int y);
+		void drawTexture(float x, float y, float width, float height, Texture& texture, Color color = Color::white);
+		
+		void drawOutlineRects(std::span<FRect> rects); // renderRectsBashed? use rects??? color?
+		void drawOutlineRect(float x, float y, float w, float h, Color color = Color::black);
+
+		void drawFillRect(float x, float y, float w, float h, Color color = Color::black);
+
+		void drawLine(float startX, float startY, float endX, float endY, Color color = Color::black); // replace with Line struct?
+
+		void drawDebugText(float x, float y, const char* str);
+
+		void drawText(Text& text, int x, int y);
+
+		void drawGeometry(const Geometry& geometry, Texture& texture);
+		//void renderVertices(Texture& texture, const Vertex* vertices, int numberOfVertices, const int* indices, int numberOfIndices); // or drawVertices
 		// renderFillRect
 		// renderFillRects
 		// renderLines
@@ -52,6 +61,12 @@ namespace cursed_engine
 		[[nodiscard]] inline TTF_TextEngine* getTextEngine() noexcept { return m_textEngine; }
 
 	private:
+		struct RenderStatistics
+		{
+			uint32_t drawCalls;
+		};
+
+		RenderStatistics m_statistics;
 		SDL_Renderer* m_renderer;
 		TTF_TextEngine* m_textEngine;
 	};

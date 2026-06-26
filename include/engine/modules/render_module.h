@@ -15,7 +15,7 @@ namespace cursed_engine
 	class RenderModule
 	{
 	public:
-		RenderModule();
+		//RenderModule();
 
 		bool init(Window& window);
 		void shutdown();
@@ -26,14 +26,13 @@ namespace cursed_engine
 		//RenderCapabilities getCapabilities() const noexcept;
 
 		// Primary access
-		[[nodiscard]] inline RenderAPI& getRenderAPI() noexcept { return m_renderAPI; }
+		[[nodiscard]] inline RenderAPI getRenderAPI() noexcept { return RenderAPI{ &m_renderer }; }
 
 		// Optional: Low-level access (use sparingly)
 		[[nodiscard]] inline Renderer& getRenderer() noexcept { return m_renderer; }
 
 	private:
 		Renderer m_renderer; // use IRenderer instead??
-		RenderAPI m_renderAPI;
 
 		//RenderCapabilities m_capabilities;
 		// RenderGraph?

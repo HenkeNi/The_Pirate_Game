@@ -1,11 +1,9 @@
 #pragma once
 #include "engine/math/vec2.hpp"
 #include <array>
-//#include <SDL3/SDL.h>
 
 union SDL_Event;
 
-// TODO; hide sdl_scancode...
 // [CONSIDER] able to call isActionPressed(Action)? -> or should input handler not know about actions?
 // How to store registered keys? -> and save/update config
 
@@ -115,10 +113,11 @@ namespace cursed_engine
 	public:
 		InputHandler(EventBus& eventBus);
 
-		void init(const InputConfig& config); // copy move instead?
+		void init(const InputConfig& config);
 
 		void beginFrame();
 		void processInput(const SDL_Event& event);
+
 		void endFrame();
 
 		// Bind action function (action, key)

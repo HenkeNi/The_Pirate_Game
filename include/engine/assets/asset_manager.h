@@ -1,6 +1,6 @@
 #pragma once
 #include "engine/assets/asset_loader.h"
-#include "engine/utils/type_traits.h"
+#include "engine/utils/concepts.h"
 #include "engine/utils/utils.h"
 #include "engine/core/logger.h"
 #include <cstdint>

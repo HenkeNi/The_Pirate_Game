@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/utils/type_traits.h"
+#include "engine/utils/concepts.h"
 #include "engine/ecs/entity/entity_handle.h"
 #include <engine/assets/asset_types.h>
 
@@ -12,6 +12,9 @@
 #include "engine/core/type_registry.hpp"
 #include <functional>
 
+
+#include "engine/rendering/render_api.h"
+
 namespace cursed_engine
 {
 	class JsonValue;
@@ -20,7 +23,7 @@ namespace cursed_engine
 	{
 		class AssetManager* assetManager{};
 		class Localization* localization{};
-		class RenderAPI* renderer{};
+		RenderAPI renderer{};
 
 		AudioManager* audioManager{};
 		FontManager* fontManager{};
@@ -71,6 +74,7 @@ namespace cursed_engine
 		template <ComponentType T, Callable<EntityHandle&, const ComponentProperties&> PrefabInstantiation, Callable<EntityHandle&, const JsonValue&, const ComponentInitContext&> Deserialize> // better name than initfunc? use from componentinfo instead?
 		void registerComponent(const std::string& name, PrefabInstantiation&& instantation, Deserialize&& deserialization)
 		{
+			// TODO; static assert that name is lowercase?
 			const ComponentID id = getComponentID<T>();
 
 			m_registry.emplace<T>(

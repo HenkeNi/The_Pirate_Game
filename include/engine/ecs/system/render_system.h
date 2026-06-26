@@ -1,6 +1,7 @@
 #pragma once
 #include "System.h"
 #include "engine/resources/resource_types.h"
+#include "engine/rendering/render_api.h"
 
 namespace cursed_engine
 {
@@ -14,7 +15,7 @@ namespace cursed_engine
 	class RenderSystem : public System
 	{
 	public:
-		RenderSystem(TextureManager* textureManager, AssetManager* assetManager, RenderAPI* renderer);
+		RenderSystem(TextureManager* textureManager, AssetManager* assetManager, RenderAPI renderer);
 
 		void update(SystemContext& context) override;
 	
@@ -24,6 +25,6 @@ namespace cursed_engine
 
 		TextureManager* m_textureManager;
 		AssetManager* m_assetManager;
-		RenderAPI* m_renderer;
+		RenderAPI m_renderer;
 	};
 }
