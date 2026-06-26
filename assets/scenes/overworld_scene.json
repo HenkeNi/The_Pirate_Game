@@ -1,0 +1,22 @@
+{
+  "identifier": "overworld_scene",
+  "entities": [
+    {
+      "id": "player",
+      "components": {
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "width": 40,
+          "height": 40
+        },
+        "sprite": {
+          "id": "pirate_sheet"
+        },
+        "parent": {
+          "parent_id": "test"
+        }
+      }
+    }
+  ]
+}

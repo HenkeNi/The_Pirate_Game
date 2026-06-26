@@ -89,6 +89,83 @@
           }
         }
       }
+    },
+    {
+      "id": "vsync_checkbox",
+      "components": {
+        "transform": {
+          "x": 500,
+          "y": 200,
+          "width": 50,
+          "height": 50
+        },
+        "sprite": {
+          "id": "square"
+        },
+        "checkbox": {
+          "is_checked": false,
+          "action": "toggle_vsync",
+          "args": {
+            "toggle_on": "enable",
+            "toggle_off": "disable"
+          }
+        },
+        "bounding_box": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "size": {
+            "width": 50,
+            "height": 50
+          }
+        }
+      }
+    },
+    {
+      "id": "master_volume_slider_base",
+      "components": {
+        "transform": {
+          "x": 200,
+          "y": 200, 
+          "width": 50,
+          "height": 250
+        },
+        "sprite": {
+          "id": "square"
+        },
+        "slider": {
+         
+        }
+      }
+    },
+    {
+      "id": "master_volume_slider_thumb",
+      "components": {
+        "transform": {
+          "x": 200,
+          "y": 200,
+          "width": 50,
+          "height": 50
+        },
+        "sprite": {
+          "id": "pirate-flag"
+        },
+        "parent": {
+          "parent_id": "master_volume_slider_base"
+        },
+        "bounding_box": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "size": {
+            "width": 50,
+            "height": 50
+          }
+        }
+
+      }
     }
   ]
 }

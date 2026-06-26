@@ -59,10 +59,7 @@
           "id": "play-button"
         },
         "button": {
-          "action": "NewGame",
-          "args": {
-            "scene": "game_scene"
-          },
+          "action": "NewGame",          
           "default_color": {
             "r": 0,
             "g": 170,

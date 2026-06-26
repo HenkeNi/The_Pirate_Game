@@ -25,5 +25,8 @@
     "vsync": true,
     "fullscreen": false,
     "icon_path": "../assets/textures/test3.bmp"
+  },
+  "network": {
+
   }
 }
