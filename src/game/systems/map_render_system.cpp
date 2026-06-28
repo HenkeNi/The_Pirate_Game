@@ -1,6 +1,7 @@
 #include "game/systems/map_render_system.h"
 #include "game/components/components.h"
 #include "game/map/tile_map.h"
+#include "game/map/tile_registry.h"
 
 using cursed_engine::FVec2;
 
@@ -19,46 +20,41 @@ void MapRenderSystem::update(cursed_engine::SystemContext& context)
 
 		for (auto* mapChunk : m_tileMap->getVisibleMapChunks())
 		{
-			assert(mapChunk && "Not valid mapChunk");
+			assert(mapChunk && "Not a valid MapChunk!");
 			if (!mapChunk)
 			{
-				cursed_engine::Logger::logError("Invalid MapChunk");
+				cursed_engine::Logger::logError("[MapRenderSystem::update] - Not a valid MapChunk!");
 				continue;
 			}
 
-			if (mapChunk->isDirty)
-				buildMapChunkGeometry(*mapChunk); // each chunk has its own geometry? or create a "big one"?
+			for (auto& layer : mapChunk->layers)
+			{
+				if (!layer.isActive)
+					continue;
 
-			m_renderAPI.drawGeometry(mapChunk->geometry, *texture);
+				if (layer.isDirty)
+				{
+					if (auto* tileSet = m_tileRegistry.getTileSet(layer.tileSetId)) [[likely]]
+					{
+						buildMapChunkGeometry(layer, *tileSet);
+						layer.isDirty = false;
+					}
+					else
+					{
+						cursed_engine::Logger::logError("[MapRenderSystem::update] - Invalid TileSet!");
+						assert(false && "Invalid TileSet - can't continue rendering");
+						continue;
+					}
+				}
+
+				// TODO; need to know what texture the layer is using...
+
+				m_renderAPI.drawGeometry(layer.geometry, *texture);
+			}
 		}
-		/*for (auto& chunk : tileMap.GetVisibleChunks(camera))
-		{
-			if (chunk.Dirty)
-				chunk.RebuildGeometry(tileRegistry);
-
-			renderer.DrawGeometry(chunk.Geometry);
-		}*/
-
-
-
-
-
-		// who is responsbile for updating dirty chunks? MapRenderSystem? MapSystem? scene updates ´map`??
-
-		// if chunk is dirty? or mapsystem does it?
-
-		//  render chunk by chunk?
-		// get tiles... -
-
-		// 
-
-
-		int x = 20;
 	}
 
-	//renderTest();
-	
-	int x = 20;
+	renderTest();
 }
 
 void MapRenderSystem::renderTest()
@@ -146,62 +142,78 @@ void MapRenderSystem::setTileMap(TileMap* tileMap)
 	m_tileMap = tileMap;
 }
 
-void MapRenderSystem::buildMapChunkGeometry(MapChunk& mapChunk)
+void MapRenderSystem::buildMapChunkGeometry(TileLayer& tileLayer, const TileSet& tileSet)
 {
-	auto& geometry = mapChunk.geometry; // pass in geometry instead? (can set isDirty)
+	auto& geometry = tileLayer.geometry; // pass in geometry instead? (can set isDirty)
 
 	// Dont clear - just overwrite?
+	// reserv or resize vertices?
+
 	auto& vertices = geometry.vertices;
 	vertices.clear();
 
 	auto& indices = geometry.indices;
 	indices.clear();
 
-	static int TILE_SIZE = 10; // TEMP!
-
-	// reserv or resize vertices?
-
-	for (int y = 0; y < map_constants::MAP_CHUNK_HEIGHT; y++)
-		for (int x = 0; x < map_constants::MAP_CHUNK_WIDTH; x++)
+	for (int y = 0; y < TileLayer::height; y++)
+	{
+		for (int x = 0; x < TileLayer::width; x++)
 		{
-			//int tileIndex = x + y * map_constants::MAP_CHUNK_WIDTH;
+			int tileIndex = x + y * TileLayer::width;
+
+			TileId tileId = tileLayer.tileIds.at(tileIndex); // returns the number of the tile
+
+			cursed_engine::UVRect uvRect;
+
+			float tileSize = (float)map_constants::TILE_SIZE; // do above loops? read from tileset?
+
+			if (auto it = tileSet.tileTypes.find(tileId); it != tileSet.tileTypes.end())
+			{
+				cursed_engine::IVec2 coords = it->second.atlasCoord;
+
+				uvRect.u0 = (coords.x * tileSize) / tileSet.textureSize.x;
+				uvRect.v0 = (coords.y * tileSize) / tileSet.textureSize.y;
+
+				uvRect.u1 = ((coords.x + 1) * tileSize) / tileSet.textureSize.x;
+				uvRect.v1 = ((coords.y + 1) * tileSize) / tileSet.textureSize.y;
+			}
+			else
+			{
+				// TODO; use some error texture?
+			}
+
+			// TODO; using tileId figure out what 
+			// TODO; figure out which atlas coordinates should be used...
+
+			//	m_tileRegistry.get();
+
 			//auto index = mapChunk.tileIds.at(tileIndex);//  might be wrong... // correct?
-
-
 			// const Tile& tile = chunk.tiles[tileIndex]; -- use tile id instead...
 
 			////////////////////////////////7
-			int column = 3;
-			int row = 2;
+			/*int column = 1;
+			int row = 1;
 
-			float u0 = (column * 128.0f) / 2048.0f;
-			float v0 = (row * 128.0f) / 768.0f;
+			uvRect.u0 = (column * 128.0f) / 2048.0f;
+			uvRect.v0 = (row * 128.0f) / 768.0f;
 
-			float u1 = ((column + 1) * 128.0f) / 2048.0f;
-			float v1 = ((row + 1) * 128.0f) / 768.0f;
-
+			uvRect.u1 = ((column + 1) * 128.0f) / 2048.0f;
+			uvRect.v1 = ((row + 1) * 128.0f) / 768.0f;*/
 
 			////////////////////////////////////
 
-			//std::size_t baseVertex = vertices.size();
-
-			/*float px = x * TILE_SIZE;
-			float py = y * TILE_SIZE;*/
-			int px = x * TILE_SIZE;
-			int py = y * TILE_SIZE;
-
-			// 4 vertices (quad)
-			vertices.emplace_back(FVec2{ (float)px, (float)py },							FVec2{ u0, v0 });
-			vertices.emplace_back(FVec2{ float(px + TILE_SIZE), (float)py },				FVec2{ u1, v0 });
-			vertices.emplace_back(FVec2{ (float)px, float(py + TILE_SIZE) },				FVec2{ u0, v1 });
-			vertices.emplace_back(FVec2{ (float)px + TILE_SIZE, float(py + TILE_SIZE) },	FVec2{ u1, v1 });
-
-			//vertices.push_back({ {px, py},                uv0, tile.color });
-			//vertices.push_back({ {px + TILE_SIZE, py},    tile.uv1, tile.color });
-			//vertices.push_back({ {px, py + TILE_SIZE},    tile.uv2, tile.color });
-			//vertices.push_back({ {px + TILE_SIZE, py + TILE_SIZE}, tile.uv3, tile.color }); */
+			const int px = x * map_constants::TILE_SIZE; // check data type..
+			const int py = y * map_constants::TILE_SIZE;
 
 			int baseVertex = (int)vertices.size();
+
+			const auto& [u0, v0, u1, v1] = uvRect;
+
+			// 4 vertices (quad)
+			vertices.emplace_back(FVec2{ (float)px, (float)py }, FVec2{ u0, v0 });
+			vertices.emplace_back(FVec2{ float(px + map_constants::TILE_SIZE), (float)py }, FVec2{ u1, v0 });
+			vertices.emplace_back(FVec2{ (float)px, float(py + map_constants::TILE_SIZE) }, FVec2{ u0, v1 });
+			vertices.emplace_back(FVec2{ (float)px + map_constants::TILE_SIZE, float(py + map_constants::TILE_SIZE) }, FVec2{ u1, v1 });
 
 			// First triangle
 			indices.push_back(baseVertex + 0);
@@ -213,47 +225,5 @@ void MapRenderSystem::buildMapChunkGeometry(MapChunk& mapChunk)
 			indices.push_back(baseVertex + 1);
 			indices.push_back(baseVertex + 3);
 		}
-
-	mapChunk.isDirty = false; // do last!
-
-
-	// store map chunk vertices in the MapChunkComponent OR in some registry?
-/*
-	if (!mapChunkComponent.isDirty)
-		return;
-
-	auto& vertices = mapChunkComponent.geometry.vertices;
-	vertices.clear();
-
-	auto& indices = mapChunkComponent.geometry.indices;
-	indices.clear();
-
-	static int TILE_SIZE = 10;*/ // TEMP!
-
-	//for (int y = 0; y < MapChunkComponent::height; y++)
-	//	for (int x = 0; x < MapChunkComponent::width; x++)
-	//	{
-	//		int tileIndex = x + y * MapChunkComponent::width;
-	//		// const Tile& tile = chunk.tiles[tileIndex]; -- use tile id instead...
-
-	//		int baseVertex = vertices.size();
-
-	//		float px = x * TILE_SIZE;
-	//		float py = y * TILE_SIZE;
-
-	//		// 4 vertices (quad)
-	//		vertices.push_back({ {px, py},                tile.uv0, tile.color });
-	//		vertices.push_back({ {px + TILE_SIZE, py},    tile.uv1, tile.color });
-	//		vertices.push_back({ {px, py + TILE_SIZE},    tile.uv2, tile.color });
-	//		vertices.push_back({ {px + TILE_SIZE, py + TILE_SIZE}, tile.uv3, tile.color });
-
-	//		// 6 indices (2 triangles)
-	//		indices.push_back(baseVertex + 0);
-	//		indices.push_back(baseVertex + 1);
-	//		indices.push_back(baseVertex + 2);
-
-	//		indices.push_back(baseVertex + 2);
-	//		indices.push_back(baseVertex + 1);
-	//		indices.push_back(baseVertex + 3);
-	//	}
+	}
 }

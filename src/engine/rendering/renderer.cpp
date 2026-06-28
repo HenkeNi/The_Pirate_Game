@@ -143,7 +143,7 @@ namespace cursed_engine
 				// COLOR need to be converted to range from 0-1...
 				vertices.emplace_back(
 					SDL_FPoint{ vertex.position.x, vertex.position.y },
-					SDL_FColor{ (float)vertex.color.r, (float)vertex.color.g, (float)vertex.color.b, (float)vertex.color.a },
+					SDL_FColor{ (float)vertex.color.r / 255.f, (float)vertex.color.g / 255.f, (float)vertex.color.b / 255.f, (float)vertex.color.a / 255.f },
 					SDL_FPoint{ vertex.uv.x, vertex.uv.y }); // maybe wont work?! - convert types
 			});
 

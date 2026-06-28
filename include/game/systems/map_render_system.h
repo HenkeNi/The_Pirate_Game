@@ -14,9 +14,10 @@ namespace cursed_engine
 
 class TileMap;
 class TileRegistry;
-struct MapChunk;
-// cull chunks? 
+struct TileLayer;
+struct TileSet;
 
+// cull chunks? 
 class MapRenderSystem : public cursed_engine::System
 {
 public:
@@ -28,7 +29,7 @@ public:
 
 private:
 	void renderTest();
-	void buildMapChunkGeometry(MapChunk& mapChunk); // rename? or rework? not mesh but geometry...
+	void buildMapChunkGeometry(TileLayer& tileLayer, const TileSet& tileSet); // rename? or rework? not mesh but geometry...
 
 	cursed_engine::RenderAPI m_renderAPI;
 	cursed_engine::TextureManager* m_textureManager;

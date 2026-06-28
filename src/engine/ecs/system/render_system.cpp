@@ -39,7 +39,7 @@ namespace cursed_engine
 			{
 				const auto& textureAtlas = m_assetManager->getAsset<TextureAtlas>(spriteComponent.atlasHandle); // no asset stored AND invalid index!
 
-				const auto& textureHandle = m_textureManager->getHandleById(textureAtlas.textureID);
+				const auto& textureHandle = m_textureManager->getHandleById(textureAtlas.textureId);
 
 				if (auto* texture = m_textureManager->get(textureHandle))
 				{

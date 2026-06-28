@@ -1,29 +1,52 @@
 #pragma once
 #include "game/map/map_types.h"
 #include <engine/rendering/render_types.h>
-#include <span>
+#include <array>
 #include <vector>
 
-// or TileMapSettings..
-//struct TileMapConfig
-//{
-//	//static constexpr uint32_t chunkWidth = 32;
-//	//static constexpr uint32_t chunkHeight = 32;
-//};
+enum class LayerType
+{
+	Ground, 
+	Water,
+	Structure,
+	Decoration,
+	Count
+};
 
+struct TileLayer
+{
+	static constexpr int width = 32;
+	static constexpr int height = 32;
+	static constexpr int tileCount = width * height;
+
+	std::array<TileId, tileCount> tileIds;
+	cursed_engine::Geometry geometry;
+	TileSetId tileSetId;
+	
+	bool isActive = false;
+	bool isDirty = true; // mutable?
+};
 
 struct MapChunk
 {
-	// position?
-	// coords? x / y?
-	std::vector<TileId> tileIds;
-	// tileid
-	cursed_engine::Geometry geometry;
+	std::array<TileLayer, (std::size_t)LayerType::Count> layers;
+	cursed_engine::IVec2 coords;
 
-	bool isDirty = true;
-	// GEometry
-	// dirty
+	// position?
+	// aabb?
+	// helper functions? at? overload[] oeprator?
 };
+
+inline cursed_engine::IVec2 getWorldPosition(const MapChunk& mapChunk)
+{
+	assert(false && "Not tested!");
+
+	cursed_engine::IVec2 worldPosition;
+	worldPosition.x = mapChunk.coords.x * (TileLayer::width * map_constants::TILE_SIZE);
+	worldPosition.y = mapChunk.coords.y * (TileLayer::height * map_constants::TILE_SIZE);
+
+	return worldPosition;
+}
 
 // offload chunks? cache coords to map chunk index?
 class TileMap

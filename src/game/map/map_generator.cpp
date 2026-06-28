@@ -9,12 +9,20 @@
 
 void MapGenerator::generateStartArea(TileMap& map, int seed)
 {
+	// FIX THIS!
+
 	MapChunk mapChunk;
-	mapChunk.tileIds = std::vector<TileId>{
+
+	auto& groundLayer = mapChunk.layers[(std::size_t)LayerType::Ground];
+
+	groundLayer.tileIds = std::array<TileId, TileLayer::tileCount>{
 		1, 1, 1,
 		1, 1, 1,
 		1, 1, 1
 	};
+
+	groundLayer.tileSetId = "island_tileset";
+	groundLayer.isActive = true;
 
 	map.insertMapChunk(std::move(mapChunk));
 }

@@ -101,13 +101,13 @@ namespace cursed_engine
 		float h;
 	};
 
-	/*struct UVRect
+	struct UVRect
 	{
-		float U0;
-		float V0;
-		float U1;
-		float V1;
-	};*/
+		float u0;
+		float v0;
+		float u1;
+		float v1;
+	};
 
 	struct Line
 	{

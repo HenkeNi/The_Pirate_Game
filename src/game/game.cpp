@@ -77,7 +77,7 @@ void Game::onCreated(const EngineContext& context)
 	//m_sceneStack.addPath("TitleScene", configs.resource.assetRoot.string() + "scenes/title_scene.json" ); // Force user to specify path?
 	//m_sceneStack.addPath("OverworldScene", configs.resource.assetRoot.string() + "scenes/overworld_scene.json");
 
-	m_tileRegistry.load("../assets/tiles/tile_types.json");
+	m_tileRegistry.load(*context.assets.assetManager, "../assets/tiles/tile_types.json");
 
 	//m_sceneFactory.init(&systemManager, &context.ecs.entityFactory, m_appContext.eventBus, &context.ecs.componentRegistry);
 

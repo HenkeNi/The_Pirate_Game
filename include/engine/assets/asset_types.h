@@ -20,6 +20,16 @@ namespace cursed_engine
 		int x{}, y{}, w{}, h{};
 	};
 
+	struct TextureAtlas
+	{
+		std::string textureId; // replace with TextureHandle texture;
+		std::vector<AtlasRegion> regions;
+		IVec2 textureSize;
+		IVec2 cellSize;
+
+		// or vector of sprite definitions...? UV's
+	};
+
 	struct SpriteDefinition
 	{
 		std::string name;
@@ -27,16 +37,6 @@ namespace cursed_engine
 		IVec2 pivot;
 		IVec2 size;
 	};
-
-	struct TextureAtlas
-	{
-		std::string textureID;
-		//TextureHandle texture;
-		std::vector<AtlasRegion> regions;
-
-		// or vector of sprite definitions...? UV's
-	};
-
 	
 	struct SpriteSheet
 	{

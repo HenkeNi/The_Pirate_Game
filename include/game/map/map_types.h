@@ -1,11 +1,11 @@
 #pragma once
 #include <cstdint>
+#include <string>
 
 namespace map_constants
 {
-	constexpr int MAP_CHUNK_WIDTH = 32;
-	constexpr int MAP_CHUNK_HEIGHT = 32;
+	constexpr uint32_t TILE_SIZE = 128;// 16; from atlas instead?
 }
 
 using TileId = uint32_t;
-
+using TileSetId = std::string;
