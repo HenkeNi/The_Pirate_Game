@@ -19,7 +19,7 @@ struct TileLayer
 	static constexpr int height = 32;
 	static constexpr int tileCount = width * height;
 
-	std::array<TileId, tileCount> tileIds;
+	std::array<TileId, tileCount> tileIds; // maybe store this in mapchunk instead? since only one tile id per tile...
 	cursed_engine::Geometry geometry;
 	TileSetId tileSetId;
 	

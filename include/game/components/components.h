@@ -1,6 +1,27 @@
 #pragma once
 #include <engine/rendering/render_types.h>
-#include <array>
+//#include <array>
+
+//struct PlayerControllerComponent
+//{
+//	int x = 20;
+//	int y = 10;
+//};
+
+struct InputComponent
+{
+	// temp...
+	bool up;
+	bool down;
+	bool left;
+	bool right;
+};
+
+
+//struct MovementComponent
+//{
+//	cursed_engine::FVec2 velocity;
+//};
 
 //constexpr std::size_t tileDimension = 10;
 //

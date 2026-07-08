@@ -8,15 +8,21 @@
 #include <engine/core/events/events.h>
 #include <iostream>
 
+#include "game/components/components.h"
+
 #include "game/scenes/title_scene.h"
 #include "game/scenes/overworld_scene.h"
 #include "game/scenes/settings_scene.h"
 
 #include "game/systems/map_render_system.h"
+#include "game/systems/player_controller_system.h"
+#include "game/systems/input_system.h"
+#include "game/systems/movement_system.h"
 
 #include <engine/ecs/system/render_system.h>
 #include <engine/ecs/system/interaction_system.h> //? ?
 #include <engine/ecs/system/ui_system.h>
+#include <engine/ecs/system/transform_system.h>
 #include <engine/ecs/system/text_system.h>
 #include <engine/ecs/system/audio_system.h>
 
@@ -45,7 +51,7 @@ void Game::onCreated(const EngineContext& context)
 		context.resources.fontManager,
 		context.resources.textureManager,
 		context.resources.textManager,
-		context.resources.textFactory
+		//context.resources.textFactory
 	};
 
 	auto* systemManager = context.ecs.systemManager;
@@ -54,9 +60,14 @@ void Game::onCreated(const EngineContext& context)
 	systemManager->emplace<cursed_engine::RenderSystem>(context.resources.textureManager, context.assets.assetManager, context.rendering.rendererAPI);
 	//m_systemManager.emplace<InputSystem>(inputHandler);
 	systemManager->emplace<cursed_engine::InteractionSystem>();
-	systemManager->emplace<cursed_engine::UISystem>(context.platform.inputHandler, context.actionRegistry); // OR Accept action registry (and event bus) by pointer?
-	systemManager->emplace<cursed_engine::TextSystem>(context.resources.textManager, context.resources.textFactory, context.assets.localization);
+	systemManager->emplace<cursed_engine::TransformSystem>();
+	systemManager->emplace<cursed_engine::UISystem>(context.platform.input, context.actionRegistry); // OR Accept action registry (and event bus) by pointer?
+	systemManager->emplace<cursed_engine::TextSystem>(context.resources.textManager/*, context.resources.textFactory*/, context.assets.localization);
 	systemManager->emplace<cursed_engine::AudioSystem>(context.resources.audioManager, context.audio.audioController, context.eventBus); // FIX eventbus ptr
+	systemManager->emplace<PlayerControllerSystem>();
+	systemManager->emplace<MovementSystem>();
+	systemManager->emplace<InputSystem>(context.platform.input);
+
 
 	systemManager->emplace<SceneSystem>(
 		componentInitContext,
@@ -64,7 +75,27 @@ void Game::onCreated(const EngineContext& context)
 		m_sceneStack,
 		m_sceneFactory);
 
+	using namespace cursed_engine;
 
+	auto* componentRegistry = context.ecs.componentRegistry;
+
+	// No player controller component?
+	/*componentRegistry->registerComponent<PlayerControllerComponent>("player_controller",
+		[](EntityHandle& handle, const ComponentProperties& properties)
+		{},
+		[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+		{
+			handle.attachComponent<PlayerControllerComponent>();
+		});*/
+
+	// or engine?
+	componentRegistry->registerComponent<InputComponent>("input",
+		[](EntityHandle& handle, const ComponentProperties& properties)
+		{},
+		[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+		{
+			handle.attachComponent<InputComponent>();
+		});
 
 	m_sceneFactory.init({ context.ecs.entityFactory, context.ecs.componentRegistry, context.ecs.systemManager, context.eventBus });
 
@@ -77,7 +108,7 @@ void Game::onCreated(const EngineContext& context)
 	//m_sceneStack.addPath("TitleScene", configs.resource.assetRoot.string() + "scenes/title_scene.json" ); // Force user to specify path?
 	//m_sceneStack.addPath("OverworldScene", configs.resource.assetRoot.string() + "scenes/overworld_scene.json");
 
-	m_tileRegistry.load(*context.assets.assetManager, "../assets/tiles/tile_types.json");
+	m_tileRegistry.load(*context.assets.assetManager, "../assets/map/tile_types.json");
 
 	//m_sceneFactory.init(&systemManager, &context.ecs.entityFactory, m_appContext.eventBus, &context.ecs.componentRegistry);
 
