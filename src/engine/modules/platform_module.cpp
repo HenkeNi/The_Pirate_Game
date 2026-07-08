@@ -1,66 +1,76 @@
 #include "engine/modules/platform_module.h"
+#include "engine/platform/platform.h"
+
 #include "engine/core/settings/engine_config.h"
 #include "engine/core/logger.h"
+#include "engine/core/result.h"
 #include "engine/resources/texture/surface_loader.h"
 #include "engine/resources/texture/surface.h"
+#include "engine/core/events/event_bus.h"
+
 #include <SDL3/SDL.h>
 
 namespace cursed_engine
 {
 	PlatformModule::PlatformModule(EventBus& eventBus)
-		: m_inputHandler{ eventBus }, m_isRunning{ true }
+		: m_eventBus{ eventBus }, m_platform{ nullptr }
+	{
+	}
+
+	PlatformModule::~PlatformModule()
 	{
 	}
 
 	bool PlatformModule::init(const EngineConfig& config)
 	{
-		const auto& appInfo = config.appInfo;
-		if (!SDL_SetAppMetadata(appInfo.name.c_str(), appInfo.version.c_str(), appInfo.identifier.c_str()))
+		Logger::logInfo(std::format("{}[PlatformModule] - Initialization started...", log_format::INDENT));
+
+		const auto& backend = config.platform.backend;
+
+		switch (backend)
 		{
-			Logger::logError(std::format("Failed to set app metadata. Error: {}", SDL_GetError()).c_str());
+		case PlatformConfig::Backend::SDL:
+			m_platform = std::make_unique<SDLPlatform>(m_eventBus);
+			Logger::logInfo(std::format("{}[PlatformModule] - Selected platform: SDL", log_format::INDENT));
+			break;
+
+		default:
+			Logger::logInfo(std::format("{}[PlatformModule] - Unsupported backend {}", log_format::INDENT, (int)backend));
 			return false;
 		}
 
-		// SDL initialization
-		if (!SDL_Init(SDL_INIT_AUDIO | SDL_INIT_GAMEPAD | SDL_INIT_VIDEO))
+		const Result result = m_platform->init(config);
+
+		if (!result.succeeded)
 		{
-			Logger::logError(std::format("Failed to initialize SDL! Error: {}", SDL_GetError()).c_str());
+			Logger::logInfo(std::format("{}[PlatformModule] - Initialization failed! Reason: {}", log_format::INDENT, result.message));
 			return false;
 		}
 
-		// Window creation
-		const auto& windowConfig = config.window;
-
-		if (!m_window.create(appInfo.name.c_str(), windowConfig))
-		{
-			Logger::logError("Failed to create new window!");
-			return false;
-		}
-		else
-		{
-			SurfaceLoader surfaceLoader;
-			Surface surface = surfaceLoader(windowConfig.iconPath);
-
-			m_window.setIcon(surface);
-		}
-
-		Logger::logInfo("-> PlatformModule: Success");
+		Logger::logInfo(std::format("{}[PlatformModule] - Created window \'{}\' ({}x{})", log_format::INDENT, config.appInfo.name, config.window.width, config.window.height));
+		Logger::logInfo(std::format("{}[PlatformModule] - Initialization successful!", log_format::INDENT));
 		return true;
 	}
 
 	void PlatformModule::shutdown()
 	{
-		m_window.destroy();
-		SDL_Quit();
+		if (m_platform)
+		{
+			m_platform->shutdown();
+			m_platform = nullptr;
+		}
 	}
 
 	void PlatformModule::beginFrame()
 	{
 		m_frameBeginCounter = SDL_GetPerformanceCounter();
 
-		m_inputHandler.beginFrame();
+		m_platform->beginFrame();
 
 		m_timer.tick();
+
+		//assert(m_platform && "Platform uninitialized");
+	//	m_platform->pollEvents();
 	}
 
 	void PlatformModule::endFrame()
@@ -70,22 +80,18 @@ namespace cursed_engine
 		float elapsed = (end - m_frameBeginCounter) / (float)SDL_GetPerformanceFrequency();
 		m_fps = 1.f / elapsed;
 
-		m_inputHandler.endFrame();
+		m_platform->endFrame();
 	}
 
-	void PlatformModule::pollEvents()
+	void PlatformModule::processEvents()
 	{
-		SDL_Event event;
-		while (SDL_PollEvent(&event))
-		{
-			if (event.type == SDL_EVENT_QUIT)
-			{
-				m_isRunning = false;
-			}
+		m_platform->processEvents();
+	}
 
-			m_inputHandler.processInput(event);
-			m_window.processEvent(event);
-		}
+	bool PlatformModule::exitRequested() const noexcept
+	{
+		assert(m_platform && "Platform uninitialized");
+		return m_platform->exitRequested();
 	}
 
 	double PlatformModule::getDeltaTime() const noexcept
@@ -98,8 +104,18 @@ namespace cursed_engine
 		return m_timer.frameCount();
 	}
 
-	//PlatformServices PlatformModule::getServices() noexcept
-	//{
-	//	return { &m_inputHandler, &m_window, &m_timer };
-	//}
+	Window& PlatformModule::getWindow() noexcept
+	{
+		return m_platform->getWindow();
+	}
+
+	Cursor& PlatformModule::getCursor() noexcept
+	{
+		return m_platform->getCursor();
+	}
+
+	Input& PlatformModule::getInput() noexcept
+	{
+		return m_platform->getInput();
+	}
 }

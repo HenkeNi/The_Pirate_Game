@@ -2,7 +2,7 @@
 
 namespace cursed_engine
 {
-	class Renderer;
+	class ResourceCreator;
 	class Texture;
 	struct TextureDescriptor;
 
@@ -15,11 +15,11 @@ namespace cursed_engine
 	class TextureLoader // : public ITextureLoader
 	{
 	public:
-		explicit TextureLoader(Renderer* renderer);
+		explicit TextureLoader(ResourceCreator* creator);
 
 		[[nodiscard]] Texture operator()(const TextureDescriptor& descriptor) const;
 
 	private:
-		Renderer* m_renderer;
+		ResourceCreator* m_creator;
 	};
 }

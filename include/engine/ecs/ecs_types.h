@@ -12,7 +12,8 @@ namespace cursed_engine
 	constexpr std::uint32_t INVALID_ENTITY_ID = std::numeric_limits<std::uint32_t>::max();
 	constexpr std::uint32_t INVALID_ENTITY_VERSION = 0;
 
-	using ComponentID = std::uint8_t;
+	// TOOD; use Id not ID?
+	using ComponentID = std::uint8_t; 
 	using SystemID = std::uint8_t;
 	using EntityID = uint32_t; // Or move to entity.h?
 	using EntityVersion = uint32_t;

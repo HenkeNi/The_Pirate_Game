@@ -20,8 +20,8 @@ namespace cursed_engine
 		}
 
 		TextureAtlas textureAtlas;
-		textureAtlas.textureID = document["texture_id"].asString();
-
+		textureAtlas.textureId = document["texture_id"].asString();
+		textureAtlas.cellSize = { 128, 128 }; // TODO; fix tihs!
 		return textureAtlas;
 	}
 

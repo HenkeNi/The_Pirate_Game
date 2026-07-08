@@ -1,8 +1,9 @@
-#include "engine/platform/input/input_handler.h"
+#include "engine/platform/input.h"
 #include "engine/core/settings/engine_config.h"
 #include "engine/core/events/event_bus.h"
 #include "engine/core/events/events.h"
 #include "engine/core/logger.h"
+#include "engine/core/Result.h"
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <functional>
@@ -10,18 +11,21 @@
 
 namespace cursed_engine
 {
-	InputHandler::InputHandler(EventBus& eventBus)
+	SDLInput::SDLInput(EventBus& eventBus)
 		: m_eventBus{ eventBus }
 	{
 	}
 
-	void InputHandler::init(const InputConfig& config)
+	Result SDLInput::init(const InputConfig& config)
 	{
 		std::for_each(config.keyBindings.begin(), config.keyBindings.end(),
 			[&](const auto& pair) { m_keyInfo[(std::size_t)pair.first] = InputInfo{ InputState::None, false, false }; });
+	
+		
+		return Result::success();
 	}
 
-	void InputHandler::beginFrame()
+	void SDLInput::beginFrame()
 	{
 		for (auto& keyInfo : m_keyInfo)
 		{
@@ -37,23 +41,23 @@ namespace cursed_engine
 		m_mouseState.scroll = 0.f;
 	}
 
-	void InputHandler::processInput(const SDL_Event& event)
+	void SDLInput::processInput(const SDL_Event& event)
 	{
 		switch (event.type)
 		{
 		case SDL_EVENT_KEY_UP:
 		case SDL_EVENT_KEY_DOWN:
-			processKeyEvent(event);
+			handleKeyEvent(event);
 			break;
 		case SDL_EVENT_MOUSE_MOTION:
-			processMouseMotionEvent(event);
+			handleMouseMotionEvent(event);
 			break;
 		case SDL_EVENT_MOUSE_BUTTON_DOWN:
 		case SDL_EVENT_MOUSE_BUTTON_UP:
-			processMouseButtonEvent(event);
+			handleMouseButtonEvent(event);
 			break;
 		case SDL_EVENT_MOUSE_WHEEL:
-			processMouseWheelEvent(event);
+			handleMouseWheelEvent(event);
 			break;
 		}
 
@@ -61,7 +65,7 @@ namespace cursed_engine
 		// TODO; send input event?!
 	}
 
-	void InputHandler::endFrame()
+	void SDLInput::endFrame()
 	{
 		//for (auto& [scancode, info] : m_keyInfo)
 		for (auto& keyInfo : m_keyInfo)
@@ -71,25 +75,25 @@ namespace cursed_engine
 		}
 	}
 
-	bool InputHandler::isKeyPressed(Key key) const
+	bool SDLInput::isKeyPressed(Key key) const
 	{
 		//assert(m_keyInfo.contains(code) && "Key not registered in InputHandler!");
 		return m_keyInfo.at((std::size_t)key).inputState == InputState::Pressed;
 	}
 
-	bool InputHandler::isKeyHeld(Key key) const
-	{
-		//assert(m_keyInfo.contains(code) && "Key not registered in InputHandler!");
-		return m_keyInfo.at((std::size_t)key).inputState == InputState::Held;
-	}
-
-	bool InputHandler::isKeyReleased(Key key) const
+	bool SDLInput::isKeyReleased(Key key) const
 	{
 		//assert(m_keyInfo.contains(code) && "Key not registered in InputHandler!");
 		return m_keyInfo.at((std::size_t)key).inputState == InputState::Released;
 	}
 
-	bool InputHandler::isMouseBtnPressed(MouseButton button) const
+	bool SDLInput::isKeyHeld(Key key) const
+	{
+		//assert(m_keyInfo.contains(code) && "Key not registered in InputHandler!");
+		return m_keyInfo.at((std::size_t)key).inputState == InputState::Held;
+	}
+
+	bool SDLInput::isMouseBtnPressed(MouseButton button) const
 	{
 		auto mouseState = SDL_GetMouseState(nullptr, nullptr);
 	
@@ -101,15 +105,7 @@ namespace cursed_engine
 		//return false;
 	}
 
-	bool InputHandler::isMouseBtnHeld(MouseButton button) const
-	{
-		if (button != MouseButton::Count)
-			return m_mouseState.buttons[(std::size_t)button].inputState == InputState::Held;
-
-		return false;
-	}
-
-	bool InputHandler::isMouseBtnReleased(MouseButton button) const
+	bool SDLInput::isMouseBtnReleased(MouseButton button) const
 	{
 		if (button != MouseButton::Count)
 			return m_mouseState.buttons[(std::size_t)button].inputState == InputState::Released;
@@ -117,9 +113,17 @@ namespace cursed_engine
 		return false;
 	}
 
-	InputState InputHandler::getMouseInputState(MouseButton button) const
+	bool SDLInput::isMouseBtnHeld(MouseButton button) const
 	{
-		const auto& mouseButton = m_mouseState.buttons[(std::size_t)button];
+		if (button != MouseButton::Count)
+			return m_mouseState.buttons[(std::size_t)button].inputState == InputState::Held;
+
+		return false;
+	}
+
+	InputState SDLInput::getMouseInputState(MouseButton button) const noexcept
+	{
+		const auto& mouseButton = m_mouseState.buttons[(std::size_t)button]; // will crash if button not present!
 
 		if (mouseButton.wasDown && mouseButton.isDown)
 			return InputState::Held;
@@ -134,37 +138,32 @@ namespace cursed_engine
 		//return m_mouseState.buttons[(std::size_t)button].inputState;
 	}
 
-	FVec2 InputHandler::getMousePosition() const
+	InputState SDLInput::getKeyState(const InputInfo& info) const noexcept
+	{
+		if (info.isDown && !info.wasDown) return InputState::Pressed;
+		if (info.isDown && info.wasDown) return InputState::Held;
+		if (!info.isDown && info.wasDown) return InputState::Released;
+
+		return InputState::None;
+	}
+	
+	FVec2 SDLInput::getMousePosition() const
 	{
 		return FVec2{ m_mouseState.x, m_mouseState.y };
 	}
 
-	FVec2 InputHandler::getMouseDelta() const
+	FVec2 SDLInput::getMouseDelta() const
 	{
 		assert(false && "Not implemented!");
 		return FVec2{};
 	}
 
-	float InputHandler::getMouseScroll() const
+	float SDLInput::getMouseScroll() const
 	{
 		return m_mouseState.scroll;
 	}
 
-	void InputHandler::processKeyEvent(const SDL_Event& event)
-	{
-		Key key = static_cast<Key>(event.key.scancode);
-		auto& keyInfo = m_keyInfo[(std::size_t)key];
-
-		//key.wasDown = key.isDown;
-		keyInfo.isDown = (event.type == SDL_EVENT_KEY_DOWN);
-
-		if (!keyInfo.wasDown && keyInfo.isDown)
-			m_eventBus.publishInstantly<KeyPressedEvent>(key);
-		else if (keyInfo.wasDown && !keyInfo.isDown)
-			m_eventBus.publishInstantly<KeyReleasedEvent>(key);
-	}
-
-	void InputHandler::processMouseButtonEvent(const SDL_Event& event)
+	void SDLInput::handleMouseButtonEvent(const SDL_Event& event)
 	{
 		uint8_t button = event.button.button;
 		auto& mouseButton = m_mouseState.buttons[button];
@@ -222,7 +221,7 @@ namespace cursed_engine
 		}*/
 	}
 
-	void InputHandler::processMouseMotionEvent(const SDL_Event& event)
+	void SDLInput::handleMouseMotionEvent(const SDL_Event& event)
 	{
 		if (m_mouseState.x != event.motion.x || m_mouseState.y != event.motion.y)
 		{
@@ -233,17 +232,22 @@ namespace cursed_engine
 		}
 	}
 
-	void InputHandler::processMouseWheelEvent(const SDL_Event& event)
+	void SDLInput::handleMouseWheelEvent(const SDL_Event& event)
 	{
 		m_mouseState.scroll = event.wheel.y;
 	}
 
-	InputState InputHandler::getKeyState(const InputInfo& info) const noexcept
+	void SDLInput::handleKeyEvent(const SDL_Event& event)
 	{
-		if (info.isDown && !info.wasDown) return InputState::Pressed;
-		if (info.isDown && info.wasDown) return InputState::Held;
-		if (!info.isDown && info.wasDown) return InputState::Released;
+		Key key = static_cast<Key>(event.key.scancode);
+		auto& keyInfo = m_keyInfo[(std::size_t)key];
 
-		return InputState::None;
+		//key.wasDown = key.isDown;
+		keyInfo.isDown = (event.type == SDL_EVENT_KEY_DOWN);
+
+		if (!keyInfo.wasDown && keyInfo.isDown)
+			m_eventBus.publishInstantly<KeyPressedEvent>(key);
+		else if (keyInfo.wasDown && !keyInfo.isDown)
+			m_eventBus.publishInstantly<KeyReleasedEvent>(key);
 	}
 }

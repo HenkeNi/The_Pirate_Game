@@ -6,15 +6,14 @@ namespace cursed_engine
 {
 	class Text;
 	class Texture;
-	class Renderer;
+	class RenderBackend;
 
-	// Put in Renderer.h?
 	// Consider having API push render commands to a queue instead...
 	class RenderAPI
 	{
 	public:
-		RenderAPI() = default;
-		RenderAPI(Renderer* renderer);
+		RenderAPI();
+		RenderAPI(RenderBackend* backend);
 
 		// rename to drawSprite?
 		void drawTexture(FRect rect, Texture& texture, Color color = Color::white);
@@ -32,9 +31,9 @@ namespace cursed_engine
 		void drawLine(FVec2 start, FVec2 end, Color color = Color::black);
 		void drawLine(float startX, float startY, float endX, float endY, Color color = Color::black); // replace with Line struct?
 
-		void drawText(Text& text, int x, int y);
+		void drawText(Text& text, float x, float y);
 
 	private:
-		Renderer* m_renderer;
+		RenderBackend* m_backend;
 	};
 }

@@ -5,6 +5,7 @@ namespace cursed_engine
 {
 	class TransformSystem : public System
 	{
-
+	public:
+		void update(SystemContext& context) override;
 	};
 }

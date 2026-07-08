@@ -4,6 +4,8 @@
 
 namespace cursed_engine
 {
+	class EventBus;
+	struct Result;
 	
 	// SettingsChangedEvent?
 
@@ -11,9 +13,9 @@ namespace cursed_engine
 	class Settings // listen to eevents?
 	{
 	public:
-		Settings(EventBus& eventBus);
+		Settings(EventBus& eventBus); // used for what?
 
-		bool loadConfig(const std::filesystem::path& path);
+		Result loadConfig(const std::filesystem::path& path);
 		void saveConfig(const std::filesystem::path& path);
 
 		void applySettings();
@@ -52,6 +54,8 @@ namespace cursed_engine
 
 
 		[[nodiscard]] inline const EngineConfig& getEngineConfig() const noexcept { return m_config; }
+
+		static std::filesystem::path getConfigPath();
 
 	private:
 		EngineConfig m_config;

@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/platform/input/input_handler.h"
+#include "engine/platform/input.h"
 #include "engine/ecs/entity/entity.h"
 #include <string>
 // TODO; create dedicated UIEvents, InputEvents, etc if file grows to large

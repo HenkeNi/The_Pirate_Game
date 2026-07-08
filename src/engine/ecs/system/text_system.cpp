@@ -3,12 +3,11 @@
 #include "engine/ecs/component/core_components.h"
 #include "engine/core/localization/localization.h"
 #include "engine/resources/text/text_manager.h"
-#include "engine/resources/text/text_factory.h"
 
 namespace cursed_engine
 {
-	TextSystem::TextSystem(TextManager* textManager, TextFactory* textFactory, Localization* localization)
-		: m_textManager{ textManager }, m_textFactory{ textFactory }, m_localization{ localization }
+	TextSystem::TextSystem(TextManager* textManager, /*TextFactory* textFactory,*/ Localization* localization)
+		: m_textManager{ textManager }/*, m_textFactory{ textFactory }*/, m_localization{ localization }
 	{
 	}
 
@@ -62,7 +61,7 @@ namespace cursed_engine
 
 					const std::string& text = m_localization->getText(textComponent.textID);
 
-					m_textFactory->createText(text, fontHandle);
+					//m_textFactory->createText(text, fontHandle);
 				}
 
 				// try use text in text component... (no handle) store directly in component...

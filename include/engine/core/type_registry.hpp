@@ -36,14 +36,16 @@ namespace cursed_engine
 
 		[[nodiscard]] bool isValid(const std::string& name) const;
 
+		void clear();
+
 	private:
 		struct Tag {};
 
 		std::vector<T> m_entries;
 			
 		//std::unordered_map<std::string, ID> m_namesToIDs; // or name to inde?
-		std::unordered_map<std::string, ID> m_namesToIndexes; // or name to inde?
-		std::unordered_map<ID, int> m_idsToIndexes; // use sparse set?
+		std::unordered_map<std::string, std::size_t> m_namesToIndexes; // or name to inde?
+		std::unordered_map<ID, std::size_t> m_idsToIndexes; // use sparse set?
 
 		// ID Or type index?
 
@@ -101,6 +103,14 @@ namespace cursed_engine
 	bool TypeRegistry<T, ID>::isValid(const std::string& name) const
 	{
 		return m_namesToIndexes.contains(name);
+	}
+
+	template <typename T, typename ID>
+	void TypeRegistry<T, ID>::clear()
+	{
+		m_entries.clear();
+		m_namesToIndexes.clear();
+		m_idsToIndexes.clear();
 	}
 
 #pragma endregion

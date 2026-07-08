@@ -15,38 +15,38 @@
 
 #include "engine/core/localization/localization.h"
 #include "engine/core/logger.h"
-#include "engine/platform/input/input_handler.h"
-#include "engine/resources/text/text_factory.h"
-#include "engine/rendering/renderer.h"
+//#include "engine/platform/input/input.h"
+#include "engine/resources/text/text_manager.h"
 #include "engine/rendering/render_types.h"
 #include "engine/audio/audio_controller.h"
 
 #include "engine/resources/resource_types.h"
 
+// TODO; handle missing values in json (registerComponents)
+
 namespace cursed_engine
 {
 	bool ECSModule::init(const EngineContext& context)
 	{
+		Logger::logInfo(std::format("{}[ECSModule] - Initialization started...", log_format::INDENT));
+
 		m_entityFactory.init(context.assets.assetManager);
 
 		registerCoreComponents();
 
-		Logger::logInfo("-> ECSModule: Success");
+		Logger::logInfo(std::format("{}[ECSModule] - Initialization successful!", log_format::INDENT));
 		return true;
 	}
 
 	void ECSModule::shutdown()
 	{
+		m_componentRegistry.clear();
 	}
-
-	/*ECSServices ECSModule::getServices() noexcept
-	{
-		return { &m_entityFactory, &m_componentRegistry, &m_systemManager };
-	}*/
 
 	void ECSModule::registerCoreComponents()
 	{
 		// TODO; use config to check which subsystems are active, only register if active? (physics -> physicsComponent)
+
 
 		m_componentRegistry.registerComponent<TransformComponent>("transform",
 			[](EntityHandle& handle, const ComponentProperties& properties)
@@ -77,6 +77,23 @@ namespace cursed_engine
 					float rotation = (float)value["rotation"].asDouble();
 
 				handle.attachComponent<TransformComponent>(FVec2{ x, y }, FVec2{ width, height }, pivot, rotation);
+			});
+
+		m_componentRegistry.registerComponent<CameraComponent>("camera",
+			[](EntityHandle& handle, const ComponentProperties& properties)
+			{},
+			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+			{
+				handle.attachComponent<CameraComponent>();
+			});
+
+		m_componentRegistry.registerComponent<VelocityComponent>("velocity",
+			[](EntityHandle& handle, const ComponentProperties& properties)
+			{},
+			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+			{
+				/// assert attachcompoent type is same as registercomponen ttype...
+				handle.attachComponent<VelocityComponent>();
 			});
 
 		m_componentRegistry.registerComponent<SpriteComponent>("sprite",
@@ -250,8 +267,6 @@ namespace cursed_engine
 
 				//const auto& resourceIdToPath = resourceConfig.resourceIdToPath;
 
-
-
 				static const std::unordered_map<std::string, FontStyle> fontStyles =
 				{
 					{ "Normal", FontStyle::Normal },
@@ -291,7 +306,7 @@ namespace cursed_engine
 
 				// handle in system?
 				auto fontHandle = ctx.fontManager->getHandleById(fontType, fontStyle, fontSize, outline, kerning);
-				auto textObj = ctx.textFactory->createText(ctx.localization->getText(textId), fontHandle);
+				auto textObj = ctx.textManager->createText(ctx.localization->getText(textId), fontHandle); // ctx.textFactory->createText(ctx.localization->getText(textId), fontHandle);
 
 				{
 					// TEST

@@ -1,7 +1,10 @@
 #include "engine/core/settings/settings.h"
 #include "engine/utils/json/json_document.h"
 #include "engine/utils/json/json_value.h"
+#include "engine/platform/input.h" // gets it already from engine config.h...
+#include "engine/core/events/event_bus.h"
 #include "engine/core/logger.h"
+#include "engine/core/result.h"
 
 namespace cursed_engine
 {
@@ -12,6 +15,40 @@ namespace cursed_engine
 		outAppInfo.identifier = document["identifier"].asString();
 
 		return true;
+	}
+
+	bool loadPlatformConfig(const JsonValue& jsonValue, PlatformConfig& outPlatformConfig)
+	{
+		std::string backend = jsonValue["backend"].asString();
+
+		if (backend == "SDL")
+		{
+			outPlatformConfig.backend = PlatformConfig::Backend::SDL;
+		}
+		else
+		{
+			Logger::logError("Unrecognized Platform backend: " + backend);
+			return false;
+		}
+
+		return true;
+	}
+
+	bool loadRenderConfig(const JsonValue& jsonValue, RenderConfig& outRenderConfig)
+	{
+		std::string backend = jsonValue["backend"].asString();
+		if (backend == "SDL")
+		{
+			outRenderConfig.backend = RenderConfig::Backend::SDL;
+		}
+		else
+		{
+			Logger::logError("Unrecognized Render backend: " + backend);
+			return false;
+		}
+
+		return true;
+
 	}
 
 	bool loadWindowConfig(const JsonValue& jsonValue, WindowConfig& outWindowConfig)
@@ -126,7 +163,7 @@ namespace cursed_engine
 	{
 	}
 
-	bool Settings::loadConfig(const std::filesystem::path& path)
+	Result Settings::loadConfig(const std::filesystem::path& path)
 	{
 		m_config.resource.assetRoot = "../assets/"; // find root instead?
 
@@ -135,20 +172,22 @@ namespace cursed_engine
 
 		if (!result.success)
 		{
-			Logger::logError("Failed to load configs!");
-			return false;
+			return Result::failure(result.errorMessage);
 		}
+
 
 		bool success = true;
 
 		success &= loadAppInfo(document, m_config.appInfo);
+		success &= loadPlatformConfig(document["platform"], m_config.platform);
+		success &= loadRenderConfig(document["renderer"], m_config.render);
 		success &= loadWindowConfig(document["window"], m_config.window);
 		success &= loadInputConfig(document["input"], m_config.input);
 		success &= loadResourceConfig(document["resource"], m_config.resource);
 
 		success &= loadAssetPaths(m_config.resource);
 
-		return success;
+		return Result::success();
 	}
 
 	void Settings::saveConfig(const std::filesystem::path& path)
@@ -163,5 +202,17 @@ namespace cursed_engine
 			height,
 			fullscreen,
 			vsync);*/
+	}
+
+	std::filesystem::path Settings::getConfigPath()
+	{
+		static const std::filesystem::path path = [] {
+
+			return "../assets/config/engine_config.json";
+
+			//auto exePath = getExecutableDirectory(); // custom function
+			//return exePath / "assets" / "config" / "engine_config.json";
+			}();
+		return path;
 	}
 }

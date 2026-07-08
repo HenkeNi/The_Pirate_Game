@@ -4,12 +4,12 @@
 
 namespace cursed_engine
 {
-	// remake into a ServiceRegistry?
+	// remake into a ServiceRegistry? or AppContext?
 	struct EngineContext
 	{
 		struct PlatformServices
 		{
-			class InputHandler* inputHandler{};
+			class Input* input{};
 			class FrameTimer* timer{};
 		} platform;
 
@@ -31,7 +31,7 @@ namespace cursed_engine
 			FontManager* fontManager{};
 			TextureManager* textureManager{};
 			class TextManager* textManager{};
-			class TextFactory* textFactory{};
+			//class TextFactory* textFactory{};
 		} resources;
 
 		struct ECSServices

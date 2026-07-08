@@ -1,0 +1,79 @@
+#pragma once
+#include "engine/platform/cursor.h"
+#include "engine/platform/window.h"
+#include "engine/platform/input.h"
+#include "engine/utils/non_copyable.h"
+
+// [Consider] - having window process window events (enum class EventType, struct WindowResizedEvent : public Event)
+
+namespace cursed_engine
+{
+	struct EngineConfig;
+	struct Result;
+	class EventBus;
+
+#pragma region Platform
+
+	class Platform : public NonCopyable
+	{
+	public:
+		Platform() = default;
+		virtual ~Platform() = default;
+
+		Platform(Platform&&) = delete;
+		Platform& operator=(Platform&&) = delete;
+		 
+		virtual Result init(const EngineConfig& config) = 0;
+		virtual void shutdown() = 0;
+
+		virtual void beginFrame() = 0;
+		virtual void endFrame() = 0;
+		
+		virtual void processEvents() = 0;
+
+		[[nodiscard]] virtual bool exitRequested() const noexcept = 0;
+		[[nodiscard]] virtual Window& getWindow() noexcept = 0;
+
+		[[nodiscard]] virtual Cursor& getCursor() noexcept = 0;
+		[[nodiscard]] virtual Input& getInput() noexcept = 0;
+	};
+
+#pragma endregion
+
+#pragma region SDL_Platform
+
+	class SDLPlatform : public Platform
+	{
+	public:
+		SDLPlatform(EventBus& eventBus);
+		~SDLPlatform();
+
+		Result init(const EngineConfig& config) override;
+		void shutdown() override;
+
+		void beginFrame() override;
+		void endFrame() override;
+
+		void processEvents() override;
+
+		[[nodiscard]] bool exitRequested() const noexcept override;
+		[[nodiscard]] Window& getWindow() noexcept override;
+
+		[[nodiscard]] Cursor& getCursor() noexcept override;
+		[[nodiscard]] Input& getInput() noexcept override;
+
+	private:
+		void pollEvents();
+
+		SDLWindow m_window;
+		SDLCursor m_cursor;
+
+		SDLInput m_input;
+		EventBus& m_eventBus;
+
+		bool m_initialized;
+		bool m_shouldExit;
+	};
+
+#pragma endregion
+}

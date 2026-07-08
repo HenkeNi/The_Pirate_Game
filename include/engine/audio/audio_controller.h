@@ -5,12 +5,14 @@ struct SDL_AudioStream;
 
 namespace cursed_engine
 {
+	struct Result;
+
 	class AudioController
 	{
 	public:
 		AudioController();
 
-		bool init();
+		Result init();
 		void shutdown();
 
 		void playSound(SDL_AudioStream* stream, uint8_t * buffer, uint32_t length); // or accept audio?

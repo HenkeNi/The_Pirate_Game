@@ -1,4 +1,5 @@
 #include "engine/audio/audio_controller.h"
+#include "engine/core/result.h"
 #include "engine/core/logger.h"
 #include <SDL3/SDL_audio.h>
 #include <format>
@@ -11,7 +12,7 @@ namespace cursed_engine
 	{
 	}
 
-	bool AudioController::init()
+	Result AudioController::init()
 	{
 		static SDL_AudioDeviceID audio_device = 0;
 
@@ -28,14 +29,13 @@ namespace cursed_engine
 
 		if (!m_audioStream)
 		{
-			Logger::logError(std::format("Failed to create audio stream! Error: {}", SDL_GetError()).c_str());
-			return false;
+			return Result::failure(std::format("Failed to open audio stream! Error: {}", SDL_GetError()));
 		}
 
 		m_deviceID = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
 
 		SDL_ResumeAudioStreamDevice(m_audioStream);
-		return true;
+		return Result::success();
 	}
 
 	void AudioController::shutdown()

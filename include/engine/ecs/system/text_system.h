@@ -3,14 +3,14 @@
 
 namespace cursed_engine
 {
-	class TextFactory;
+//	class TextFactory;
 	class TextManager;
 	class Localization;
 	
 	class TextSystem : public System
 	{
 	public:
-		TextSystem(TextManager* textManager,TextFactory* textFactory, Localization* localization);
+		TextSystem(TextManager* textManager/*,TextFactory* textFactory*/, Localization* localization);
 
 		void update(SystemContext& context) override;
 
@@ -19,7 +19,7 @@ namespace cursed_engine
 		//void handleStaticText();
 
 		TextManager* m_textManager;
-		TextFactory* m_textFactory;
+		//TextFactory* m_textFactory;
 		Localization* m_localization;
 	};
 }

@@ -1,5 +1,6 @@
 #include "engine/modules/physics_module.h"
 #include "engine/core/logger.h"
+#include <format>
 
 namespace cursed_engine
 {
@@ -10,10 +11,11 @@ namespace cursed_engine
 
 	bool PhysicsModule::init()
 	{
+		Logger::logInfo(std::format("{}[PhysicsModule] - Initialization started...", log_format::INDENT));
 		//if (!m_physics.init())
 		//	return false;
 
-		Logger::logInfo("-> PhysicsModule: Success");
+		Logger::logInfo(std::format("{}[PhysicsModule] - Initialization successful!", log_format::INDENT));
 		return true;
 	}
 

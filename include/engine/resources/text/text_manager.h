@@ -58,7 +58,7 @@ namespace cursed_engine
 	
 
 	//class FontManager;
-	class Renderer;
+	class ResourceCreator;
 	class Texture;
 	struct Color;
 	// TODO; currently text's are stored by id (not path), maybe should be separate storage?
@@ -67,40 +67,45 @@ namespace cursed_engine
 	{
 	public:
 		TextManager();
-		TextManager(FontManager* fontManager, Renderer* renderer);
+		//TextManager(FontManager* fontManager, Renderer* renderer);
 		//TextManager(TextureManager& textureManager, FontManager& fontManager, Renderer& renderer);
 
-		void init(FontManager* fontManager, Renderer& renderer);
+		void init(FontManager* fontManager, ResourceCreator* creator);
+
+
+		// TEST - insert text as well? or do lazy loading?
+		[[nodiscard]] Text createText(const std::string& text, ResourceHandle<Font> fontHandle) const; // accept a font or hold fontmanager?
+
 
 		// TextParams?
-		[[nodiscard]] ResourceHandle<Texture> getHandle(const std::string& id, int fontSize);
+		//[[nodiscard]] ResourceHandle<Texture> getHandle(const std::string& id, int fontSize);
 		
-		[[nodiscard]] ResourceHandle<Texture> create(const std::string& id, const std::string& text, ResourceHandle<Font> fontHandle, const Color& color, int fontSize); // get font size from font instead??
+		//[[nodiscard]] ResourceHandle<Texture> create(const std::string& id, const std::string& text, ResourceHandle<Font> fontHandle, const Color& color, int fontSize); // get font size from font instead??
 
-		[[nodiscard]] inline const Texture* get(ResourceHandle<Texture> handle) const { return m_cache.retrieve(handle); }
-		[[nodiscard]] inline Texture* get(ResourceHandle<Texture> handle) { return m_cache.retrieve(handle); }
+		//[[nodiscard]] inline const Texture* get(ResourceHandle<Texture> handle) const { return m_cache.retrieve(handle); }
+		//[[nodiscard]] inline Texture* get(ResourceHandle<Texture> handle) { return m_cache.retrieve(handle); }
 
 
 		// or string view+
-		[[nodiscard]] bool isConstructed(const std::string& id, int fontSize) const noexcept;
+		//[[nodiscard]] bool isConstructed(const std::string& id, int fontSize) const noexcept;
 
 		// ResourceHandle<Texture> acquireOrCreate(const std::string& id, ResourceHandle<Font> fontHandle, const Color& color, int fontSize);
 
 	private:
-		Texture createTexture(const char* text, Font& font, const Color& color) const;
+		//Texture createTexture(const char* text, Font& font, const Color& color) const;
 
 	
 		using HandleMap = std::unordered_map<TextKey, ResourceHandle<Texture>>;
 
 		// create a storage class for runtime resources??
-		ResourceCache<Texture> m_cache; 
-		HandleMap m_keyToHandle;
+		//ResourceCache<Texture> m_cache; 
+		//HandleMap m_keyToHandle;
 
 		// TextureManager& m_textureManager;
 		FontManager* m_fontManager;
 		
-		Renderer* m_renderer;
-
+		//Renderer* m_renderer;
+		ResourceCreator* m_creator;
 	};
 }
 

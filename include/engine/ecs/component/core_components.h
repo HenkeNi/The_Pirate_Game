@@ -71,12 +71,16 @@ namespace cursed_engine
 		bool isVelocityConstant = false; // Dont? use physics instead?
 	};
 
+	// here or game?
 	struct CameraComponent
 	{
-		FVec2 position = { 0.f, 0.f };
+		FVec2 position = { 0.f, 0.f }; // offset instead? or use heirarchy component..
 		float aspectRatio = 0.f;
 		float rotation = 0.f;
 		float zoom = 1.f;
+
+		// FRect rect; // or i Rect? or just size and width?
+
 
 		bool isActive = true;
 	};
@@ -299,6 +303,7 @@ namespace cursed_engine
 	{
 
 	};
+
 
 	// Tab? View? Tooltip? ProgressBar?
 }

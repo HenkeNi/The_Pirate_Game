@@ -8,25 +8,19 @@
 
 namespace cursed_engine
 {
-	//ResourceModule::ResourceModule(RenderingServices rendering, const cursed_engine::ResourceConfig& config)
-	//	: m_textureManager{ config, TextureLoader{ rendering.renderer } },
-	//	m_audioManager{ config, AudioLoader{} },
-	//	m_fontManager{ config, FontLoader{} },
-	//	m_textManager{ resource.fontManager, rendering.renderer },
-	//	m_textFactory{ resource.fontManager, rendering.textRenderer.getTextEngine() }
-	//{
-	//}
-
-	bool ResourceModule::init(Renderer& renderer, const cursed_engine::ResourceConfig& config)
+	bool ResourceModule::init(ResourceCreator* creator, const cursed_engine::ResourceConfig& config)
 	{
-		m_textureManager.init(&config, std::make_unique<TextureLoader>(&renderer));
+		Logger::logInfo(std::format("{}[ResourceModule] - Initialization started...", log_format::INDENT));
+
+		m_textureManager.init(&config, std::make_unique<TextureLoader>(creator));
 		m_audioManager.init(&config, std::make_unique<AudioLoader>());
 		m_fontManager.init(&config, std::make_unique<FontLoader>());
-		m_textManager.init(&m_fontManager, renderer); // accept font manager in constructor?
 
-		m_textFactory.init(&m_fontManager, renderer);
+		// why both?
+		m_textManager.init(&m_fontManager, creator); // accept font manager in constructor?
+		//m_textFactory.init(&m_fontManager, renderer);
 
-		Logger::logInfo("-> ResourceModule: Success");
+		Logger::logInfo(std::format("{}[ResourceModule] - Initialization successful!", log_format::INDENT));
 		return true;
 	}
 

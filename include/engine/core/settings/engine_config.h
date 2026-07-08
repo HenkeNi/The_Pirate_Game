@@ -1,6 +1,6 @@
 #pragma once
-#include "engine/platform/input/input_handler.h"
-#include "engine/platform/input/action.h"
+#include "engine/platform/input.h"
+#include "engine/platform/action.h"
 #include <filesystem>
 #include <string>
 #include <unordered_map>
@@ -10,6 +10,16 @@
 
 namespace cursed_engine
 {
+	struct PlatformConfig
+	{
+		enum class Backend
+		{
+			SDL
+		};
+
+		Backend backend = Backend::SDL;
+	};
+
 	struct WindowConfig
 	{
 		std::string iconPath = "";
@@ -19,8 +29,13 @@ namespace cursed_engine
 		int width = 1280;
 		int height = 720;
 
+		// Position
+		int xPos = 0;
+		int yPos = 0;  // TOOD; read
+
 		// Display Settings
 		bool fullscreen = false;
+		bool alwaysOnTop = true; // TOOD; read
 		bool vsync = true;
 		bool resizable = true;
 	};
@@ -49,6 +64,13 @@ namespace cursed_engine
 
 	struct RenderConfig
 	{
+		enum class Backend
+		{
+			SDL
+		};
+
+		Backend backend = Backend::SDL;
+
 		float brightness = 1.f;
 		float contrast = 1.f;
 	};
@@ -70,13 +92,14 @@ namespace cursed_engine
 	// client side instead?
 	struct AppInfo
 	{
-		std::string name = "";
+		std::string name = ""; // both here and in window?
 		std::string identifier = "";
 		std::string version = "";
 	};
 
 	struct EngineConfig
 	{
+		PlatformConfig platform;
 		WindowConfig window;
 		InputConfig input;
 		AudioConfig audio;

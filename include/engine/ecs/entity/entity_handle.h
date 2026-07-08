@@ -47,6 +47,8 @@ namespace cursed_engine
 
 		[[nodiscard]] inline const Entity getEntity() const noexcept { return m_entity; } // remove
 
+		[[nodiscard]] inline bool isValid() const noexcept { return m_entity.isValid(); }
+
 	private:
 		ECSRegistry* m_registry;
 		Entity m_entity;

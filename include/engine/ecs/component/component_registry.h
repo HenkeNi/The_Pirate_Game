@@ -29,7 +29,7 @@ namespace cursed_engine
 		FontManager* fontManager{};
 		TextureManager* textureManager{};
 		class TextManager* textManager{};
-		class TextFactory* textFactory{};
+		//class TextFactory* textFactory{};
 	};
 
 	struct ComponentInfo
@@ -110,8 +110,13 @@ namespace cursed_engine
 			return m_registry.isValid(name);
 		}
 
+		inline void clear()
+		{
+			m_registry.clear();
+		}
 
 	private:
-		TypeRegistry<struct ComponentInfo, uint32_t> m_registry;
+		TypeRegistry<struct ComponentInfo, ComponentID> m_registry;
+		//TypeRegistry<struct ComponentInfo, uint32_t> m_registry;
 	};
 }

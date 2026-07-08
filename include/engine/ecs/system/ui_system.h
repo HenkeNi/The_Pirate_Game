@@ -7,13 +7,13 @@ namespace cursed_engine
 	// set state?
 	// update visual state...
 
-	class InputHandler;
 	class ActionRegistry;
+	class Input;
 	
 	class UISystem : public System
 	{
 	public:
-		UISystem(InputHandler* inputHandler, ActionRegistry* actionRegistry);
+		UISystem(Input* input, ActionRegistry* actionRegistry);
 
 		void update(SystemContext& context) override;
 
@@ -29,7 +29,7 @@ namespace cursed_engine
 
 		[[nodiscard]] bool isMouseInsideBoundingBox(struct TransformComponent& transformComponent, struct BoundingBoxComponent& boundingBoxComponent, float mousePosX, float mousePosY) const noexcept;
 
-		InputHandler* m_inputHandler;
+		Input* m_input;
 		ActionRegistry* m_actionRegistry;
 		//EventBus& m_eventBus;
 	};

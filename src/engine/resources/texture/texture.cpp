@@ -30,7 +30,6 @@ namespace cursed_engine
 		other.m_texture = nullptr;
 	}
 
-
 	Texture& Texture::operator=(Texture&& other) noexcept
 	{
 		if (this != &other)

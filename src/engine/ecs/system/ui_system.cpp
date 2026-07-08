@@ -4,7 +4,7 @@
 #include "engine/core/events/event_bus.h"
 #include "engine/core/events/events.h"
 #include "engine/core/action/action_registry.h"
-#include "engine/platform/input/input_handler.h"
+#include "engine/platform/input.h"
 #include "engine/math/vec2.hpp"
 // TODO; move boundingbox checks to an interaction system?
 
@@ -16,8 +16,8 @@ namespace cursed_engine
 			&& point.y >= min.y && point.y <= max.y;
 	}
 
-	UISystem::UISystem(InputHandler* inputHandler, ActionRegistry* actionRegistry)
-		: m_inputHandler{ inputHandler }, m_actionRegistry{ actionRegistry }
+	UISystem::UISystem(Input* input, ActionRegistry* actionRegistry)
+		: m_input{ input }, m_actionRegistry{ actionRegistry }
 	{
 		// need to pull events, doesnt have access to registry class otherwise...
 
@@ -43,7 +43,7 @@ namespace cursed_engine
 	// TODO; pass mouse pos to each function?
 	void UISystem::handleButtonInteractions(ECSRegistry& registry)
 	{
-		FVec2 mousePosition = m_inputHandler->getMousePosition();
+		FVec2 mousePosition = m_input->getMousePosition();
 
 		auto view = registry.view<TransformComponent, ButtonComponent, BoundingBoxComponent>();
 		view.forEach([&](Entity entity, TransformComponent& transformComponent, ButtonComponent& buttonComponent, BoundingBoxComponent& boundingBoxComponent)
@@ -64,7 +64,7 @@ namespace cursed_engine
 				if (isInside)
 				{
 
-					switch (m_inputHandler->getMouseInputState(MouseButton::Left))
+					switch (m_input->getMouseInputState(MouseButton::Left))
 					{
 					case InputState::None:
 						buttonComponent.currentState = ButtonComponent::State::Hovered; // func? handleButtonHoverState
@@ -102,7 +102,7 @@ namespace cursed_engine
 	void UISystem::handleCheckboxInteractions(ECSRegistry& registry)
 	{
 		// pass in mouse pos instead?
-		FVec2 mousePosition = m_inputHandler->getMousePosition();
+		FVec2 mousePosition = m_input->getMousePosition();
 
 		// TODO; handle bounding box in physics or collision system?
 		auto view = registry.view<TransformComponent, CheckboxComponent, BoundingBoxComponent>();
@@ -112,7 +112,7 @@ namespace cursed_engine
 
 				if (isInside)
 				{
-					switch (m_inputHandler->getMouseInputState(MouseButton::Left))
+					switch (m_input->getMouseInputState(MouseButton::Left))
 					{
 						//case InputState::Pressed:
 					case InputState::Released:

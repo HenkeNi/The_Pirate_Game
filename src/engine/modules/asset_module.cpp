@@ -1,10 +1,13 @@
 #include "engine/modules/asset_module.h"
 #include "engine/assets/asset_loader.h"
+#include <format>
 
 namespace cursed_engine
 {
 	bool AssetModule::init()
 	{
+		Logger::logInfo(std::format("{}[AssetModule] - Initialization started...", log_format::INDENT));
+
 		// TODO; create an AssetRegistry? or handle loading elsewhere? in Assets.h?
 		// TODO; do lazy loading later on!? -> maybe load core resources?
 
@@ -37,7 +40,7 @@ namespace cursed_engine
 			}
 		}
 
-		Logger::logInfo("-> AssetModule: Success");
+		Logger::logInfo(std::format("{}[AssetModule] - Initialization successful!", log_format::INDENT));
 		return true;
 	}
 

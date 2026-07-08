@@ -1,7 +1,9 @@
 #pragma once
+#include "engine/utils/non_copyable.h"
 #include "engine/rendering/render_api.h"
-#include "engine/rendering/renderer.h"
-#include <functional>
+#include "engine/core/settings/engine_config.h"
+#include "engine/core/result.h"
+#include <memory>
 
 namespace cursed_engine
 {
@@ -10,29 +12,35 @@ namespace cursed_engine
 		std::function<class Texture(Renderer&, struct Surface)> createTexture;
 	};*/
 
+	class ResourceCreator;
+	class RenderBackend;
 	class Window;
 
-	class RenderModule
+	class RenderModule : public NonCopyable
 	{
 	public:
-		//RenderModule();
+		RenderModule();
+		~RenderModule();
 
-		bool init(Window& window);
+		RenderModule(RenderModule&&) = delete;
+		RenderModule& operator=(RenderModule&&) = delete;
+
+		bool init(Window& window, const RenderConfig& config);
 		void shutdown();
 
 		void beginFrame();
 		void endFrame();
 
-		//RenderCapabilities getCapabilities() const noexcept;
-
 		// Primary access
-		[[nodiscard]] inline RenderAPI getRenderAPI() noexcept { return RenderAPI{ &m_renderer }; }
+		[[nodiscard]] inline RenderAPI getRenderAPI() noexcept { return RenderAPI{ m_backend.get() }; }
+
+		[[nodiscard]] ResourceCreator* getResourceCreator() noexcept;
 
 		// Optional: Low-level access (use sparingly)
-		[[nodiscard]] inline Renderer& getRenderer() noexcept { return m_renderer; }
+		//[[nodiscard]] inline RenderBackend& getBackend() noexcept { return *m_renderer; }
 
 	private:
-		Renderer m_renderer; // use IRenderer instead??
+		std::unique_ptr<RenderBackend> m_backend;
 
 		//RenderCapabilities m_capabilities;
 		// RenderGraph?

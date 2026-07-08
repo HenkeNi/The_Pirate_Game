@@ -1,7 +1,7 @@
-#include "engine/action/actions.h"
-#include "engine/action/action_registry.h"
-#include "engine/events/event_bus.h"
-#include "engine/events/events.h"
+#include "engine/core/action/actions.h"
+#include "engine/core/action/action_registry.h"
+#include "engine/core/events/event_bus.h"
+#include "engine/core/events/events.h"
 
 namespace cursed_engine
 {

@@ -1,7 +1,9 @@
 #pragma once
 #include "engine/math/vec2.hpp"
 #include <cstdint>
+#include <variant>
 #include <vector>
+#include <engine/resources/texture/surface.h>
 
 namespace cursed_engine
 {
@@ -85,21 +87,17 @@ namespace cursed_engine
 
 	// add constexpr constructor?
 	// TODO; put in math?
+	template <typename T>
 	struct Rect
 	{
-		int x;
-		int y;
-		int w;
-		int h;
+		T x;
+		T y;
+		T w;
+		T h;
 	};
 
-	struct FRect
-	{
-		float x;
-		float y;
-		float w;
-		float h;
-	};
+	using FRect = Rect<float>;
+	using IRect = Rect<int>;
 
 	struct UVRect
 	{

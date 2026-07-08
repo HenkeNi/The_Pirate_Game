@@ -1,7 +1,7 @@
-#include "engine/rendering/text.h"
-#include "engine/core/logger.h"
-#include "engine/rendering/font.h"
+#include "engine/resources/text/text.h"
+#include "engine/resources/text/font.h"
 #include "engine/rendering/render_types.h"
+#include "engine/core/logger.h"
 #include <SDL3_ttf/SDL_ttf.h>
 
 namespace cursed_engine
@@ -42,7 +42,7 @@ namespace cursed_engine
 	IVec2 Text::getSize() const noexcept
 	{
 		IVec2 size;
-		TTF_GetTextSize(m_text, &size.x, &size.y);
+		TTF_GetTextSize(m_text, &size.x, &size.y); // todo store size in variable...
 
 		return size;
 	}

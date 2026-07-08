@@ -7,7 +7,7 @@
 #include "engine/resources/texture/texture.h"
 
 #include "engine/rendering/render_api.h"
-#include "engine/rendering/render_types.h" // Put in renderer.h? to avoid including it
+#include "engine/rendering/render_types.h" // or put in render api?
 
 namespace cursed_engine
 {

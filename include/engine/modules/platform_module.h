@@ -1,50 +1,62 @@
 #pragma once
-#include "engine/platform/input/input_handler.h"
-#include "engine/platform/window/window.h"
 #include "engine/utils/frame_timer.h"
+#include <memory>
 
 namespace cursed_engine
 {
 	struct EngineConfig;
+	class Platform;
 	class EventBus; 
+	class Window;
+	class Input;
+	class Cursor;
 
 	class PlatformModule
 	{  
 	public:
 		PlatformModule(EventBus& eventBus);
+		~PlatformModule();
 
 		bool init(const EngineConfig& config);
 		void shutdown();
 
 		void beginFrame();
-		void endFrame(); // or swap buffers?
+		void endFrame();
 
-		void pollEvents();
+		void processEvents();
 
 		// get time?. get deltaTime()
-
 		// should have these? or fetch window, etc??
-		[[nodiscard]] inline bool shouldQuit() const noexcept { return !m_isRunning; }
-
-		[[nodiscard]] inline float getFPS() const noexcept { return m_fps; }
+		[[nodiscard]] bool exitRequested() const noexcept;
 
 		[[nodiscard]] double getDeltaTime() const noexcept;
 
 		[[nodiscard]] uint64_t getFrameCount() const noexcept;
 
-		[[nodiscard]] inline InputHandler& getInputHandler() noexcept { return m_inputHandler; }
+		//[[nodiscard]] inline float getDeltaTime() const noexcept { return m_deltaTime; }
+		[[nodiscard]] inline float getFPS() const noexcept { return m_fps; }
+
+		[[nodiscard]] Window& getWindow() noexcept;
+		[[nodiscard]] Cursor& getCursor() noexcept;
+
+		[[nodiscard]] Input& getInput() noexcept;
+		
 		[[nodiscard]] inline FrameTimer& getFrameTimer() noexcept { return m_timer; }
-		[[nodiscard]] inline Window& getWindow() noexcept { return m_window; }
 
 		// get frame stats?
+		// return current backend type?
+		// cursor?
 
 	private:
-		InputHandler m_inputHandler;
-		FrameTimer m_timer;
-		Window m_window;
-		// Timer class?
-		uint64_t m_frameBeginCounter;
+		std::unique_ptr<Platform> m_platform;
+		EventBus& m_eventBus;
+	
+		// time system?
+		FrameTimer m_timer; // dont put frame timer here? put in IMpl?
+		
+		uint64_t m_frameBeginCounter; // rename startFrame?
+		float m_deltaTime;
 		float m_fps;
-		bool m_isRunning;
+		//bool m_isRunning; // use shouldQuit? store here or in platfomr?
 	};
 }

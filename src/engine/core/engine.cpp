@@ -1,8 +1,7 @@
 #include "engine/core/engine.h"
-#include "engine/core/application.h"
 #include "engine/core/engine_context.h"
+#include "engine/core/application.h"
 #include "engine/core/logger.h"
-
 #include "engine/modules/asset_module.h"
 #include "engine/modules/audio_module.h"
 #include "engine/modules/ecs_module.h"
@@ -13,6 +12,9 @@
 #include "engine/modules/physics_module.h"
 
 
+
+#include "engine/math/noise.h"
+
 #include "engine/core/events/event_bus.h" 
 #include "engine/core/settings/settings.h"
 #include "engine/core/action/action_registry.h"
@@ -20,13 +22,14 @@
 #include <cassert>
 #include <string_view>
 
+
 namespace
 {
-	constexpr const char* initFailedMessage = "Engine Initialization Failed! Module: {}";
+	constexpr const char* initFailedMessage = "[Engine] - Initialization Failed! Module: {}";
 }
 
 namespace cursed_engine
-{	
+{
 	struct Engine::Impl
 	{
 		Impl(Application& app)
@@ -38,15 +41,15 @@ namespace cursed_engine
 		PlatformModule platform;
 		EventBus eventBus;
 		Settings settings;
-	
+
 		// Resource
 		AssetModule asset;
 		ResourceModule resource;
-		
+
 		// Output
 		RenderModule rendering;
 		AudioModule audio;
-		
+
 		// Simulation
 		ECSModule ecs;
 		PhysicsModule physics;
@@ -74,16 +77,16 @@ namespace cursed_engine
 
 	bool Engine::init()
 	{
-		Logger::logInfo("############################ Starting engine initialization ############################");
+		Logger::logInfo("[Engine] - Began initialization...\n");
 		assert(m_impl && "Engine::Impl is null!");
 
 		auto& settings = m_impl->settings;
 
-		const char* configPath = "../assets/config/engine_config.json"; // TODO: store elsewhere..
+		Result result = settings.loadConfig(Settings::getConfigPath());
 
-		if (!settings.loadConfig(configPath))
+		if (!result.succeeded)
 		{
-			Logger::logError(std::format("Engine initialization aborted. Could not load configuration file {}", configPath));
+			Logger::logError(std::format("[Engine] - Error occured trying to read engine configs. Reason: {}", result.message));
 			return false;
 		}
 
@@ -97,7 +100,7 @@ namespace cursed_engine
 		}
 
 		auto& rendering = m_impl->rendering;
-		if (!rendering.init(platform.getWindow()))
+		if (!rendering.init(platform.getWindow(), configs.render))
 		{
 			Logger::logError(std::format(initFailedMessage, "RenderModule"));
 			return false;
@@ -125,9 +128,16 @@ namespace cursed_engine
 		}
 
 		auto& resource = m_impl->resource;
-		if (!resource.init(rendering.getRenderer(), configs.resource))
+		if (!resource.init(rendering.getResourceCreator(), configs.resource))
 		{
 			Logger::logError(std::format(initFailedMessage, "ResourceModule"));
+			return false;
+		}
+
+		auto& network = m_impl->network;
+		if (!network.init())
+		{
+			Logger::logError(std::format(initFailedMessage, "NetworkModule"));
 			return false;
 		}
 
@@ -140,116 +150,109 @@ namespace cursed_engine
 			return false;
 		}
 
-		auto& network = m_impl->network;
-		if (!network.init())
-		{
-			Logger::logError(std::format(initFailedMessage, "NetworkModule"));
-			return false;
-		}
-
 		m_impl->application.onCreated(ctx);
 
-		Logger::logInfo("Engine initialization successful!\n\n");
+		Logger::logInfo("[Engine] - Initialization successful!");
 		return true;
 	}
 
 	void Engine::shutdown()
 	{
-		Logger::logInfo("############################ Engine shutdown started ############################");
+		Logger::logInfo("[Engine] - Began shutdown...");
 		assert(m_impl && "Engine::Impl is null!");
 
-		m_impl->application.onDestroyed();
+		auto& impl = *m_impl;
 
-		m_impl->asset.shutdown();
-		m_impl->audio.shutdown();
-		m_impl->ecs.shutdown();
-		m_impl->physics.shutdown();
-		m_impl->resource.shutdown();
-		m_impl->rendering.shutdown();
-		m_impl->platform.shutdown(); // always last!
+		impl.application.onDestroyed();
+		impl.asset.shutdown();
+		impl.audio.shutdown();
+		impl.ecs.shutdown();
+		impl.physics.shutdown();
+		impl.resource.shutdown();
+		impl.rendering.shutdown();
+		impl.platform.shutdown();
 
-		Logger::logInfo("Engine shutdown complete!");
+		Logger::logInfo("[Engine] - Shutdown complete!");
 	}
 
 	void Engine::run()
 	{
-		Logger::logInfo("############################ Engine Loop started ############################");
+		Logger::logInfo("[Engine] - Starting game loop...");
 		assert(m_impl && "Engine::Impl is null!");
 
-		bool running = true;
+		auto& impl = *m_impl;
+
+		bool running = true; // EngineState struct that contains paused, minimized, hasFocus?
 
 		while (running)
 		{
-			auto& platform = m_impl->platform;
 
-			platform.beginFrame();
-			platform.pollEvents();
+			impl.platform.beginFrame();
+			impl.platform.processEvents();
 
-			if (platform.shouldQuit())
+			if (impl.platform.exitRequested())
 			{
 				running = false;
 			}
 
-			m_impl->rendering.beginFrame(); // rename clear screen?
+			impl.rendering.beginFrame();
 
-			double deltaTime = platform.getDeltaTime();
-			m_impl->application.onUpdate(deltaTime);
+			double deltaTime = impl.platform.getDeltaTime();
+			impl.application.onUpdate(deltaTime);
 
 			// Update ecs systems here?
 			//m_impl->systemManager.update(deltaTime); // After application update?
 
-			m_impl->eventBus.dispatchAll();
-
-			m_impl->resource.update(platform.getFrameCount(), deltaTime);
+			impl.eventBus.dispatchAll();
+			impl.resource.update(impl.platform.getFrameCount(), deltaTime);
 
 			//float currentTime = platform.getTime();
 			//frameTimer.tick(currentTime);
-
-			// Put in platfomr end...
-			m_impl->rendering.endFrame();
-			platform.endFrame();
-
 			// timer.getFPS();
 			// system sets fps?
 			// window.setTitle(std::format("The Cursed Pirate - Fps: {}", (int)fps).c_str()); // render debug text instead?
+
+			impl.rendering.endFrame();
+			impl.platform.endFrame();
 		}
 	}
 
 	EngineContext Engine::context() const
 	{
+		auto& impl = *m_impl;
+
 		return EngineContext{
 			EngineContext::PlatformServices{
-				&m_impl->platform.getInputHandler(),
-				&m_impl->platform.getFrameTimer()
+				&impl.platform.getInput(),
+				&impl.platform.getFrameTimer()
 			},
 			EngineContext::RenderingServices {
-				m_impl->rendering.getRenderAPI()
+				impl.rendering.getRenderAPI()
 			},
 			EngineContext::AssetServices{
-				&m_impl->asset.getAssetManager(),
-				&m_impl->asset.getLocalization()
+				&impl.asset.getAssetManager(),
+				&impl.asset.getLocalization()
 			},
 			EngineContext::ResourceServices{
-				&m_impl->resource.getAudioManager(),
-				&m_impl->resource.getFontManager(),
-				&m_impl->resource.getTextureManager(),
-				&m_impl->resource.getTextManager(),
-				&m_impl->resource.getTextFactory(),
+				&impl.resource.getAudioManager(),
+				&impl.resource.getFontManager(),
+				&impl.resource.getTextureManager(),
+				&impl.resource.getTextManager()
 			},
 			EngineContext::ECSServices{
-				&m_impl->ecs.getEntityFactory(),
-				&m_impl->ecs.getComponentRegistry(),
-				&m_impl->ecs.getSystemManager(),
+				&impl.ecs.getEntityFactory(),
+				&impl.ecs.getComponentRegistry(),
+				&impl.ecs.getSystemManager(),
 			},
 			EngineContext::PhysicsServices{
-				&m_impl->physics.getPhysics(),
+				&impl.physics.getPhysics(),
 			},
 			EngineContext::AudioServices{
-				&m_impl->audio.getAudioController()
+				&impl.audio.getAudioController()
 			},
-			&m_impl->actionRegistry,
-			&m_impl->eventBus,
-			&m_impl->settings
+			&impl.actionRegistry,
+			&impl.eventBus,
+			&impl.settings
 		};
 	}
 }

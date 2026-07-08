@@ -1,15 +1,16 @@
 #include "engine/resources/texture/texture_loader.h"
 #include "engine/resources/texture/texture.h"
-#include "engine/rendering/renderer.h"
+#include "engine/resources/texture/surface.h"
+#include "engine/resources/resource_creator.h"
 #include "engine/core/logger.h"
 #include <SDL3_image/SDL_image.h>
 #include <filesystem>
 
 namespace cursed_engine
 {
-	TextureLoader::TextureLoader(Renderer* renderer)
-		: m_renderer{ renderer }
-	{
+	TextureLoader::TextureLoader(ResourceCreator* creator)
+		: m_creator{ creator }
+	{ 
 	}
 
 	Texture TextureLoader::operator()(const TextureDescriptor& key) const
@@ -30,15 +31,16 @@ namespace cursed_engine
 			return Texture{ nullptr };
 		}
 
-		SDL_Texture* texture = SDL_CreateTextureFromSurface(m_renderer->getRenderer(), surface);
+		Texture texture = m_creator->createTextureFromSurface(Surface{ surface });
+		//SDL_Texture* texture = SDL_CreateTextureFromSurface(m_renderer->getRenderer(), surface);
 
-		if (!texture)
+		return texture;
+		/*if (!texture)
 		{
 			Logger::logError("Unable to create texture from surface, path: " + key.path + ", error: " + SDL_GetError());
 			return Texture{ nullptr };
-		}
+		}*/
 
-		SDL_DestroySurface(surface);
-		return Texture{ texture };
+		//return Texture{ texture };
 	}
 }

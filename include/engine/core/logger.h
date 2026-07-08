@@ -3,6 +3,11 @@
 
 namespace cursed_engine
 {
+	namespace log_format
+	{
+		constexpr const char* INDENT = "  ";
+	}
+
 	class Logger
 	{
 	public:
