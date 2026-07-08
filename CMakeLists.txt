@@ -9,6 +9,18 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
+include(FetchContent)
+
+FetchContent_Declare(
+    FastNoiseLite
+    GIT_REPOSITORY https://github.com/Auburn/FastNoiseLite.git
+    GIT_TAG v1.1.1   # pin a version or commit hash
+)
+
+FetchContent_MakeAvailable(FastNoiseLite)
+
+add_library(FastNoiseLite INTERFACE)
+
 find_path(RAPIDJSON_INCLUDE_DIRS 
     NAMES rapidjson/rapidjson.h
     PATHS ${CMAKE_CURRENT_LIST_DIR}/../vcpkg/installed/${VCPKG_TARGET_TRIPLET}/include
@@ -23,6 +35,7 @@ find_package(SDL3 CONFIG REQUIRED)
 find_package(SDL3_ttf CONFIG REQUIRED)
 find_package(SDL3_image CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
+
 
 
 # --- Engine Library ---
@@ -40,6 +53,7 @@ target_include_directories(Engine PUBLIC include)
 target_include_directories(Engine PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${RAPIDJSON_INCLUDE_DIRS}
+	${fastnoiselite_SOURCE_DIR}/Cpp
 )
 
 # Automatically links to specified libs
@@ -48,6 +62,7 @@ target_link_libraries(Engine PRIVATE
 	SDL3_ttf::SDL3_ttf
 	SDL3_image::SDL3_image
 	box2d::box2d
+	FastNoiseLite
 )
 
 # Add precompiled header
