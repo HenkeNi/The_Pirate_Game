@@ -41,7 +41,7 @@ namespace cursed_engine
 
 	private:
 		//using Systems = std::vector<std::unique_ptr<System>>;
-		using Systems = sparse_set<std::unique_ptr<System>, SystemID>;
+		using Systems = sparse_set<std::unique_ptr<System>, SystemId>;
 
 		Systems m_systems;
 	};
@@ -54,7 +54,7 @@ namespace cursed_engine
 		auto system = std::make_unique<T>(std::forward<Args>(args)...);
 		auto* systemPtr = system.get();
 
-		m_systems.insert(getSystemID<T>(), std::move(system));
+		m_systems.insert(getSystemId<T>(), std::move(system));
 		
 		return *systemPtr;
 	}
@@ -62,37 +62,37 @@ namespace cursed_engine
 	template <DerivedFrom<System> T>
 	void SystemManager::insert(std::unique_ptr<T>&& system)
 	{
-		m_systems.insert(getSystemID<T>(), std::move(system));
+		m_systems.insert(getSystemId<T>(), std::move(system));
 	}
 
 	template <DerivedFrom<System> T>
 	const T& SystemManager::getSystem() const
 	{
-		return m_systems.at(getSystemID<T>());
+		return m_systems.at(getSystemId<T>());
 	}
 
 	template <DerivedFrom<System> T>
 	T& SystemManager::getSystem()
 	{
-		return static_cast<T&>(*m_systems.at(getSystemID<T>())); // correct cast?
+		return static_cast<T&>(*m_systems.at(getSystemId<T>())); // correct cast?
 	}
 
 	template <DerivedFrom<System> T>
 	const T* SystemManager::tryGetSystem() const
 	{
-		return m_systems.get(getSystemID<T>());
+		return m_systems.get(getSystemId<T>());
 	}
 
 	template <DerivedFrom<System> T>
 	T* SystemManager::tryGetSystem()
 	{
-		return m_systems.get(getSystemID<T>());
+		return m_systems.get(getSystemId<T>());
 	}
 
 	template <DerivedFrom<System> T>
 	bool SystemManager::contains() const noexcept
 	{
-		return m_systems.contains(getSystemID<T>());
+		return m_systems.contains(getSystemId<T>());
 	}
 
 #pragma endregion

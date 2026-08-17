@@ -23,7 +23,7 @@ namespace cursed_engine
 		EntityHandle& operator=(EntityHandle&&) = default;
 
 		template <ComponentType T, typename... Args>
-		void attachComponent(Args&&... args); // rename addComponent?
+		std::pair<T*, bool> attachComponent(Args&&... args); // rename addComponent?
 
 		template <ComponentType T>
 		void detachComponent();
@@ -43,11 +43,16 @@ namespace cursed_engine
 		template <ComponentType... Ts>
 		[[nodiscard]] bool hasComponents() const;
 
+		[[nodiscard]] static EntityHandle invalid()
+		{
+			return EntityHandle(Entity::invalid(), nullptr);
+		}
+
 		// add destroy... (cant store as const then)? - strore bool 'alive'?
 
 		[[nodiscard]] inline const Entity getEntity() const noexcept { return m_entity; } // remove
 
-		[[nodiscard]] inline bool isValid() const noexcept { return m_entity.isValid(); }
+		[[nodiscard]] bool isValid() const noexcept;
 
 	private:
 		ECSRegistry* m_registry;
@@ -65,10 +70,15 @@ namespace cursed_engine
 #pragma region Definitions
 
 	template <ComponentType T, typename... Args>
-	void EntityHandle::attachComponent(Args&&... args)
+	std::pair<T*, bool> EntityHandle::attachComponent(Args&&... args)
 	{
-		assert(m_registry && "Invalid ECSRegistry!");
-		m_registry->attachComponent<T>(m_entity, std::forward<Args>(args)...);
+		assert(isValid() && "Invalid Entity!");
+		
+		if (isValid())
+			return m_registry->attachComponent<T>(m_entity, std::forward<Args>(args)...);
+
+		// log error!
+		return { nullptr, false };
 	}
 
 	template <ComponentType T>
@@ -110,7 +120,7 @@ namespace cursed_engine
 	bool EntityHandle::hasComponents() const
 	{
 		assert(m_registry && "Invalid ECSRegistry!");
-		return m_registry->hasComponents<Ts...>(m_entity.id);
+		return m_registry->hasComponents<Ts...>(m_entity);
 	}
 
 #pragma endregion

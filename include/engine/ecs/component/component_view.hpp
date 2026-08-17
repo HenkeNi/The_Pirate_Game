@@ -1,9 +1,12 @@
 #pragma once
 #include "engine/ecs/component/component_manager.hpp"
+#include "engine/ecs/ecs_types.h"
+#include "engine/ecs/signature_registry.hpp"
 #include "engine/utils/concepts.h"
 #include "engine/utils/non_copyable.h"
 #include <span>
 #include <execution>
+
 
 namespace cursed_engine
 {
@@ -11,6 +14,8 @@ namespace cursed_engine
 	// [Consider] - have FindAllIf and FindIf - returning either pair<Entity, Ts&> or EntityHandle
 	//  * caching component view (pass in sparse set, but pass in entities each frame?)
 	//  * add sorting? and predicate (for ForEach) as optional, or separate function
+
+	// How to deal with checking signature (needed for when excluding entities with certain componnets) - pass registry or store entity handles instead of entities?
 
 	// private consturctor? only ECSRegistry cna construict?
 
@@ -34,6 +39,9 @@ namespace cursed_engine
 	//	// use it to access the component in each sparse set.... components.get(entity);
 	//};
 
+	// exclude
+
+	using Signatures = SignatureRegistry<EntityId, MAX_COMPONENTS, MAX_ENTITIES>;
 
 	// TODO; make sure each type is unique!!
 	template <ComponentType... Ts>
@@ -42,7 +50,7 @@ namespace cursed_engine
 	public:
 		// TODO, make private? friend class ECSRegistry..
 		ComponentView();
-		ComponentView(ComponentContainer<Ts>*... containers, std::span<const Entity> entities);
+		ComponentView(const Signatures* signatures, ComponentContainer<Ts>*... containers, std::span<const Entity> entities);
 
 		~ComponentView() = default;
 
@@ -63,6 +71,8 @@ namespace cursed_engine
 		//template <ComponentType... Ts, CallableReturns<bool, EntityHandle> Func>
 		//[[nodiscard]] ComponentView<Ts...> view(Func&& filtering);
 
+		template <ComponentType T>
+		void exclude();
 
 		template <ComponentType T>
 		[[nodiscard]] const T* getComponent(Entity entity) const;
@@ -81,7 +91,7 @@ namespace cursed_engine
 
 		// ==================== Search ====================
 		template <typename Predicate> // template <Callable Func>
-		[[nodiscard]] std::optional<Entity> findIf(Predicate&& predicate) const; // findFirst?
+		[[nodiscard]] std::optional<Entity> findFirst(Predicate&& predicate) const;
 
 		template <typename Predicate>
 		[[nodiscard]] std::vector<Entity> findAllIf(Predicate&& predicate) const; // findAll?
@@ -110,26 +120,29 @@ namespace cursed_engine
 
 	private:
 		// ==================== Helpers ====================
-		std::tuple<const Ts&...> getComponents(EntityID id) const; // will this work with const TransformComponent and SpriteComponent
+		std::tuple<const Ts&...> getComponents(EntityId id) const; // will this work with const TransformComponent and SpriteComponent
 
-		std::tuple<Ts&...> getComponents(EntityID id);
+		std::tuple<Ts&...> getComponents(EntityId id);
 
 		std::span<const Entity> m_entities;
 		std::tuple<ComponentContainer<Ts>*...> m_components;
+
+		EntitySignature m_excluded; // rename entity signature? 
+		const Signatures* m_signatures;
 	};
 
 #pragma region Definitions
 
 	template <ComponentType... Ts>
 	ComponentView<Ts...>::ComponentView()
-		: m_components(static_cast<ComponentContainer<Ts>*>(nullptr)...), m_entities{}
+		: m_signatures{ nullptr }, m_components(static_cast<ComponentContainer<Ts>*>(nullptr)...), m_entities{}
 	{
 		//std::apply([](auto&... ptrs) { ((ptrs = nullptr), ...); }, m_components);
 	}
 
 	template <ComponentType ...Ts>
-	ComponentView<Ts...>::ComponentView(ComponentContainer<Ts>*... containers, std::span<const Entity> entities)
-		: m_components{ containers... }, m_entities{ entities }
+	ComponentView<Ts...>::ComponentView(const Signatures* signatures, ComponentContainer<Ts>*... containers, std::span<const Entity> entities)
+		: m_signatures{ signatures }, m_components{ containers... }, m_entities{ entities }
 	{
 	}
 
@@ -143,6 +156,11 @@ namespace cursed_engine
 
 		for (const auto& entity : m_entities)
 		{
+			if ((m_signatures->getSignature(entity.id) & m_excluded).any())
+			{
+				return;
+			}
+
 			auto components = getComponents(entity.id);
 
 			if constexpr (hasEntityParam)
@@ -191,6 +209,15 @@ namespace cursed_engine
 
 		std::for_each(std::execution::seq, m_entities.begin(), m_entities.end(),
 			[&](const Entity& entity) {
+
+				if ((m_signatures->getSignature(entity.id) & m_excluded).any())
+				{
+					return;
+				}
+
+				// if entity has component skip...
+				//get entity signature, 
+
 				auto components = getComponents(entity.id);
 
 				if constexpr (hasEntityParam)
@@ -224,6 +251,14 @@ namespace cursed_engine
 					}
 				}
 			});
+	}
+
+	template <ComponentType ...Ts>
+	template <ComponentType T>
+	void ComponentView<Ts...>::exclude()
+	{
+		const ComponentId componentId = getComponentId<T>();
+		m_excluded.set(componentId);
 	}
 
 	template <ComponentType ...Ts>
@@ -263,9 +298,9 @@ namespace cursed_engine
 
 	template <ComponentType... Ts>
 	template <typename Predicate> // template <Callable Func>
-	std::optional<Entity> ComponentView<Ts...>::findIf(Predicate&& predicate) const
+	std::optional<Entity> ComponentView<Ts...>::findFirst(Predicate&& predicate) const
 	{
-		auto it = std::ranges::find_if(m_entities, [](Entity entity)
+		auto it = std::ranges::find_if(m_entities, [&](Entity entity)
 			{
 				return predicate(std::get<ComponentContainer<Ts>*>(m_components)->at(entity.id)...); // TODO; pass in entity to?
 			});
@@ -299,13 +334,13 @@ namespace cursed_engine
 	}
 
 	template <ComponentType ...Ts>
-	std::tuple<const Ts&...> ComponentView<Ts...>::getComponents(EntityID id) const
+	std::tuple<const Ts&...> ComponentView<Ts...>::getComponents(EntityId id) const
 	{
 		return std::tie(std::get<ComponentContainer<Ts>*>(m_components)->at(id)...);
 	}
 
 	template <ComponentType ...Ts>
-	std::tuple<Ts&...> ComponentView<Ts...>::getComponents(EntityID id)
+	std::tuple<Ts&...> ComponentView<Ts...>::getComponents(EntityId id)
 	{
 		return std::tie(std::get<ComponentContainer<Ts>*>(m_components)->at(id)...); // Use at instead?
 	}

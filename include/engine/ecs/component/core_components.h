@@ -5,7 +5,7 @@
 #include "engine/rendering/animation_types.h"
 #include "engine/core/action/action_registry.h" // or put type alisas in action.h?
 #include "engine/ecs/entity/entity_handle.h"
-#include "engine/rendering/render_types.h"
+#include "engine/rendering/render_types.h" // remove?
 #include "engine/resources/text/text.h"
 #include <optional>
 #include <array>
@@ -13,41 +13,42 @@
 
 namespace cursed_engine
 {
-	/*class ComponentRegistry; 
+	/*class ComponentRegistry;
 	class EngineResources;
 	class Localization;
 	struct ResourceConfig;
 */
 
-	// Separet ui transform and world transform? or screen space / world space?
+// Separet ui transform and world transform? or screen space / world space?
 
-	//struct TransformComponent
-	//{
-	//	// TODO; add 2 constructors? one for each individual argument?
+//struct TransformComponent
+//{
+//	// TODO; add 2 constructors? one for each individual argument?
 
-	//	FVec2 localPosition{ 0.f, 0.f };
-	//	FVec2 localScale{ 1.f, 1.f };
-	//	float localRotation = 0.f;
-	//	
-	//	FVec2 pivot{ 0.f, 0.f }; // helper functions or add funct in struct?
-	//
-	//	mat4 worldTransform; // dont store? compute?
-	//};
+//	FVec2 localPosition{ 0.f, 0.f };
+//	FVec2 localScale{ 1.f, 1.f };
+//	float localRotation = 0.f;
+//	
+//	FVec2 pivot{ 0.f, 0.f }; // helper functions or add funct in struct?
+//
+//	mat4 worldTransform; // dont store? compute?
+//};
 
-	//struct RenderLayer
-	//{
-	//	Texture* texture;
-	//	Vector2 offset;
-	//	float rotation = 0.0f;
-	//	Vector2 scale = { 1,1 };
-	//	int order = 0;
-	//};
+//struct RenderLayer
+//{
+//	Texture* texture;
+//	Vector2 offset;
+//	float rotation = 0.0f;
+//	Vector2 scale = { 1,1 };
+//	int order = 0;
+//};
 
-	//struct RenderComponent
-	//{
-	//	std::vector<RenderLayer> layers;
-	//};
+//struct RenderComponent
+//{
+//	std::vector<RenderLayer> layers;
+//};
 
+// UITransformComponent as well?
 	struct TransformComponent
 	{
 		// TODO; add 2 constructors? one for each individual argument?
@@ -87,58 +88,33 @@ namespace cursed_engine
 
 	struct SpriteComponent
 	{
-		/*
-		* struct SpriteComponent
-			{
-				TextureHandle texture;
-				Rect sourceRect;
-
-				Vector2 pivot;
-			};
-		*/
-
-		/*
-		* struct SpriteComponent
-		* {
-		*	TextureHandle texture;
-		* vec2 uvTopLeft;
-		* vec2 uvBottomRight;
-		* };
-		*/
-
-		//SpriteComponent(AtlasH handle, AtlasRegion region, float color[4], float z)
-		//	: atlasH
-
-		// wrap in sprite struct?
-		AssetHandle atlasHandle; // Handle to texture                   --- better than storing id to atlas handle? (maybe to much indirection)
-		AtlasRegion atlasRegion;
+		AssetHandle atlasHandle; // id to atlas instead?
+		AtlasRegion atlasRegion; // use region ID instead?
 
 		Color color = Color::white;
-		
-		//std::array<float, 4> color; // use COlor instead?
-		//float colors[4]; // create type or type alias for color!
-
-		// std::variant<TextureHandle, AtlasSpriteHandle> source;
-
-		// store texture handle? if invalid, overwrite with new one from getHandle...
-
 		float zOrder;
 	};
 
 	struct AnimationComponent
 	{
-		AssetHandle spriteSheetHandle; // const ref?
-		
-		// TODO; decide what to store in component vs animation (if should have it at all)
-		//std::unordered_map<std::string, Animation> animations;
-		
-		Animation animation;  // poionter to an animation? store animations in asset manager?
-		int currentFrameIndex = 0;
+		AnimationComponent() = default;
+		AnimationComponent(AssetHandle handle, std::string currentAnimationId)
+			: animationSetHandle{ std::move(handle) }, currentAnimationId{ std::move(currentAnimationId) }
+		{
+		}
 
-		float elapsedFrameTime = 0.f;
-		bool isDone = false;
-		bool isPlaying = false;
-		bool isLooping = false;
+		AssetHandle animationSetHandle;
+		std::string currentAnimationId{};
+
+		float elapsedTime = 0.f;
+		std::size_t currentFrameIndex = 0; // unsigned?
+
+		bool isFinished = false;
+	};
+
+	struct UIComponent
+	{
+
 	};
 
 	class Audio;
@@ -178,16 +154,20 @@ namespace cursed_engine
 		// rotation?
 	};
 
-	//struct HierarchyComponent // or name ParentComponent
-	//{
-	//	Entity parent;
-	//	// also children?
-	//};
+	struct HierarchyComponent // or name ParentComponent
+	{
+		// handles? optionals?
+		EntityHandle parent = EntityHandle::invalid();
+		EntityHandle nextSibling = EntityHandle::invalid();
+		EntityHandle prevSibling = EntityHandle::invalid();
+		EntityHandle firstChild = EntityHandle::invalid();
+		//	// also children?
+	};
 
 	struct ParentComponent
 	{
 		ParentComponent() = default;
-		
+
 		ParentComponent(std::string parentIdentifier)
 			: parentIdentifier{ std::move(parentIdentifier) }
 		{
@@ -216,11 +196,11 @@ namespace cursed_engine
 
 		ButtonComponent() = default;
 		ButtonComponent(std::string action, ActionArgs args, Color defaultColor, std::optional<Color> hoverColor = std::nullopt, std::optional<Color> pressedColor = std::nullopt)
-			: action{ action }, actionArgs{ std::move(args) }, defaultColor{defaultColor}, hoverColor{hoverColor}, pressedColor{pressedColor}
+			: action{ action }, actionArgs{ std::move(args) }, defaultColor{ defaultColor }, hoverColor{ hoverColor }, pressedColor{ pressedColor }
 		{
 		}
 
-		enum class State{ Normal, Hovered, Pressed }; // replace with input state instead?
+		enum class State { Normal, Hovered, Pressed }; // replace with input state instead?
 		State currentState = State::Normal;
 		State previousState = State::Normal;
 
@@ -235,11 +215,11 @@ namespace cursed_engine
 
 		// on click...? function pointer? or send event?
 	};
-	
+
 	class Texture;
 	class Font;
 
-	struct TextComponent 
+	struct TextComponent
 	{
 		TextComponent(std::string id, ResourceHandle<Font> fontHandle, Text text, Color color = Color::black)
 			: textID{ std::move(id) }, fontHandle{ fontHandle }, textObj{ std::move(text) }, color{ color }
@@ -275,7 +255,7 @@ namespace cursed_engine
 			: orientation{ orientation }, minValue{ minValue }, maxValue{ maxValue }, currentValue{ currentValue }
 		{
 		}*/
-	
+
 		// cant make const? needs to be able to be initialized form other 
 		Orientation orientation;
 		float minValue; // or line?

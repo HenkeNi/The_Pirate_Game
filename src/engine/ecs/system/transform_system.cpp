@@ -9,12 +9,25 @@ namespace cursed_engine
 		auto componentView = context.registry.view<ParentComponent>();
 		componentView.forEach([&](ParentComponent& parentComponent)
 			{
+				// want all root nodes.. (maybe with WorldTransfromComponent)
+				// all with local transforms
+				// - need to know if root or not, if player goes on boat, then it needs to swap to a local transform?
+
+				
 				// create a tree?
+				
 				auto parentHandle = parentComponent.parent;
 				if (!parentHandle.isValid())
 					return;
 
-				
+				// if root...
+				if (!parentHandle.hasComponents<ParentComponent>())
+				{
+					// updaet position...
+
+
+
+				}
 
 			});
 	}

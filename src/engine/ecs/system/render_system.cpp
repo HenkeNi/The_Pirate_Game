@@ -16,24 +16,53 @@ namespace cursed_engine
 	{
 	}
 
-	void renderTilemapTest(ECSRegistry& registry)
-	{
-
-
-	//	int tileIndex = x + y * chunkWidth;
-		//int baseVertex = tileIndex * 4;
-	}
-
 	void RenderSystem::update(SystemContext& context)
 	{
 		auto& registry = context.registry;
 		
-		renderTilemapTest(registry);
+		auto view = registry.view<CameraComponent>();
+		auto activeCamera = view.findFirst([](const CameraComponent& cameraComponent)
+			{
+				return cameraComponent.isActive;
+			});
+
+		FVec2 worldPosition{}; // create FVec2::zero();??
+
+		if (activeCamera.has_value())
+		{
+			const auto& cameraTransformComponent = registry.getComponent<TransformComponent>(activeCamera.value());
+			worldPosition = cameraTransformComponent.position;
+
+			m_renderer.setRenderState(cursed_engine::RenderState{ cursed_engine::View{worldPosition, 0.0, 0.f}, cursed_engine::Projection{ { 1280, 720 } } }); // view, projection				
+		}
+
+		// Pass camera pos to a function? if no camera, pass 0, 0?
 
 		// TODO; sort by handles? -> maybe sort using texture id (perhaps integer would be better than string?)
 
 		//auto& textureManager = m_engineResources.textureManager;
 
+		renderTextures(registry, worldPosition);
+	
+
+		// ################### TEST #########################
+
+#ifndef NDEBUG
+
+		renderDebug(registry);
+
+#endif
+
+		//m_renderer.drawLine(0, 0, 100, 100, Color{ 123, 21, 32, 255 });
+
+		renderText(registry);
+		//m_renderer.present(); // Here or in main loop?
+
+		//renderText(registry); -> maybe not needed? text uses textuers...
+	}
+
+	void RenderSystem::renderTextures(ECSRegistry& registry, const FVec2& cameraPos)
+	{
 		const auto componentView = registry.view<SpriteComponent, TransformComponent>();
 		componentView.forEach([&](const SpriteComponent& spriteComponent, const TransformComponent& transformComponent)
 			{
@@ -51,28 +80,16 @@ namespace cursed_engine
 					//const auto& pos = transformComponent.position;
 					//const auto& scale = transformComponent.scale;
 					auto position = transformComponent.position;
+					position.x -= cameraPos.x;
+					position.y -= cameraPos.y;
+
 					const auto& scale = transformComponent.scale;
 
 					position -= scale * transformComponent.pivot;
 
-					m_renderer.drawTexture(position.x, position.y, scale.x, scale.y, *texture, spriteComponent.color);
+					m_renderer.drawTexture(*texture, position, scale, spriteComponent.color);
 				}
 			});
-
-		// ################### TEST #########################
-
-#ifndef NDEBUG
-
-		renderDebug(registry);
-
-#endif
-
-		m_renderer.drawLine(0, 0, 100, 100, Color{ 123, 21, 32, 255 });
-
-		renderText(registry);
-		//m_renderer.present(); // Here or in main loop?
-
-		//renderText(registry); -> maybe not needed? text uses textuers...
 	}
 
 	void RenderSystem::renderText(ECSRegistry& registry)

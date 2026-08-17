@@ -30,15 +30,15 @@ namespace cursed_engine
 		//				return;
 		//			}
 
-		//			const std::string& text = m_localization.getText(textComponent.textID);
+		//			const std::string& text = m_localization.getText(textComponent.textId);
 
-		//			if (!m_textManager.isConstructed(textComponent.textID, textComponent.fontSize))
+		//			if (!m_textManager.isConstructed(textComponent.textId, textComponent.fontSize))
 		//			{
-		//				textComponent.textureHandle = m_textManager.create(textComponent.textID, text, fontHandle, textComponent.color, textComponent.fontSize);
+		//				textComponent.textureHandle = m_textManager.create(textComponent.textId, text, fontHandle, textComponent.color, textComponent.fontSize);
 		//			}
 		//			else
 		//			{
-		//				textComponent.textureHandle = m_textManager.getHandle(textComponent.textID, textComponent.fontSize); //Y TODO pass in path?
+		//				textComponent.textureHandle = m_textManager.getHandle(textComponent.textId, textComponent.fontSize); //Y TODO pass in path?
 		//			}
 
 		//			textComponent.isDirty = false;

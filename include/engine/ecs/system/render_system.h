@@ -9,9 +9,8 @@ namespace cursed_engine
 
 	class AssetManager;
 	class RenderAPI;
-	//class TextureManager;
-	//class TextRenderer;
 
+	// WorldRenderSystem? SpriteRenderSystem?
 	class RenderSystem : public System
 	{
 	public:
@@ -20,6 +19,7 @@ namespace cursed_engine
 		void update(SystemContext& context) override;
 	
 	private:
+		void renderTextures(ECSRegistry& registry, const FVec2& cameraPos);
 		void renderText(ECSRegistry& registry);
 		void renderDebug(ECSRegistry& registry);
 
