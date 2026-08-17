@@ -16,21 +16,21 @@ namespace cursed_engine
 	class ActionRegistry
 	{
 	public:
-		using ActionID = std::string;
+		using ActionId = std::string;
 		using Action = std::function<void(const ActionArgs&)>;
 
 		template <typename F>
-		void registerAction(ActionID id, F&& action);
+		void registerAction(ActionId id, F&& action);
 
-		void execute(const ActionID& id, const ActionArgs& args);
+		void execute(const ActionId& id, const ActionArgs& args);
 		
 		/*template <typename... Args>
-		void execute(const ActionID& id, Args&&... args);*/
+		void execute(const ActionId& id, Args&&... args);*/
 
-		[[nodiscard]] bool isRegistered(const ActionID& id) const noexcept;
+		[[nodiscard]] bool isRegistered(const ActionId& id) const noexcept;
 
 	private:
-		using Actions = std::unordered_map<ActionID, Action>;
+		using Actions = std::unordered_map<ActionId, Action>;
 
 		Actions m_actions;
 	};
@@ -38,14 +38,14 @@ namespace cursed_engine
 #pragma region Definitions
 
 	template <typename F>
-	void ActionRegistry::registerAction(ActionID id, F&& action)
+	void ActionRegistry::registerAction(ActionId id, F&& action)
 	{
 		// add staci assert for correct signature?
 		m_actions.insert_or_assign(std::move(id), std::forward<F>(action));
 	}
 
 	/*template <typename... Args>
-	void ActionRegistry::execute(const ActionID& id, Args&&... args)
+	void ActionRegistry::execute(const ActionId& id, Args&&... args)
 	{
 		assert(isRegistered(id) && "Action is not registered!");
 

@@ -19,7 +19,7 @@ namespace cursed_engine
 		//SDL_AudioSpec getSpecs();
 
 	private:
-		SDL_AudioDeviceID m_deviceID;
+		SDL_AudioDeviceID m_deviceId;
 		SDL_AudioStream* m_audioStream;
 	};
 }
