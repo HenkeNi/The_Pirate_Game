@@ -4,6 +4,32 @@
 void TileMap::insertMapChunk(MapChunk mapChunk)
 {
 	m_mapChunks.push_back(std::move(mapChunk));
+
+	// TODO; fix chunk coord initialization! 
+	m_coordsToIndex.insert({ChunkCoord{ mapChunk.coords.x, mapChunk.coords.y }, m_mapChunks.size() - 1});
+}
+
+bool TileMap::isValidChunk(int x, int y) const noexcept
+{
+	// check unoredered map instead?
+
+	auto it = std::find_if(m_mapChunks.begin(), m_mapChunks.end(), 
+		[=](const MapChunk& mapChunk) 
+		{
+			const auto& coords = mapChunk.coords;
+			return coords.x == x && coords.y == y;
+		});
+
+	//for (const auto& mapChunk : m_mapChunks)
+	//{
+	//	const auto& coords = mapChunk.coords;
+	//	if (coords.x == x && coords.y == y)
+	//	{
+	//		return true;
+	//	}
+	//}
+
+	return it != m_mapChunks.end();
 }
 
 std::vector<const MapChunk*> TileMap::getVisibleMapChunks() const noexcept

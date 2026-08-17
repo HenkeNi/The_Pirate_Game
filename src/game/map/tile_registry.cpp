@@ -10,9 +10,9 @@ bool TileRegistry::load(cursed_engine::AssetManager& assetManager, const std::fi
 	cursed_engine::JsonDocument doc;
 	auto result = doc.loadFromFile(path);
 
-	if (!result.success)
+	if (!result.succeeded)
 	{
-		cursed_engine::Logger::logError(std::format("Failed to load tile types from: {}, reason: {}", path.string(), result.errorMessage));
+		cursed_engine::Logger::logError(std::format("Failed to load tile types from: {}, reason: {}", path.string(), result.message));
 		return false;
 	}
 
@@ -54,6 +54,17 @@ bool TileRegistry::load(cursed_engine::AssetManager& assetManager, const std::fi
 
 			definition.id = id; // ??
 			definition.spriteIndex = 0; // ???
+
+			if (tile.hasMember("spawnables"))
+			{
+				for (const auto& spawnable : tile["spawnables"].asArray())
+				{
+					std::string id = spawnable["id"].asString();
+					double chance = spawnable["chance"].asDouble();
+
+					definition.spawnables.emplace_back(std::move(id), (float)chance);
+				}
+			}
 
 			set.tileTypes.insert({ id, std::move(definition) });
 		}

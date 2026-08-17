@@ -18,16 +18,27 @@
 #include "game/systems/player_controller_system.h"
 #include "game/systems/input_system.h"
 #include "game/systems/movement_system.h"
+#include "game/systems/map_system.h"
+#include "game/systems/map_decoration_system.h"
 
 #include <engine/ecs/system/render_system.h>
 #include <engine/ecs/system/interaction_system.h> //? ?
 #include <engine/ecs/system/ui_system.h>
 #include <engine/ecs/system/transform_system.h>
+#include <engine/ecs/system/hierarchy_system.h>
 #include <engine/ecs/system/text_system.h>
 #include <engine/ecs/system/audio_system.h>
+#include <engine/ecs/system/animation_system.h>
 
 #include <engine/core/settings/settings.h>
 #include <engine/ecs/component/component_registry.h>
+
+#include <engine/ecs/system/screen_space_render_system.h>
+#include <engine/ecs/system/world_render_system.h>
+
+#include <engine/rendering/render_pipeline.h>
+
+#include "game/rendering/render_passes.h"
 
 Game::Game()
 {
@@ -41,7 +52,12 @@ void Game::onUpdate(float deltaTime)
 	// get current scene?
 }
 
-void Game::onCreated(const EngineContext& context)
+void Game::onRender(const cursed_engine::RenderContext& ctx)
+{
+
+}
+
+void Game::onCreated(const cursed_engine::EngineContext& context)
 {
 	cursed_engine::ComponentInitContext componentInitContext{
 		context.assets.assetManager,
@@ -56,26 +72,36 @@ void Game::onCreated(const EngineContext& context)
 
 	auto* systemManager = context.ecs.systemManager;
 
+
 	systemManager->emplace<MapRenderSystem>(context.rendering.rendererAPI, context.resources.textureManager, m_tileRegistry);
-	systemManager->emplace<cursed_engine::RenderSystem>(context.resources.textureManager, context.assets.assetManager, context.rendering.rendererAPI);
+	systemManager->emplace<cursed_engine::WorldRenderSystem>(context.resources.textureManager, context.assets.assetManager, context.rendering.rendererAPI);
+	systemManager->emplace<cursed_engine::ScreenSpaceRenderSystem>(context.resources.textureManager, context.assets.assetManager, context.rendering.rendererAPI);
+	//systemManager->emplace<cursed_engine::RenderSystem>(context.resources.textureManager, context.assets.assetManager, context.rendering.rendererAPI);
+	
+	
 	//m_systemManager.emplace<InputSystem>(inputHandler);
 	systemManager->emplace<cursed_engine::InteractionSystem>();
-	systemManager->emplace<cursed_engine::TransformSystem>();
+	systemManager->emplace<cursed_engine::TransformSystem>(); // this or hierarchy system?
 	systemManager->emplace<cursed_engine::UISystem>(context.platform.input, context.actionRegistry); // OR Accept action registry (and event bus) by pointer?
 	systemManager->emplace<cursed_engine::TextSystem>(context.resources.textManager/*, context.resources.textFactory*/, context.assets.localization);
 	systemManager->emplace<cursed_engine::AudioSystem>(context.resources.audioManager, context.audio.audioController, context.eventBus); // FIX eventbus ptr
 	systemManager->emplace<PlayerControllerSystem>();
 	systemManager->emplace<MovementSystem>();
+	systemManager->emplace<cursed_engine::HierarchySystem>();
 	systemManager->emplace<InputSystem>(context.platform.input);
-
-
 	systemManager->emplace<SceneSystem>(
 		componentInitContext,
 		context.eventBus,
 		m_sceneStack,
 		m_sceneFactory);
+	systemManager->emplace<cursed_engine::AnimationSystem>(*context.assets.assetManager);
+	//systemManager->emplace<MapSystem>(m_mapGenerator); - currentyl done in overworld scene!
+	systemManager->emplace<MapDecorationSystem>(m_tileRegistry, *context.ecs.entityFactory, *context.eventBus);
 
-	using namespace cursed_engine;
+	context.rendering.renderPipeline.emplace<WorldPass>(context.rendering.rendererAPI, context.resources.textureManager, context.assets.assetManager, m_tileRegistry);
+	//context.rendering.renderPipeline.emplace<UIPass>(context.);
+
+	using namespace cursed_engine; // why here and not at top?
 
 	auto* componentRegistry = context.ecs.componentRegistry;
 
@@ -120,6 +146,9 @@ void Game::onCreated(const EngineContext& context)
 			// eventBus.publishInstantly(PlaySoundEvent{ "ButtonClick" });
 
 			// eventBus.publishInstantly(SceneTransitionEvent{ "GameScene" }); // should game know about scenes?
+
+			//m_mapGenerator.generateStartArea(m_tileMap, 1);
+
 
 			eventBus->publishInstantly<NewGameEvent>(); // or handle direclty in game class or change scene
 
