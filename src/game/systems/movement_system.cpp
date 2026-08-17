@@ -8,7 +8,7 @@ void MovementSystem::update(cursed_engine::SystemContext& context)
 	componentView.forEach([&](cursed_engine::TransformComponent& transformComponent, cursed_engine::VelocityComponent& velocityComponent)
 		{
 			auto& position = transformComponent.position;
-			position.x += velocityComponent.velocity.x * 2;
-			position.y += velocityComponent.velocity.y * 2;
+			position.x += velocityComponent.velocity.x * context.deltaTime * 200;
+			position.y += velocityComponent.velocity.y * context.deltaTime * 200;
 		});
 }

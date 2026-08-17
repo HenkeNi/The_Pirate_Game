@@ -48,9 +48,9 @@ void SceneStack::applyPendingChanges()
 	m_pendingTransition = std::nullopt;
 }
 
-//void SceneStack::addPath(std::string sceneID, std::filesystem::path path)
+//void SceneStack::addPath(std::string sceneId, std::filesystem::path path)
 //{
-//	m_idToPaths.insert({ std::move(sceneID), std::move(path) });
+//	m_idToPaths.insert({ std::move(sceneId), std::move(path) });
 //}
 
 void SceneStack::push(std::unique_ptr<Scene> scene)

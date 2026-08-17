@@ -2,6 +2,7 @@
 #include "game/scenes/scene_factory.h"
 #include "game/scenes/scene_loader.h"
 #include "game/events/events.h"
+
 #include <engine/core/events/event_bus.h>
 
 #include "game/scenes/scene_stack.h"
@@ -11,7 +12,7 @@ SceneSystem::SceneSystem(const cursed_engine::ComponentInitContext& ctx, cursed_
 	: m_componentContext{ ctx }, m_eventBus{ eventBus }, m_sceneStack{ sceneStack }, m_sceneFactory{ sceneFactory }
 {
 	m_eventBus->subscribe<SceneTransitionEvent>(
-		[this](SceneTransitionEvent e)
+		[this](const SceneTransitionEvent& e)
 		{
 			transitionToScene(e);
 		});
