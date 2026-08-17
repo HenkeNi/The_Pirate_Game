@@ -5,7 +5,7 @@
 
 namespace cursed_engine::utils
 {
-	std::string extractAssetID(const std::filesystem::path& path)
+	std::string extractAssetId(const std::filesystem::path& path)
 	{
 		std::string filename = path.filename().string();
 
@@ -34,7 +34,7 @@ namespace cursed_engine::utils
 		return filename;
 	}
 
-	//std::string extractResourceID(const std::filesystem::path& path)
+	//std::string extractResourceId(const std::filesystem::path& path)
 	//{
 	//	std::string filename = path.filename().string();
 

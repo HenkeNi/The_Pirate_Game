@@ -1,4 +1,4 @@
-#include "engine/platform/cursor/cursor.h"
+#include "engine/platform/cursor.h"
 #include <SDL3/SDL.h>
 
 namespace cursed_engine

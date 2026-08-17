@@ -53,11 +53,11 @@ namespace cursed_engine
 		}
 
 		JsonDocument jsonDocument;
-		const JsonResult result = jsonDocument.loadFromFile(path);
+		const Result result = jsonDocument.loadFromFile(path);
 
-		if (!result.success)
+		if (!result.succeeded)
 		{
-			Logger::logError(std::format("Failed to load language: {}", result.errorMessage));
+			Logger::logError(std::format("Failed to load language: {}", result.message));
 			return false;
 		}
 

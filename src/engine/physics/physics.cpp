@@ -71,9 +71,9 @@ namespace cursed_engine
 
 		b2WorldId id = b2CreateWorld(&worldDef);
 		
-		PhysicsWorld worldID{ id.index1, id.generation };
+		PhysicsWorld worldId{ id.index1, id.generation };
 
- 		return worldID;
+ 		return worldId;
 	}
 
 	/*bool Physics::isValidWorld(PhysicsWorld world) const

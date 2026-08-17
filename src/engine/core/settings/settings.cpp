@@ -92,7 +92,7 @@ namespace cursed_engine
 		return true;
 	}
 
-	std::string extractResourceID(const std::filesystem::path& path) noexcept
+	std::string extractResourceId(const std::filesystem::path& path) noexcept
 	{
 		return path.stem().string();
 		/*std::string filename = path.filename().string();
@@ -140,7 +140,7 @@ namespace cursed_engine
 				|| hasValidFileExtension(filename, resourceConfig.validAudioFormats)
 				|| hasValidFileExtension(filename, resourceConfig.validFontFormats))
 			{
-				auto id = extractResourceID(path);
+				auto id = extractResourceId(path);
 				resourceConfig.resourceIdToPath.insert_or_assign(std::move(id), path.string());
 			}
 		}
@@ -168,13 +168,12 @@ namespace cursed_engine
 		m_config.resource.assetRoot = "../assets/"; // find root instead?
 
 		JsonDocument document;
-		JsonResult result = document.loadFromFile(path);
+		Result result = document.loadFromFile(path);
 
-		if (!result.success)
+		if (!result.succeeded)
 		{
-			return Result::failure(result.errorMessage);
+			return result;
 		}
-
 
 		bool success = true;
 
