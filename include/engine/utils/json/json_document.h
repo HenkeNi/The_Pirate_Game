@@ -1,5 +1,6 @@
 #pragma once
 #include "engine/utils/non_copyable.h"
+#include "engine/core/result.h"
 #include <filesystem>
 #include <memory>
 
@@ -9,12 +10,6 @@ namespace cursed_engine
 
 	class JsonValue;
 
-	struct JsonResult
-	{
-		bool success;
-		std::string errorMessage;
-	};
-
 	class JsonDocument
 	{
 	public:
@@ -22,9 +17,13 @@ namespace cursed_engine
 		JsonDocument(const fs::path& path); // make sure works!! or dont? no way of knowing if succesful or not,..
 		~JsonDocument();
 
-		JsonResult loadFromFile(const fs::path& path);
+		Result loadFromFile(const fs::path& path);
 
 		[[nodiscard]] JsonValue root() const;
+
+		[[nodiscard]] bool hasMember(const char* member) const;
+		
+		[[nodiscard]] bool hasParseError() const;
 
 		[[nodiscard]] bool isLoaded() const noexcept;
 

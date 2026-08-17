@@ -190,7 +190,7 @@ namespace cursed_engine
 		[[nodiscard]] JsonValue operator[](size_t index) const;
 
 		// Object operations
-		[[nodiscard]] bool has(const char* key) const;
+		[[nodiscard]] bool hasMember(const char* key) const;
 		JsonValue operator[](const char* key);
 		[[nodiscard]] JsonValue operator[](const char* key) const; // or string view?
 

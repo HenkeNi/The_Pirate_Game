@@ -1,10 +1,10 @@
 #include "engine/utils/json/json_document.h"
-#include "engine/core/logger.h"
 #include <rapidjson/document.h>
 #include <fstream>
-
+#include <format>
 
 #include "engine/utils/json/json_value.h"
+
 
 namespace cursed_engine
 {
@@ -26,26 +26,18 @@ namespace cursed_engine
 
 	JsonDocument::~JsonDocument() = default;
 
-	JsonResult JsonDocument::loadFromFile(const fs::path& path)
+	Result JsonDocument::loadFromFile(const fs::path& path)
 	{
-		constexpr std::string_view logPrefix = "[JsonDocument::loadFromFile] ";
-
 		if (!fs::exists(path))
 		{
-			const std::string message = "File does not exist: " + path.string();
-			Logger::logError(std::string(logPrefix) + message);
-
-			return { false, message };
+			return Result::failure(std::format("Not valid file: {}", path.string()));
 		}
 
 		std::ifstream ifs(path, std::ios::binary | std::ios::ate);
 
 		if (!ifs)
 		{
-			const std::string message = "Unable to open file: " + path.string();
-			Logger::logError(std::string(logPrefix) + message);
-
-			return { false, message };
+			return Result::failure(std::format("File could not be opened: {}", path.string()));
 		}
 
 		std::streamsize size = ifs.tellg();
@@ -54,10 +46,7 @@ namespace cursed_engine
 		std::string content(static_cast<size_t>(size), '\0');
 		if (!ifs.read(content.data(), size))
 		{
-			const std::string message = "Failed to read contents of file: " + path.string();
-			Logger::logError(std::string(logPrefix) + message);
-
-			return { false, message };
+			return Result::failure(std::format("File could not be read: {}", path.string()));
 		}
 
 		rapidjson::Document document;
@@ -65,15 +54,11 @@ namespace cursed_engine
 
 		if (document.HasParseError())
 		{
-			const std::string message = "JSON parse error in file: " + path.string();
-
-			Logger::logError(std::string(logPrefix) + message);
-			return { false, message };
+			return Result::failure(std::format("Document had parse errors. Path {}", path.string())); // TODO: use document.GetParseError()?
 		}
 
 		m_impl->document.CopyFrom(document, m_impl->document.GetAllocator());
-
-		return { true, "Successfully loaded document: " + path.string() };
+		return Result::success();
 	}
 
 	JsonValue JsonDocument::root() const
@@ -81,9 +66,19 @@ namespace cursed_engine
 		return JsonValue{ &m_impl->document };
 	}
 
+	bool JsonDocument::hasParseError() const
+	{
+		return m_impl->document.HasParseError();
+	}
+
+	bool JsonDocument::hasMember(const char* member) const
+	{
+		return m_impl->document.HasMember(member);
+	}
+
 	bool JsonDocument::isLoaded() const noexcept
 	{
-		return m_impl && !m_impl->document.HasParseError();
+		return m_impl && !m_impl->document.HasParseError(); // or store own member; bool isLoaded in impl
 	}
 
 	JsonValue JsonDocument::operator[](const char* key) const

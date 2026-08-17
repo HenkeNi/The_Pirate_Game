@@ -390,7 +390,7 @@ namespace cursed_engine
 		return JsonValue{ &(*m_value)[index] };
 	}
 
-	bool JsonValue::has(const char* key) const
+	bool JsonValue::hasMember(const char* key) const
 	{
 		if (!m_value || !m_value->IsObject())
 			return false;
