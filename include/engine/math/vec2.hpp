@@ -25,13 +25,13 @@ namespace cursed_engine
 		template <Numeric U>
 		Vec2 operator=(const Vec2<U>& other);
 		
-		Vec2& normalize();
+		[[nodiscard]] Vec2& normalize();
 		
-		Vec2 normalized() const;
+		[[nodiscard]] Vec2 normalized() const;
 
-		Vec2 directionTo(const Vec2& target) const;
+		[[nodiscard]] Vec2 directionTo(const Vec2& target) const;
 
-		T distanceTo(const Vec2& other) const noexcept;
+		[[nodiscard]] T distanceTo(const Vec2& other) const noexcept;
 
 		T x{};
 		T y{};
