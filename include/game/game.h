@@ -1,6 +1,7 @@
 #pragma once
 #include "game/scenes/scene_stack.h"
 #include "game/scenes/scene_factory.h"
+//#include "game/map/map_generator.h"
 #include "game/map/tile_registry.h"
 #include <engine/core/application.h>
 
@@ -9,8 +10,6 @@ namespace cursed_engine
 	class EventBus;
 }
 
-using cursed_engine::EngineContext;
-
 class Game : public cursed_engine::Application
 {
 public:
@@ -18,8 +17,9 @@ public:
 	~Game() = default;
 
 	void onUpdate(float deltaTime) override;
+	void onRender(const cursed_engine::RenderContext& ctx) override;
 	
-	void onCreated(const EngineContext& context) override; // pass by value?
+	void onCreated(const cursed_engine::EngineContext& ctx) override; // pass by value?
 	void onDestroyed() override;
 
 private:
@@ -31,4 +31,5 @@ private:
 	//cursed_engine::EventBus* m_eventBus;
 
 	TileRegistry m_tileRegistry;
+	//MapGenerator m_mapGenerator; // put in GameScene? (base)
 };
