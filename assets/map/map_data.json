@@ -1,0 +1,12 @@
+{
+  "oceanLevel": -0.20,
+  "beachLevel": -0.05,
+  "hillLevel": 0.45,
+  "mountainLevel": 0.75,
+
+  "heightNoise": {
+    "seed": 1234,
+    "frequency": 0.0015,
+    "octaves": 5
+  }
+}

@@ -1,0 +1,25 @@
+{
+	"name": "DefaultText",
+	"components": {
+		"Transform": {
+			"position": [ 0, 0 ],
+			"scale": [ 1.0, 1.0 ],
+			"rotation": 0.0
+		},
+		"Text": {
+			"font": "JackPirate_PERSONAL_USE_ONLY",
+			"size": 100,
+			"color": {
+				"r": 8,
+				"g": 8,
+				"b": 8,
+				"a": 255
+			},
+			"outline": 0
+		},
+		"Tag": {
+			"type": "Camera"
+		}
+	}
+
+}

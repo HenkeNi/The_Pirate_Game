@@ -1,0 +1,131 @@
+{
+  "texture_id": "pirate_sheet",
+  "regions": [
+    {
+      "identifier": "idle_0",
+      "x": 0,
+      "y": 0,
+      "width": 117,
+      "height": 127
+    },
+    {
+      "identifier": "idle_1",
+      "x": 117,
+      "y": 0,
+      "width": 117,
+      "height": 127
+    },
+    {
+      "identifier": "idle_2",
+      "x": 234,
+      "y": 0,
+      "width": 117,
+      "height": 127
+    },
+    {
+      "identifier": "blink_0",
+      "x": 0,
+      "y": 127,
+      "width": 117,
+      "height": 127
+    },
+    {
+      "identifier": "blink_1",
+      "x": 117,
+      "y": 127,
+      "width": 117,
+      "height": 127
+    },
+    {
+      "identifier": "blink_2",
+      "x": 234,
+      "y": 127,
+      "width": 117,
+      "height": 127
+    },
+    {
+      "identifier": "walk_right_0",
+      "x": 0,
+      "y": 351,
+      "width": 117,
+      "height": 127
+    },
+    {
+      "identifier": "walk_right_1",
+      "x": 117,
+      "y": 127,
+      "width": 117,
+      "height": 351
+    },
+    {
+      "identifier": "walk_right_2",
+      "x": 234,
+      "y": 127,
+      "width": 117,
+      "height": 351
+    },
+    {
+      "identifier": "walk_left_0",
+      "x": 0,
+      "y": 468,
+      "width": 117,
+      "height": 127
+    },
+    {
+      "identifier": "walk_left_1",
+      "x": 117,
+      "y": 468,
+      "width": 117,
+      "height": 351
+    },
+    {
+      "identifier": "walk_left_2",
+      "x": 234,
+      "y": 468,
+      "width": 117,
+      "height": 351
+    },
+    {
+      "identifier": "walk_down_0",
+      "x": 0,
+      "y": 468,
+      "width": 117,
+      "height": 585
+    },
+    {
+      "identifier": "walk_down_1",
+      "x": 117,
+      "y": 468,
+      "width": 117,
+      "height": 585
+    },
+    {
+      "identifier": "walk_down_2",
+      "x": 234,
+      "y": 468,
+      "width": 117,
+      "height": 585
+    },
+    {
+      "identifier": "walk_up_0",
+      "x": 0,
+      "y": 468,
+      "width": 117,
+      "height": 702
+    },
+    {
+      "identifier": "walk_up_1",
+      "x": 117,
+      "y": 468,
+      "width": 117,
+      "height": 702
+    },
+    {
+      "identifier": "walk_up_2",
+      "x": 234,
+      "y": 468,
+      "width": 117,
+      "height": 702
+    }
+  ]
+}

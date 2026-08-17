@@ -2,7 +2,48 @@
   "identifier": "overworld_scene",
   "entities": [
     {
+      "id": "main_camera",
+      "parent": "player",
+      "components": {
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "width": 1200,
+          "height": 760
+        },
+        "camera": {
+        },
+        "parent": {
+          "parent_id": "player"
+        }
+      }
+    },
+    {
       "id": "player",
+      "components": {
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "width": 100,
+          "height": 100
+        },
+        "sprite": {
+          "id": "pirate_sheet"
+        },
+        "animation": {
+          "animation_set_id": "player",
+          "active_animation_id": "idle"
+        },
+        "velocity": {},
+        "input": {},
+        "parent": {
+          "parent_id": "test"
+        }
+      }
+    },
+    {
+      "id": "hat",
+      "parent": "player",
       "components": {
         "transform": {
           "x": 0,
@@ -11,10 +52,7 @@
           "height": 40
         },
         "sprite": {
-          "id": "pirate_sheet"
-        },
-        "parent": {
-          "parent_id": "test"
+          "id": "crossed-bones"
         }
       }
     }

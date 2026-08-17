@@ -1,0 +1,23 @@
+{
+  "texture": "pirate_sheet",
+  "animations": [
+    {
+      "name": "idle",
+      "looping": true,
+      "frames": [
+        {
+          "region": "idle_0",
+          "duration": 0.8
+        },
+        {
+          "region": "idle_1",
+          "duration": 0.8
+        },
+        {
+          "region": "idle_2",
+          "duration": 0.8
+        }
+      ]
+    }
+  ]
+}

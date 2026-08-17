@@ -12,7 +12,8 @@
         },
         "sprite": {
           "id": "title_background"
-        }
+        },
+        "ui": {}
       }
     },
     {
@@ -28,6 +29,7 @@
             "y": 0.0
           }
         },
+        "ui": {},
         "text": {
           "text_id": "title_text",
           "font": "JackPirate_PERSONAL_USE_ONLY",
@@ -58,8 +60,9 @@
         "sprite": {
           "id": "play-button"
         },
+        "ui": {},
         "button": {
-          "action": "NewGame",          
+          "action": "NewGame",
           "default_color": {
             "r": 0,
             "g": 170,
@@ -103,6 +106,7 @@
         "sprite": {
           "id": "cog"
         },
+        "ui": {},
         "button": {
           "action": "SceneTransition",
           "args": {
