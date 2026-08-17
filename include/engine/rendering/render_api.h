@@ -1,24 +1,29 @@
 #pragma once
-#include "engine/rendering/render_types.h"
 #include "engine/math/vec2.hpp"
+#include "engine/math/rect.hpp"
+#include "engine/rendering/render_types.h"
 
 namespace cursed_engine
 {
+	// [Consider] having API push render commands to a queue instead...
+
 	class Text;
 	class Texture;
 	class RenderBackend;
 
-	// Consider having API push render commands to a queue instead...
 	class RenderAPI
 	{
 	public:
 		RenderAPI();
 		RenderAPI(RenderBackend* backend);
 
-		// rename to drawSprite?
-		void drawTexture(FRect rect, Texture& texture, Color color = Color::white);
-		void drawTexture(FVec2 pos, FVec2 size, Texture& texture, Color color = Color::white);
-		void drawTexture(float x, float y, float width, float height, Texture& texture, Color color = Color::white);
+		void setRenderState(RenderState state);
+
+		void drawTexture(Texture& texture, FRect dst, Color color = Color::white);
+		void drawTexture(Texture& texture, FVec2 pos, FVec2 size, Color color = Color::white);
+
+		void drawTexture(Texture& texture, FRect src, FRect dst, Color color = Color::white);
+		void drawTexture(Texture& texture, FVec2 srcPos, FVec2 srcSize, FVec2 dstPos, FVec2 dstSize, Color color = Color::white);
 
 		void drawGeometry(const Geometry& geometry, Texture& texture);
 

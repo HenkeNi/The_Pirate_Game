@@ -21,9 +21,9 @@ namespace cursed_engine
 
 		bool operator==(const Color& other) const
 		{
-			return r == other.r 
-				&& g == other.g 
-				&& b == other.b 
+			return r == other.r
+				&& g == other.g
+				&& b == other.b
 				&& a == other.a;
 		}
 
@@ -33,7 +33,7 @@ namespace cursed_engine
 		}
 
 		uint8_t r, g, b, a;
-		 
+
 		static const Color black;
 		static const Color white;
 		static const Color gray;
@@ -46,7 +46,7 @@ namespace cursed_engine
 		static const Color orange;
 		static const Color brown;
 	};
-	     
+
 	inline const Color Color::black{ 0, 0, 0, 255 };
 	inline const Color Color::white{ 255, 255, 255, 255 };
 	inline const Color Color::gray{ 128, 128, 128, 128 };
@@ -79,6 +79,30 @@ namespace cursed_engine
 		//std::vector<uint32_t> indices;
 	};
 
+	struct View
+	{
+		FVec2 position;
+		float rotation;
+		float zoom;
+	};
+
+	struct Projection
+	{
+		FVec2 size;
+		FVec2 originOffset;
+	};
+
+	struct RenderState
+	{
+		View view;
+		Projection projection;
+	};
+
+	struct RenderStatistics
+	{
+		uint32_t drawCalls;
+	};
+
 	enum class Orientation
 	{
 		Horizontal,
@@ -87,17 +111,7 @@ namespace cursed_engine
 
 	// add constexpr constructor?
 	// TODO; put in math?
-	template <typename T>
-	struct Rect
-	{
-		T x;
-		T y;
-		T w;
-		T h;
-	};
-
-	using FRect = Rect<float>;
-	using IRect = Rect<int>;
+	
 
 	struct UVRect
 	{
@@ -111,5 +125,11 @@ namespace cursed_engine
 	{
 		FVec2 start;
 		FVec2 end;
+	};
+
+	struct RenderContext
+	{
+		//RenderAPI renderAPI;
+		class RenderPipeline& renderPipeline;
 	};
 }

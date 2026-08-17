@@ -1,5 +1,6 @@
 #include "engine/rendering/render_api.h"
 #include "engine/rendering/render_backend.h"
+#include "engine/resources/texture/texture.h"
 
 namespace cursed_engine
 {
@@ -13,19 +14,37 @@ namespace cursed_engine
 	{
 	}
 
-	void RenderAPI::drawTexture(FRect rect, Texture& texture, Color color)
+	void RenderAPI::setRenderState(RenderState state)
 	{
-		m_backend->drawTexture(texture, rect, color);
+		m_backend->setRenderState(std::move(state));
 	}
 
-	void RenderAPI::drawTexture(FVec2 pos, FVec2 size, Texture& texture, Color color)
+	void RenderAPI::drawTexture(Texture& texture, FRect dst, Color color)
 	{
-		m_backend->drawTexture(texture, FRect{ pos.x, pos.y, size.x, size.y }, color);
+		FRect src{ 0, 0, texture.getWidth(), texture.getHeight() };
+
+		m_backend->drawTexture(texture, std::move(src), dst, color);
 	}
 
-	void RenderAPI::drawTexture(float x, float y, float width, float height, Texture& texture, Color color)
+	void RenderAPI::drawTexture(Texture& texture, FVec2 pos, FVec2 size, Color color)
 	{
-		m_backend->drawTexture(texture, FRect{ x, y, width, height }, color);
+		FRect src{ 0, 0, texture.getWidth(), texture.getHeight() };
+		FRect dst{ pos.x, pos.y, size.x, size.y };
+
+		m_backend->drawTexture(texture, std::move(src), std::move(dst), color);
+	}
+
+	void RenderAPI::drawTexture(Texture& texture, FRect src, FRect dst, Color color)
+	{
+		m_backend->drawTexture(texture, src, dst, color);
+	}
+
+	void RenderAPI::drawTexture(Texture& texture, FVec2 srcPos, FVec2 srcSize, FVec2 dstPos, FVec2 dstSize, Color color)
+	{
+		FRect src{ srcPos.x, srcPos.y, srcSize.x, srcSize.y };
+		FRect dst{ dstPos.x, dstPos.y, dstSize.x, dstSize.y };
+
+		m_backend->drawTexture(texture, std::move(src), std::move(dst), color);
 	}
 
 	void RenderAPI::drawGeometry(const Geometry& geometry, Texture& texture)
