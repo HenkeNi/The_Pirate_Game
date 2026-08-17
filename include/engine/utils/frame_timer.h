@@ -15,6 +15,8 @@ namespace cursed_engine
 
 	private:
 		//Uint64 m_last = SDL_GetPerformanceCounter();
+		uint64_t m_previous = 0;
+		uint64_t m_current = 0;
 
 		double m_totalTime = 0.0;
 

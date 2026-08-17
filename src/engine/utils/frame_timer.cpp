@@ -7,11 +7,16 @@ namespace cursed_engine
 	{
 		++m_currentFrame;
 		m_totalTime += SDL_GetPerformanceCounter();
+
+		m_current = SDL_GetPerformanceCounter();
+		m_deltaTime = static_cast<double>(m_current - m_previous) / SDL_GetPerformanceFrequency();
+	
+		m_previous = m_current;
 	}
 
 	double FrameTimer::getDeltaTime() const
 	{
-		return 0.0;
+		return m_deltaTime;
 	}
 
 	double FrameTimer::getFPS() const
