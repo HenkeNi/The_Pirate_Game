@@ -11,8 +11,14 @@ namespace cursed_engine::utils
 		return std::type_index(typeid(std::remove_cvref_t<T>));
 	}
 
+	/*template <typename T>
+	[[nodiscard]] inline constexpr T remap(T value, T min, T max)
+	{
+
+	}*/
+
 	// elsewhere?? re´name? get`XX from path
-	[[nodiscard]] std::string extractAssetID(const std::filesystem::path& path);
+	[[nodiscard]] std::string extractAssetId(const std::filesystem::path& path);
 	//[[nodiscard]] std::string extractResourceID(const std::filesystem::path& path); remove?
 
 	namespace hash
