@@ -1,7 +1,7 @@
 #include "engine/modules/ecs_module.h"
 #include "engine/ecs/component/core_components.h"
 #include "engine/ecs/component/component_registry.h"
-#include "engine/ecs/system/render_system.h",
+#include "engine/ecs/system/render_system.h"
 #include "engine/ecs/system/interaction_system.h"
 #include "engine/ecs/system/input_system.h"
 #include "engine/ecs/system/ui_system.h"
@@ -66,14 +66,14 @@ namespace cursed_engine
 
 				FVec2 pivot{ 0.f, 0.f };
 
-				if (value.has("pivot")) {
+				if (value.hasMember("pivot")) {
 					pivot.x = (float)value["pivot"]["x"].asDouble();
 					pivot.y = (float)value["pivot"]["y"].asDouble();
 				}
 
 				float rotation = 0.f;
 
-				if (value.has("rotation"))
+				if (value.hasMember("rotation"))
 					float rotation = (float)value["rotation"].asDouble();
 
 				handle.attachComponent<TransformComponent>(FVec2{ x, y }, FVec2{ width, height }, pivot, rotation);
@@ -115,22 +115,22 @@ namespace cursed_engine
 				}
 
 				AtlasRegion region; // TODO; fix!
-				region.x = 0;
-				region.y = 0;
-				region.w = 700;
-				region.h = 700;
+				region.rect.x = 0;
+				region.rect.y = 0;
+				region.rect.w = 700;
+				region.rect.h = 700;
 
 				//std::array<float, 4> color{ 1.f, 1.f, 1.f, 1.f };
 
 				Color color = Color::white;
 
-				if (value.has("color"))
+				if (value.hasMember("color"))
 				{
 					color.r = value["color"]["r"].asInt();
 					color.g = value["color"]["g"].asInt();
 					color.b = value["color"]["b"].asInt();
 
-					if (value["color"].has("a"))
+					if (value["color"].hasMember("a"))
 						color.a = value["color"]["a"].asInt();
 				}
 
@@ -150,6 +150,26 @@ namespace cursed_engine
 				handle.attachComponent<SpriteComponent>(atlasHandle, region, color, zOrder);
 			});
 
+		m_componentRegistry.registerComponent<AnimationComponent>("animation",
+			[](EntityHandle& handle, const ComponentProperties& properties)
+			{},
+			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+			{
+				std::string animationSetId = value["animation_set_id"].asString();
+				AssetHandle assetHandle = ctx.assetManager->getAssetHandle<AnimationSet>(std::move(animationSetId));
+
+				std::string currentAnimationId = value["active_animation_id"].asString();
+
+				handle.attachComponent<AnimationComponent>(std::move(assetHandle), std::move(currentAnimationId));				
+			});
+
+		m_componentRegistry.registerComponent<UIComponent>("ui",
+			[](EntityHandle& handle, const ComponentProperties& properties)
+			{},
+			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+			{
+				handle.attachComponent<UIComponent>();
+			});
 
 		/*registerComponent<InputComponent>(registry, "input",
 			[](EntityHandle& handle, const ComponentProperties& properties)
@@ -169,7 +189,7 @@ namespace cursed_engine
 
 				// TODO; get params
 				ActionArgs args;
-				if (value.has("args"))
+				if (value.hasMember("args"))
 				{
 					value["args"].forEachProperty(
 						[&](std::string name, JsonValue value)
@@ -194,7 +214,7 @@ namespace cursed_engine
 
 				Color defaultColor;
 
-				if (value.has("default_color"))
+				if (value.hasMember("default_color"))
 				{
 					defaultColor.r = value["default_color"]["r"].asInt();
 					defaultColor.g = value["default_color"]["g"].asInt();
@@ -209,7 +229,7 @@ namespace cursed_engine
 
 				std::optional<Color> optHoverColor = std::nullopt;
 
-				if (value.has("hover_color"))
+				if (value.hasMember("hover_color"))
 				{
 					optHoverColor = Color{};
 
@@ -222,7 +242,7 @@ namespace cursed_engine
 
 				std::optional<Color> optPressedColor = std::nullopt;
 
-				if (value.has("pressed_color"))
+				if (value.hasMember("pressed_color"))
 				{
 					optPressedColor = Color{};
 
@@ -278,7 +298,7 @@ namespace cursed_engine
 
 
 				FontStyle fontStyle = FontStyle::Normal;
-				if (value.has("font_style"))
+				if (value.hasMember("font_style"))
 				{
 					std::string style = value["font_style"].asString();
 
@@ -297,10 +317,10 @@ namespace cursed_engine
 				//int size;
 
 				//int outline;
-				int outline = value.has("outline") ? value["outline"].asInt() : 0;
+				int outline = value.hasMember("outline") ? value["outline"].asInt() : 0;
 
 				//bool kerning
-				bool kerning = value.has("kerning") ? value["kerning"].asBool() : true;
+				bool kerning = value.hasMember("kerning") ? value["kerning"].asBool() : true;
 
 				std::string textId = value["text_id"].asString();
 
@@ -318,7 +338,7 @@ namespace cursed_engine
 				{
 					Color textColor = Color::black;
 
-					if (value.has("color"))
+					if (value.hasMember("color"))
 					{
 						textColor.r = value["color"]["r"].asInt();
 						textColor.g = value["color"]["g"].asInt();
@@ -413,6 +433,17 @@ namespace cursed_engine
 			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx) 
 			{
 				handle.attachComponent<ParentComponent>(value["parent_id"].asString());
+
+				//how to  find parent? -> send event "Entity Created"? let systme handle it?
+			});
+
+		m_componentRegistry.registerComponent<HierarchyComponent>("hierarchy",
+			[](EntityHandle& handle, const ComponentProperties& properties)
+			{
+			},
+			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+			{
+				handle.attachComponent<HierarchyComponent>();
 
 				//how to  find parent? -> send event "Entity Created"? let systme handle it?
 			});

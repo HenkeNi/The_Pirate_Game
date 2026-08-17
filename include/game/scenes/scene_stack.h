@@ -51,7 +51,7 @@ public:
 
 
 
-	//void addPath(std::string sceneID, std::filesystem::path path); // TODO; maybe not here?!!!
+	//void addPath(std::string sceneId, std::filesystem::path path); // TODO; maybe not here?!!!
 
 	template <DerivedFrom<Scene> T, typename... Args>
 	void push(Args&&... args);

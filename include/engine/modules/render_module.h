@@ -1,6 +1,7 @@
 #pragma once
 #include "engine/utils/non_copyable.h"
 #include "engine/rendering/render_api.h"
+#include "engine/rendering/render_pipeline.h"
 #include "engine/core/settings/engine_config.h"
 #include "engine/core/result.h"
 #include <memory>
@@ -33,6 +34,7 @@ namespace cursed_engine
 
 		// Primary access
 		[[nodiscard]] inline RenderAPI getRenderAPI() noexcept { return RenderAPI{ m_backend.get() }; }
+		[[nodiscard]] inline RenderPipeline& getRenderPipeline() noexcept { return m_renderPipeline; }
 
 		[[nodiscard]] ResourceCreator* getResourceCreator() noexcept;
 
@@ -41,6 +43,7 @@ namespace cursed_engine
 
 	private:
 		std::unique_ptr<RenderBackend> m_backend;
+		RenderPipeline m_renderPipeline;
 
 		//RenderCapabilities m_capabilities;
 		// RenderGraph?

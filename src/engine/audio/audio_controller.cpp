@@ -8,7 +8,7 @@
 namespace cursed_engine
 {
 	AudioController::AudioController()
-		: m_audioStream{ nullptr }, m_deviceID{ 0 }
+		: m_audioStream{ nullptr }, m_deviceId{ 0 }
 	{
 	}
 
@@ -23,7 +23,7 @@ namespace cursed_engine
 		spec.format = SDL_AUDIO_S16LE;
 		spec.channels = 2;
 
-		//m_deviceID = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec);
+		//m_deviceId = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec);
 
 		m_audioStream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, nullptr, nullptr);
 
@@ -32,7 +32,7 @@ namespace cursed_engine
 			return Result::failure(std::format("Failed to open audio stream! Error: {}", SDL_GetError()));
 		}
 
-		m_deviceID = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
+		m_deviceId = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
 
 		SDL_ResumeAudioStreamDevice(m_audioStream);
 		return Result::success();
@@ -51,7 +51,7 @@ namespace cursed_engine
 		{
 
 			// DO in init sound?
-			if (!SDL_BindAudioStream(m_deviceID, stream))
+			if (!SDL_BindAudioStream(m_deviceId, stream))
 			{
 				Logger::logError(std::format("Failed to bind stream! Error: {}", SDL_GetError()).c_str());
 
@@ -76,8 +76,8 @@ namespace cursed_engine
 		//}
 
 
-		//SDL_BindAudioStream(m_deviceID, m_audioStream);
-		//SDL_ResumeAudioDevice(m_deviceID);
+		//SDL_BindAudioStream(m_deviceId, m_audioStream);
+		//SDL_ResumeAudioDevice(m_deviceId);
 	}
 
 	/*SDL_AudioSpec AudioController::getSpecs()

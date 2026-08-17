@@ -12,6 +12,7 @@
 #include "engine/modules/physics_module.h"
 
 
+#include "engine/ecs/system/screen_space_render_system.h"
 
 #include "engine/math/noise.h"
 
@@ -186,7 +187,6 @@ namespace cursed_engine
 
 		while (running)
 		{
-
 			impl.platform.beginFrame();
 			impl.platform.processEvents();
 
@@ -198,8 +198,10 @@ namespace cursed_engine
 			impl.rendering.beginFrame();
 
 			double deltaTime = impl.platform.getDeltaTime();
-			impl.application.onUpdate(deltaTime);
 
+			impl.application.onUpdate(deltaTime);
+			impl.application.onRender(RenderContext{ impl.rendering.getRenderPipeline() }); // DONT PASS rendering api and pipeline?
+			
 			// Update ecs systems here?
 			//m_impl->systemManager.update(deltaTime); // After application update?
 
@@ -227,7 +229,8 @@ namespace cursed_engine
 				&impl.platform.getFrameTimer()
 			},
 			EngineContext::RenderingServices {
-				impl.rendering.getRenderAPI()
+				impl.rendering.getRenderAPI(),
+				impl.rendering.getRenderPipeline()
 			},
 			EngineContext::AssetServices{
 				&impl.asset.getAssetManager(),

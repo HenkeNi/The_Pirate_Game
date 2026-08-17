@@ -14,7 +14,7 @@ namespace cursed_engine
 		m_localization.registerLanguage("english", "../assets/localization/en.json"); // Dont here? read start language from config...
 		m_localization.setLanguage("english");
 
-		m_assetManager.addLoader<SpriteSheetLoader>();
+		m_assetManager.addLoader<AnimationLoader>();
 		m_assetManager.addLoader<TextureAtlasLoader>();
 		m_assetManager.addLoader<PrefabLoader>();
 
@@ -26,9 +26,9 @@ namespace cursed_engine
 			const auto& path = entry.path();
 			std::string filename = path.string();
 
-			if (filename.ends_with("sprite_sheet.json"))
+			if (filename.ends_with("animation.json"))
 			{
-				auto handle = m_assetManager.loadAsset<SpriteSheet>(path);
+				auto handle = m_assetManager.loadAsset<AnimationSet>(path);
 			}
 			else if (filename.ends_with("texture_atlas.json"))
 			{
