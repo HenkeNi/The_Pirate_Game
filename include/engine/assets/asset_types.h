@@ -1,6 +1,10 @@
 #pragma once
 #include "engine/resources/resource_handle.h"
 #include "engine/math/vec2.hpp"
+#include "engine/math/rect.hpp"
+
+//#include "engine/assets/asset_manager.h"
+
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -14,53 +18,53 @@ namespace cursed_engine
 
 	struct AtlasRegion
 	{
-		std::string name; // rename texture id?
-		IVec2 pivot;
-		IVec2 size;
-		int x{}, y{}, w{}, h{};
+		// consider pixelRect and uvRect (cached uv calculation)
+		IRect rect;
+		//IVec2 pivot; // or in sprite definition?
 	};
 
 	struct TextureAtlas
 	{
 		std::string textureId; // replace with TextureHandle texture;
 		std::vector<AtlasRegion> regions;
-		IVec2 textureSize;
-		IVec2 cellSize;
 
-		// or vector of sprite definitions...? UV's
+		std::unordered_map<std::string, std::size_t> idToRegionIndex;
+
+		IVec2 textureSize; // set?
 	};
 
-	struct SpriteDefinition
+	//struct Grid ?
+
+	//struct SpriteDefinition
+	//{
+	//	std::string name;
+	//	int rect[4]; // change to a rect struct!
+	//	IVec2 pivot;
+	//	IVec2 size;
+	//};
+
+	struct Animation
 	{
-		std::string name;
-		int rect[4]; // change to a rect struct!
-		IVec2 pivot;
-		IVec2 size;
+		struct Frame
+		{
+			std::string regionId;
+			//AtlasRegion region;
+			float duration;
+		};
+
+		std::vector<Frame> frames;
+		bool looping;
 	};
-	
-	struct SpriteSheet
+
+	struct AnimationSet
 	{
-		std::string textureID;
-		//TextureHandle textureHandle;
-		
-		// width? height?
-
-		std::vector<SpriteDefinition> definitions;
-
-		int rows = 0;
-		int columns = 0;
-
-		//std::vector<Animation> animations;
-		std::unordered_map<std::string, Animation> idToAnimations; // or nameToAnimations?
-
-		// TODO; store sequences?
-
-		//std::vector<int> frameIndices; // TODO; store frame here??
-		float frameDuration = 0.f;
-		bool loop = true;
+		// todo; use int (id) later
+		std::unordered_map<std::string, Animation> animations;
+		//AssetHandle atlasHandle;
+		std::string textureId; // either here or in Animation to allow multiple textures
 	};
 
-	// TODO; put in an AssetTypes? together with TextureAtlas, SpriteSheet, etc?
+	// TODO; put in an AssetTypes? together with TextureAtlas, Animations, etc?
 
 	// put in prefab registry?
 

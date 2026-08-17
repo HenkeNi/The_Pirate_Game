@@ -21,80 +21,61 @@ namespace cursed_engine
 
 		TextureAtlas textureAtlas;
 		textureAtlas.textureId = document["texture_id"].asString();
-		textureAtlas.cellSize = { 128, 128 }; // TODO; fix tihs!
+
+		if (document.hasMember("regions"))
+		{
+			for (const auto& region : document["regions"].asArray())
+			{
+				textureAtlas.regions.emplace_back(IRect{
+					region["x"].asInt(),
+					region["y"].asInt(),
+					region["width"].asInt(),
+					region["height"].asInt()
+				});
+
+				textureAtlas.idToRegionIndex.insert({ region["identifier"].asString(), textureAtlas.regions.size() - 1 });
+			}
+		}
+
 		return textureAtlas;
 	}
 
-	std::optional<SpriteSheet> SpriteSheetLoader::load(const std::filesystem::path& path) const
+	std::optional<AnimationSet> AnimationLoader::load(const std::filesystem::path& path) const
 	{
 		JsonDocument document;
 
 		const auto [success, message] = document.loadFromFile(path);
+
 		if (!success)
 		{
 			Logger::logError("Failed to load SpriteSheet: " + message);
 			return std::nullopt;
 		}
 
-		SpriteSheet spriteSheet;
-		
-		spriteSheet.textureID = document["texture"].asString();
-		
-		//std::string textureID = document["texture"].to<std::string>(); // rename "texture_path"?
-		//auto textureHandle = m_resources.getHandle<Texture>(textureID);
+		// TODO; pass in texture manager? to get texture handle...
 
-		//if (!textureHandle.isValid())
-		//{
-		//	Logger::logWarning("[SpriteSheetLoader::Load] - Invalid texture handle!");
-		//	return std::nullopt;
-		//}
-		//spriteSheet.textureHandle = textureHandle;
+		AnimationSet animationSet;
+		animationSet.textureId = document["texture"].asString();
 
-		int frameWidth = document["frame_width"].asInt(); // TODO!
-		int frameHeight = document["frame_height"].asInt();
+		for (const auto& animation : document["animations"].asArray())
+		{
+			std::string name = animation["name"].asString();
+			std::vector<Animation::Frame> frames;
 
-		spriteSheet.rows = document["rows"].asInt();
-		spriteSheet.columns = document["columns"].asInt();
-
-		document["animations"].forEachProperty([&](const char* name, JsonValue value)
+			for (const auto& frame : animation["frames"].asArray())
 			{
-				auto n = name;
+				frames.emplace_back(
+					frame["region"].asString(),
+					frame["duration"].asDouble()
+				);
+			}
 
-				std::vector<int> frames;
+			bool isLooping = animation["looping"].asBool();
 
-				// TODO; fix optional name!
+			animationSet.animations.insert({ std::move(name), Animation{ std::move(frames), isLooping } });
+		}
 
-				//for (const auto& )
-
-				//value.forEachArray([&](JsonValue value) 
-				//	{
-				//		int frameIndex = value.asInt();
-				//		frames.push_back(frameIndex);
-				//	});
-
-				//for (const auto& frame : value.GetArray())
-				//{
-				//	int frameIndex = frame.GetInt();
-				//	frames.push_back(frameIndex);
-				//}
-
-				// Create animation...
-			});
-
-			//"frame_width": 117,
-			//"frame_height" : 127,
-			//"rows" : 6,
-			//"columns" : 3,
-			//"animations" : {
-			//"idle_default": [0, 1, 2] ,
-			//	"idle_special" : [3, 4, 5] ,
-			//	"walk_right" : [6, 7, 8] ,
-			//	"walk_left" : [9, 10, 11] ,
-			//	"walk_down" : [12, 13, 14] ,
-			//	"walk_up" : [15, 16, 17]
-		
-	
-		return spriteSheet;
+		return animationSet;
 	}
 
 	std::optional<Prefab> PrefabLoader::load(const std::filesystem::path& path) const

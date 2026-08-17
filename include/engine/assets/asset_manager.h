@@ -123,6 +123,9 @@ namespace cursed_engine
 		}
 
 		auto* assetLoader = getLoader<Asset>();
+
+		assert(assetLoader && "Not a valid asset loader!");
+
 		if (!assetLoader)
 		{
 			Logger::logError("No asset loader for type found!");
@@ -143,7 +146,7 @@ namespace cursed_engine
 		AssetHandle handle{ (uint32_t)storage.size() - 1, 0, utils::getTypeIndex<Asset>() };
 		m_pathToHandles.insert({ keyPath, handle });
 
-		m_idsToPaths.insert({ utils::extractAssetID(path), path});
+		m_idsToPaths.insert({ utils::extractAssetId(path), path});
 		//m_idsToPaths.insert({ extractIdentifier(path), path});
 
 		return handle;

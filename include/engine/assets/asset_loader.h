@@ -30,13 +30,18 @@ namespace cursed_engine
 		[[nodiscard]] std::optional<TextureAtlas> load(const std::filesystem::path& path) const override;
 	};
 
+	// rename animation loader...
+	class AnimationLoader : public AssetLoader<AnimationSet>
+	{
+	public:
+		[[nodiscard]] std::optional<AnimationSet> load(const std::filesystem::path& path) const override;
+	};
 
-	class SpriteSheetLoader : public AssetLoader<SpriteSheet>
+	/*class SpriteSheetLoader : public AssetLoader<SpriteSheet>
 	{
 	public:
 		[[nodiscard]] std::optional<SpriteSheet> load(const std::filesystem::path& path) const override;
-	};
-
+	};*/
 
 	class PrefabLoader : public AssetLoader<Prefab>
 	{
