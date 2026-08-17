@@ -28,9 +28,10 @@ namespace cursed_engine
 		m_ecsRegistry = ecsRegistry;
 	}
 
-	std::optional<EntityHandle> EntityFactory::createFromPrefab(const std::string& prefabID)
+	std::optional<EntityHandle> EntityFactory::createFromPrefab(const std::string& prefabId)
 	{
-		//const auto& prefab = m_prefabRegistry->get(prefabID);
+		const AssetHandle handle = m_assetManager->getAssetHandle<Prefab>(prefabId);
+		//const auto& prefab = m_prefabRegistry->get(prefabId);
 
 		// TODO; construct entity...
 

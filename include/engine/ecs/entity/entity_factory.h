@@ -20,7 +20,7 @@ namespace cursed_engine
 		void setEcsRegistry(ECSRegistry* ecsRegistry);
 
 		// contain functions like createEnemy, etc? contain logic to determine which type? sets other data? random strength, etc?
-		std::optional<EntityHandle> createFromPrefab(const std::string& prefabID); // TODO; return EntityBuilder instead??? createEntity.withComponent<Transform>(data).withComponent().withTag("Player"´).build();
+		std::optional<EntityHandle> createFromPrefab(const std::string& prefabId); // TODO; return EntityBuilder instead??? createEntity.withComponent<Transform>(data).withComponent().withTag("Player"´).build();
 		//std::optional<EntityHandle> instantiate(ECSRegistry& ecsRegistry, std::string_view prefab);
 
 	private:

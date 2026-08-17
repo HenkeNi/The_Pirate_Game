@@ -9,7 +9,7 @@
 
 #include "engine/resources/resource_types.h"
 
-#include "engine/core/type_registry.hpp"
+#include "engine/utils/containers/registry.hpp"
 #include <functional>
 
 
@@ -34,7 +34,7 @@ namespace cursed_engine
 
 	struct ComponentInfo
 	{
-		ComponentID id;
+		ComponentId id;
 		std::string name;
 		std::size_t alignment;
 		std::size_t size;
@@ -75,7 +75,7 @@ namespace cursed_engine
 		void registerComponent(const std::string& name, PrefabInstantiation&& instantation, Deserialize&& deserialization)
 		{
 			// TODO; static assert that name is lowercase?
-			const ComponentID id = getComponentID<T>();
+			const ComponentId id = getComponentId<T>();
 
 			m_registry.emplace<T>(
 				name,
@@ -116,7 +116,6 @@ namespace cursed_engine
 		}
 
 	private:
-		TypeRegistry<struct ComponentInfo, ComponentID> m_registry;
-		//TypeRegistry<struct ComponentInfo, uint32_t> m_registry;
+		Registry<struct ComponentInfo, ComponentId> m_registry;
 	};
 }

@@ -8,14 +8,14 @@ namespace cursed_engine
 {
 	EntityManager::EntityManager()
 	{
-		initializeAvailableIDs();
+		initializeAvailableIds();
 	}
 
 	std::optional<Entity> EntityManager::create() noexcept
 	{
 		if (!m_available.empty())
 		{
-			const EntityID id = m_available.front();
+			const EntityId id = m_available.front();
 			m_available.pop();
 
 			uint32_t& version = m_versions[id];
@@ -56,30 +56,30 @@ namespace cursed_engine
 		m_alive.clear();
 	}
 
-	bool EntityManager::isValidID(EntityID id) const noexcept
+	bool EntityManager::isValidId(EntityId id) const noexcept
 	{
 		return id < MAX_ENTITIES && id >= 0;
 	}
 
 	bool EntityManager::isAlive(Entity entity) const noexcept
 	{
-		return isValidID(entity.id) &&
+		return isValidId(entity.id) &&
 			m_alive.contains(entity.id) &&
 			m_versions[entity.id] == entity.version;
 	}
 
-	EntitySignature EntityManager::getSignature(EntityID id) const noexcept
+	EntitySignature EntityManager::getSignature(EntityId id) const noexcept
 	{
-		assert(isValidID(id) && "Trying to access signature with an invalid id!");
+		assert(isValidId(id) && "Trying to access signature with an invalid id!");
 		return m_signatures.getSignature(id);
 	}
 
-	bool EntityManager::hasSignature(EntityID id, EntitySignature signature) const noexcept
+	bool EntityManager::hasSignature(EntityId id, EntitySignature signature) const noexcept
 	{
 		return (m_signatures.getSignature(id) & signature) == signature;
 	}
 
-	void EntityManager::setSignature(EntityID id, EntitySignature signature)
+	void EntityManager::setSignature(EntityId id, EntitySignature signature)
 	{
 		m_signatures.setSignature(id, signature);
 	}
@@ -99,7 +99,7 @@ namespace cursed_engine
 		return matches;
 	}
 
-	void EntityManager::initializeAvailableIDs()
+	void EntityManager::initializeAvailableIds()
 	{
 		for (int i = 0; i < MAX_ENTITIES; ++i)
 		{
@@ -108,9 +108,9 @@ namespace cursed_engine
 		}
 	}
 
-	void EntityManager::recycle(EntityID id)
+	void EntityManager::recycle(EntityId id)
 	{
-		assert(isValidID(id) && "Tried to recycle invalid id!");
+		assert(isValidId(id) && "Tried to recycle invalid id!");
 
 		m_available.push(id);
 		++m_versions[id];

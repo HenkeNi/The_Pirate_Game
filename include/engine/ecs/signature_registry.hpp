@@ -18,6 +18,8 @@ You can’t safely convert it to size_t to use as an index.
 static_cast<std::size_t>(id) will fail to compile or produce nonsense.
 	*/
 
+	// use registry class?
+
 	template <UnsignedIntegral Id, std::size_t signatureSize, std::size_t capacity>
 	class SignatureRegistry
 	{
@@ -47,14 +49,14 @@ static_cast<std::size_t>(id) will fail to compile or produce nonsense.
 	template <UnsignedIntegral Id, std::size_t signatureSize, std::size_t capacity>
 	const SignatureRegistry<Id, signatureSize, capacity>::Signature& SignatureRegistry<Id, signatureSize, capacity>::getSignature(Id id) const noexcept
 	{
-		assert(isValid(id) && "Invalid ID passed to getSignature");
+		assert(isValid(id) && "Invalid Id passed to getSignature");
 		return m_signatures[id];
 	}
 
 	template <UnsignedIntegral Id, std::size_t signatureSize, std::size_t capacity>
 	void SignatureRegistry<Id, signatureSize, capacity>::setSignature(Id id, const Signature& signature) noexcept
 	{
-		assert(isValid(id) && "Invalid ID passed to getSignature");
+		assert(isValid(id) && "Invalid Id passed to getSignature");
 		m_signatures[id] = signature;
 	}
 

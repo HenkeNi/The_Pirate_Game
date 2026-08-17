@@ -12,16 +12,16 @@ namespace cursed_engine
 		virtual ~IComponentManager() = default;
 		
 		// ==================== Component Management ====================
-		virtual void remove(EntityID id) = 0;
+		virtual void remove(EntityId id) = 0;
 		virtual void removeAll() = 0;
 
 		// ==================== Queries ====================
 		[[nodiscard]] virtual std::size_t size() const noexcept = 0;
-		[[nodiscard]] virtual bool contains(EntityID id) const = 0;
+		[[nodiscard]] virtual bool contains(EntityId id) const = 0;
 	};
 
 	template <ComponentType T>
-	using ComponentContainer = sparse_set<std::decay_t<T>, EntityID>; // Rename component storage?
+	using ComponentContainer = sparse_set<std::decay_t<T>, EntityId>; // Rename component storage?
 
 	template <ComponentType T>
 	class ComponentManager : public IComponentManager, private NonCopyable
@@ -39,17 +39,17 @@ namespace cursed_engine
 
 		// ==================== Component Operations ====================
 		template <typename... Args>
-		T* add(EntityID id, Args&&... args); // TODO; add both insert and emplace?
+		T* add(EntityId id, Args&&... args); // TODO; add both insert and emplace?
 
-		void remove(EntityID id) override; // TODO, return bool? valid check?
+		void remove(EntityId id) override; // TODO, return bool? valid check?
 		void removeAll() override;
 
 		// ==================== Component Access ====================
-		[[nodiscard]] const T& get(EntityID id) const;
-		[[nodiscard]] T& get(EntityID id);
+		[[nodiscard]] const T& get(EntityId id) const;
+		[[nodiscard]] T& get(EntityId id);
 
-		[[nodiscard]] const T* tryGet(EntityID id) const;
-		[[nodiscard]] T* tryGet(EntityID id);
+		[[nodiscard]] const T* tryGet(EntityId id) const;
+		[[nodiscard]] T* tryGet(EntityId id);
 
 		// ==================== Container Access ====================
 		[[nodiscard]] const ComponentContainer<T>& getContainer() const; // make view friend class instead? 
@@ -60,7 +60,7 @@ namespace cursed_engine
 
 		// ==================== Query Operations ====================
 		[[nodiscard]] std::size_t size() const noexcept override;
-		[[nodiscard]] bool contains(EntityID id) const override;
+		[[nodiscard]] bool contains(EntityId id) const override;
 
 	private:
 		ComponentContainer<T> m_components;
@@ -70,14 +70,14 @@ namespace cursed_engine
 
 	template <ComponentType T>
 	template <typename... Args>
-	T* ComponentManager<T>::add(EntityID id, Args&&... args)
+	T* ComponentManager<T>::add(EntityId id, Args&&... args)
 	{
 		auto[it, success] = m_components.emplace(id, std::forward<Args>(args)...);
 		return &*it;
 	}
 
 	template <ComponentType T>
-	void ComponentManager<T>::remove(EntityID id)
+	void ComponentManager<T>::remove(EntityId id)
 	{
 		m_components.erase(id); 
 	}
@@ -89,20 +89,20 @@ namespace cursed_engine
 	}
 
 	template <ComponentType T>
-	const T& ComponentManager<T>::get(EntityID id) const
+	const T& ComponentManager<T>::get(EntityId id) const
 	{
 		assert(m_components.contains(id) && "Entity does not have this component!");
 		return m_components.at(id);
 	}
 
 	template <ComponentType T>
-	T& ComponentManager<T>::get(EntityID id)
+	T& ComponentManager<T>::get(EntityId id)
 	{
 		return const_cast<T&>(std::as_const(*this).get<T>(id));
 	}
 
 	template <ComponentType T>
-	const T* ComponentManager<T>::tryGet(EntityID id) const
+	const T* ComponentManager<T>::tryGet(EntityId id) const
 	{
 		if (m_components.contains(id))
 			return m_components.get(id);
@@ -111,7 +111,7 @@ namespace cursed_engine
 	}
 
 	template <ComponentType T>
-	T* ComponentManager<T>::tryGet(EntityID id)
+	T* ComponentManager<T>::tryGet(EntityId id)
 	{
 		return const_cast<T*>(std::as_const(*this).tryGet(id));
 	}
@@ -141,7 +141,7 @@ namespace cursed_engine
 	}
 
 	template <ComponentType T>
-	bool ComponentManager<T>::contains(EntityID id) const
+	bool ComponentManager<T>::contains(EntityId id) const
 	{
 		return m_components.contains(id);
 	}

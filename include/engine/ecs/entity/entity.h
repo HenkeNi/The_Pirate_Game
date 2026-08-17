@@ -8,11 +8,13 @@ namespace cursed_engine
 {
 	struct Entity
 	{
-		EntityID id = INVALID_ENTITY_ID;
+		EntityId id = INVALID_ENTITY_ID;
 		EntityVersion version = INVALID_ENTITY_VERSION; // rename generation?
 
 		bool operator==(const Entity& other) const { return id == other.id && version == other.version; }
 		bool isValid() const { return id != INVALID_ENTITY_ID && version != INVALID_ENTITY_VERSION; }
+	
+		[[nodiscard]] constexpr static Entity invalid() { return Entity{ INVALID_ENTITY_ID, INVALID_ENTITY_VERSION }; }
 	};
 }
 

@@ -32,7 +32,7 @@ namespace cursed_engine
 
 		// ==================== Queries ====================
 
-		[[nodiscard]] bool isValidID(EntityID id) const noexcept;
+		[[nodiscard]] bool isValidId(EntityId id) const noexcept;
 
 		[[nodiscard]] bool isAlive(Entity entity) const noexcept;
 
@@ -43,12 +43,14 @@ namespace cursed_engine
 		[[nodiscard]] inline std::size_t getAvailableSize() const noexcept { return m_available.size(); }
 
 		// ==================== Signature Management ====================
+	
+		[[nodiscard]] EntitySignature getSignature(EntityId id) const noexcept; 
 
-		[[nodiscard]] EntitySignature getSignature(EntityID id) const noexcept; 
+		[[nodiscard]] inline const SignatureRegistry<EntityId, MAX_COMPONENTS, MAX_ENTITIES>* getSignatureRegistry() const { return &m_signatures; }
 
-		[[nodiscard]] bool hasSignature(EntityID id, EntitySignature signature) const noexcept;
+		[[nodiscard]] bool hasSignature(EntityId id, EntitySignature signature) const noexcept;
 
-		void setSignature(EntityID id, EntitySignature signature);
+		void setSignature(EntityId id, EntitySignature signature);
 
 		// ==================== Entity Queries ====================
 
@@ -57,16 +59,16 @@ namespace cursed_engine
 	private:
 		// ==================== Internal Helpers ====================
 
-		void initializeAvailableIDs();
+		void initializeAvailableIds();
 
-		void recycle(EntityID id);
+		void recycle(EntityId id);
 
 		// ==================== Data Members ====================
 
-		sparse_set<Entity, EntityID> m_alive;
-		std::queue<EntityID> m_available;
+		sparse_set<Entity, EntityId> m_alive;
+		std::queue<EntityId> m_available;
 
-		SignatureRegistry<EntityID, MAX_COMPONENTS, MAX_ENTITIES> m_signatures;
+		SignatureRegistry<EntityId, MAX_COMPONENTS, MAX_ENTITIES> m_signatures;
 		std::array<uint32_t, MAX_ENTITIES> m_versions;
 	};
 }

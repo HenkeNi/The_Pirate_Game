@@ -4,7 +4,7 @@
 
 namespace cursed_engine
 {
-	void ActionRegistry::execute(const ActionID& id, const ActionArgs& args)
+	void ActionRegistry::execute(const ActionId& id, const ActionArgs& args)
 	{
 		assert(isRegistered(id) && "Action is not registered!");
 
@@ -18,7 +18,7 @@ namespace cursed_engine
 		}
 	}
 
-	bool ActionRegistry::isRegistered(const ActionID& id) const noexcept
+	bool ActionRegistry::isRegistered(const ActionId& id) const noexcept
 	{
 		return m_actions.contains(id);
 	}

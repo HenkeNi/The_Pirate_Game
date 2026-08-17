@@ -13,4 +13,9 @@ namespace cursed_engine
 		: m_entity{ entity }, m_registry{ registry }
 	{
 	}
+
+	bool EntityHandle::isValid() const noexcept
+	{
+		return m_registry && m_registry->isAlive(m_entity);
+	}
 }
