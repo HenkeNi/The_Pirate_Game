@@ -5,6 +5,7 @@
 class TileMap;
 struct MapChunk;
 
+// TODO; use these!!!!
 struct MapGeneratorSettings
 {
 	float oceanLevel = -0.20f;
@@ -17,6 +18,8 @@ struct MapGeneratorSettings
 	// moisture noise?
 };
 
+enum class TerrainType;
+
 class MapGenerator
 {
 public:
@@ -28,5 +31,13 @@ public:
 	[[nodiscard]] MapChunk generateMapChunk(int x, int y) const;
 
 private:
+	struct TerrainThreshold
+	{
+		float minValue;
+		TerrainType type;
+	};
+
+	[[nodiscard]] TerrainType getTerrainType(float value) const; // rename? getTileId?
+	
 	MapGeneratorSettings m_settings;
 };

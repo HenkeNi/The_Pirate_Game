@@ -13,10 +13,17 @@ namespace cursed_engine
     class AssetManager;
 }
 
+struct Spawnable
+{
+    std::string id; // ResourceId instead?
+    float chance;
+};
+
 struct TileDefinition
 {
     TileId id;
-    
+    std::vector<Spawnable> spawnables;
+
     uint32_t spriteIndex;
     uint32_t layer;
     cursed_engine::IVec2 atlasCoord; // or index?
@@ -33,6 +40,7 @@ struct TileSet // just store textru handle and uvs?
     cursed_engine::IVec2 textureSize;
 };
 
+// Rename TileTypeRegistry?
 class TileRegistry
 {
 public:

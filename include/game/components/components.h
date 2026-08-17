@@ -42,12 +42,12 @@ struct InputComponent
 
 //struct TileType
 //{
-//	TextureID texture;
+//	TextureId texture;
 //	bool walkable;
 //	bool opaque;
 //};
 //
-//using TileID = uint16_t;
+//using TileId = uint16_t;
 //
 //
 //// maybe map chunks shouldnt be components?

@@ -1,14 +1,8 @@
 #pragma once
-#include <string>
 
-// here or in engine?
-struct NewGameEvent
+// Window events... input events... etc
+
+namespace cursed_engine
 {
 
-};
-
-struct SceneTransitionEvent
-{
-	std::string scene;
-	std::string transition; // replace with enum? replace, pop and push...
-};
+}
