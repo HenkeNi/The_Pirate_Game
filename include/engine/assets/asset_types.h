@@ -64,10 +64,6 @@ namespace cursed_engine
 		std::string textureId; // either here or in Animation to allow multiple textures
 	};
 
-	// TODO; put in an AssetTypes? together with TextureAtlas, Animations, etc?
-
-	// put in prefab registry?
-
 
 	struct PropertyValue : std::variant<
 		std::nullptr_t,
@@ -95,22 +91,49 @@ namespace cursed_engine
 			return fallback;
 		}
 
-		bool isNumeric() const noexcept
+		[[nodiscard]] bool isNumeric() const noexcept
 		{
 			return std::holds_alternative<int>(*this) || std::holds_alternative<float>(*this); // TODO; double check
 		}
 	};
 
-
-
 	using ComponentProperties = std::unordered_map<std::string, PropertyValue>;
 
+	//class ComponentProperties
+	//{
+	//public:
+		
+	//private:
+	//};
+
+
+	// todo, remake? structure like json document?
 	struct Prefab
 	{
 		std::unordered_map<std::string, ComponentProperties> components;
 		std::string name;
 		// std::vector<std::function<void(Entity)>> componentBuilders;
 	};
+
+
+	//class Prebab
+	//{
+	//public:
+	//	Prebab operator[](size_t index) noexcept;
+
+	//private:
+	//	using ComponentId = std::string; // or use type id??
+	//	using PropertyKey = std::string;
+
+	//	using ComponentProperties = std::unordered_map<PropertyKey, PropertyValue>;
+
+
+	//	std::unordered_map<ComponentId, ComponentProperties> components; // component properties or comp.. data?
+
+	//	//template  <typename T>
+	//	//const ComponentProperties& get
+
+	//};
 
 	//namespace prefab
 	//{

@@ -31,13 +31,18 @@ namespace cursed_engine
 					region["y"].asInt(),
 					region["width"].asInt(),
 					region["height"].asInt()
-				});
+					});
 
 				textureAtlas.idToRegionIndex.insert({ region["identifier"].asString(), textureAtlas.regions.size() - 1 });
 			}
 		}
 
 		return textureAtlas;
+	}
+
+	const char* TextureAtlasLoader::format() const
+	{
+		return ".texture_atlas.json";
 	}
 
 	std::optional<AnimationSet> AnimationLoader::load(const std::filesystem::path& path) const
@@ -78,6 +83,11 @@ namespace cursed_engine
 		return animationSet;
 	}
 
+	const char* AnimationLoader::format() const
+	{
+		return ".animation.json";
+	}
+
 	std::optional<Prefab> PrefabLoader::load(const std::filesystem::path& path) const
 	{
 		JsonDocument document;
@@ -93,31 +103,42 @@ namespace cursed_engine
 
 		document["components"].forEachProperty([&](const char* name, JsonValue value)
 			{
+				if (!value.isObject())
+				{
+					// LogError?
+					return;
+				}
+
 				ComponentProperties properties;
 				//auto values = parsePropertyValue(value);
 
-				if (value.isObject())
-				{
-					// TODO; dont? or maybe do?
+				// TODO; dont? or maybe do?
 
-					value.forEachProperty([&](const char* name, JsonValue jsonValue) // rename value?
-						{
-							auto property = parsePropertyValue(jsonValue);
-							properties.insert({ name, std::move(property) });
-						});
+				value.forEachProperty([&](const char* name, JsonValue jsonValue) // rename value?
+					{
+						auto n = name;
 
-					//for (const auto& [name, val] : value.getObject())
-					//{
-					//	auto property = parsePropertyValue(val);
-					//	properties.insert({ name.GetString(), std::move(property) });
-					//}
-				}
+						auto property = parsePropertyValue(jsonValue);
+						properties.insert({ name, std::move(property) });
+					});
+
+				//for (const auto& [name, val] : value.getObject())
+				//{
+				//	auto property = parsePropertyValue(val);
+				//	properties.insert({ name.GetString(), std::move(property) });
+				//}
+
 
 				prefab.components.insert({ name, std::move(properties) });
 			});
 
 		prefab.name = document["name"].asString(); // TODO; use name! store in prefab!
 		return prefab;
+	}
+
+	const char* PrefabLoader::format() const
+	{
+		return ".prefab.json";
 	}
 
 

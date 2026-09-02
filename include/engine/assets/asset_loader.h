@@ -12,6 +12,8 @@ namespace cursed_engine
 	{
 	public:
 		virtual ~AssetLoaderBase() = default;
+
+		[[nodiscard]] virtual const char* format() const = 0;
 	};
 
 	template <typename T>
@@ -28,6 +30,7 @@ namespace cursed_engine
 	{
 	public:
 		[[nodiscard]] std::optional<TextureAtlas> load(const std::filesystem::path& path) const override;
+		[[nodiscard]] const char* format() const override;
 	};
 
 	// rename animation loader...
@@ -35,17 +38,13 @@ namespace cursed_engine
 	{
 	public:
 		[[nodiscard]] std::optional<AnimationSet> load(const std::filesystem::path& path) const override;
+		[[nodiscard]] const char* format() const override;
 	};
-
-	/*class SpriteSheetLoader : public AssetLoader<SpriteSheet>
-	{
-	public:
-		[[nodiscard]] std::optional<SpriteSheet> load(const std::filesystem::path& path) const override;
-	};*/
 
 	class PrefabLoader : public AssetLoader<Prefab>
 	{
 	public:
 		[[nodiscard]] std::optional<Prefab> load(const std::filesystem::path& path) const override;
+		[[nodiscard]] const char* format() const override;
 	};
 }
