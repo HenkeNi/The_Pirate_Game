@@ -4,16 +4,16 @@
 
 namespace cursed_engine
 {
-	PhysicsModule::PhysicsModule()
-		: m_physics{}
-	{
-	}
-
-	bool PhysicsModule::init()
+	bool PhysicsModule::init(RenderAPI renderAPI)
 	{
 		Logger::logInfo(std::format("{}[PhysicsModule] - Initialization started...", log_format::INDENT));
 		//if (!m_physics.init())
 		//	return false;
+
+		// auto version = b2GetVersion(); -> log this in physics?
+
+
+		m_physicsDebugDraw.init(renderAPI);
 
 		Logger::logInfo(std::format("{}[PhysicsModule] - Initialization successful!", log_format::INDENT));
 		return true;
@@ -23,6 +23,11 @@ namespace cursed_engine
 	{
 		//m_physics.shutdown(); Destroy all worlds? store them in physics?
 	}
+
+	//void PhysicsModule::debugDraw()
+	//{
+	//	m_physicsDebugDraw.draw();
+	//}
 
 	//PhysicsServices PhysicsModule::getServices() noexcept
 	//{
