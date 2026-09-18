@@ -13,13 +13,20 @@
 #include "game/scenes/title_scene.h"
 #include "game/scenes/overworld_scene.h"
 #include "game/scenes/settings_scene.h"
+#include "game/scenes/scene_types.h"
+
 
 #include "game/systems/map_render_system.h"
 #include "game/systems/player_controller_system.h"
 #include "game/systems/input_system.h"
 #include "game/systems/movement_system.h"
 #include "game/systems/map_system.h"
+#include "game/systems/camera_system.h"
 #include "game/systems/map_decoration_system.h"
+#include "game/systems/debug_system.h"
+#include "game/systems/hud_system.h"
+
+#include "game/map/tileset_loader.h"
 
 #include <engine/ecs/system/render_system.h>
 #include <engine/ecs/system/interaction_system.h> //? ?
@@ -29,6 +36,7 @@
 #include <engine/ecs/system/text_system.h>
 #include <engine/ecs/system/audio_system.h>
 #include <engine/ecs/system/animation_system.h>
+#include <engine/ecs/system/physics_system.h>
 
 #include <engine/core/settings/settings.h>
 #include <engine/ecs/component/component_registry.h>
@@ -40,125 +48,227 @@
 
 #include "game/rendering/render_passes.h"
 
+#include <engine/ecs/entity/entity_factory.h> // For setting context in factory... remove later!
+
+#include <engine/assets/asset_manager.h>
+
+using namespace cursed_engine;
+
+
 Game::Game()
+	: m_eventBus{ nullptr }, m_configs{ nullptr }
 {
 }
 
 void Game::onUpdate(float deltaTime)
 {
-	m_sceneStack.update(deltaTime);
-	m_sceneStack.applyPendingChanges();
+	//if (m_sceneStack.isEmpty()) [[unlikely]]
+	//	m_eventBus->publishInstantly<SceneTransitionEvent>("title_scene", "push");
+
+	m_sceneManager.update(deltaTime);
+	m_sceneManager.applyPendingTransition();
+
 	// handle scene transition...
 	// get current scene?
 }
 
 void Game::onRender(const cursed_engine::RenderContext& ctx)
 {
-
 }
 
 void Game::onCreated(const cursed_engine::EngineContext& context)
 {
-	cursed_engine::ComponentInitContext componentInitContext{
-		context.assets.assetManager,
-		context.assets.localization,
-		context.rendering.rendererAPI,
-		context.resources.audioManager,
-		context.resources.fontManager,
-		context.resources.textureManager,
-		context.resources.textManager,
-		//context.resources.textFactory
-	};
+	m_eventBus = context.eventBus;
+	m_configs = &context.settings->getEngineConfig();
+
+	context.assets.assetManager->addLoader<TilesetLoader>(*context.assets.assetManager);
+	//context.assets.assetManager->preload<Tileset>("tile_types"); // any way of static_assert if havent specified tempalte type?
+
+	// m_tileRegistry.load(*context.assets.assetManager, "../assets/map/tile_types.json");
+
+	PhysicsAPI physicsAPI = context.physics.physics;
+	physicsAPI.setDebugDrawEnabled(true);
+
+
+	// just use engine ctx instead?
+	ce::ComponentInitContext componentInitContext = ce::createComponentInitContext(context);
+
+	//cursed_engine::ComponentInitContext componentInitContext{
+	//	context.assets.assetManager,
+	//	context.assets.localization,
+	//	context.rendering.rendererAPI,
+	//	context.resources.audioManager,
+	//	context.resources.fontManager,
+	//	context.resources.textureManager,
+	//	context.resources.textManager,
+	//	//context.resources.textFactory
+	//};
 
 	auto* systemManager = context.ecs.systemManager;
 
+	context.ecs.entityFactory->setContext(componentInitContext); // ? or pass context when creating?
 
-	systemManager->emplace<MapRenderSystem>(context.rendering.rendererAPI, context.resources.textureManager, m_tileRegistry);
-	systemManager->emplace<cursed_engine::WorldRenderSystem>(context.resources.textureManager, context.assets.assetManager, context.rendering.rendererAPI);
-	systemManager->emplace<cursed_engine::ScreenSpaceRenderSystem>(context.resources.textureManager, context.assets.assetManager, context.rendering.rendererAPI);
-	//systemManager->emplace<cursed_engine::RenderSystem>(context.resources.textureManager, context.assets.assetManager, context.rendering.rendererAPI);
-	
-	
-	//m_systemManager.emplace<InputSystem>(inputHandler);
-	systemManager->emplace<cursed_engine::InteractionSystem>();
-	systemManager->emplace<cursed_engine::TransformSystem>(); // this or hierarchy system?
-	systemManager->emplace<cursed_engine::UISystem>(context.platform.input, context.actionRegistry); // OR Accept action registry (and event bus) by pointer?
-	systemManager->emplace<cursed_engine::TextSystem>(context.resources.textManager/*, context.resources.textFactory*/, context.assets.localization);
-	systemManager->emplace<cursed_engine::AudioSystem>(context.resources.audioManager, context.audio.audioController, context.eventBus); // FIX eventbus ptr
-	systemManager->emplace<PlayerControllerSystem>();
-	systemManager->emplace<MovementSystem>();
-	systemManager->emplace<cursed_engine::HierarchySystem>();
-	systemManager->emplace<InputSystem>(context.platform.input);
-	systemManager->emplace<SceneSystem>(
-		componentInitContext,
-		context.eventBus,
-		m_sceneStack,
-		m_sceneFactory);
-	systemManager->emplace<cursed_engine::AnimationSystem>(*context.assets.assetManager);
-	//systemManager->emplace<MapSystem>(m_mapGenerator); - currentyl done in overworld scene!
-	systemManager->emplace<MapDecorationSystem>(m_tileRegistry, *context.ecs.entityFactory, *context.eventBus);
-
-	context.rendering.renderPipeline.emplace<WorldPass>(context.rendering.rendererAPI, context.resources.textureManager, context.assets.assetManager, m_tileRegistry);
+	//context.rendering.renderPipeline.emplace<WorldPass>(context.rendering.rendererAPI, context.resources.textureManager, context.assets.assetManager);
 	//context.rendering.renderPipeline.emplace<UIPass>(context.);
 
-	using namespace cursed_engine; // why here and not at top?
+	registerActions(context);
+	registerScenes(context);
 
-	auto* componentRegistry = context.ecs.componentRegistry;
+	registerComponents(context);
+	setupSystems(context);
 
+	// DONT HERE? creates / enters scene before engine is done initializing...
+	//context.eventBus->publishInstantly<SceneTransitionEvent>("overworld_scene", "push");
+	//context.eventBus->publishInstantly<SceneTransitionEvent>("title_scene", "push");
+	
+	// GAME COULD ALSO SET INITIAL SCENE!?
+	context.eventBus->publish<SceneTransitionRequestEvent>("title_scene", SceneTransitionType::Push);
+	//context.eventBus->publish<SceneTransitionRequestEvent>("overworld_scene", SceneTransitionType::Push);
+	
+	//context.eventBus->publish<SceneTransitionEvent>("title_scene", SceneTransitionType::Push);
+}
+
+void Game::onDestroyed()
+{
+	m_sceneManager.shutdown();
+}
+
+void Game::setupSystems(const ce::EngineContext& ctx)
+{
+	SystemManager* systemManager = ctx.ecs.systemManager;
+
+	systemManager->emplace<MapRenderSystem>(ctx.rendering.rendererAPI, ctx.resources.textureManager);
+	systemManager->emplace<WorldRenderSystem>(ctx.resources.textureManager, ctx.assets.assetManager, ctx.rendering.rendererAPI, ctx.physics.physicsDebugDraw);
+	systemManager->emplace<ScreenSpaceRenderSystem>(ctx.resources.textureManager, ctx.assets.assetManager, ctx.rendering.rendererAPI);
+	//systemManager->emplace<cursed_engine::RenderSystem>(context.resources.textureManager, context.assets.assetManager, context.rendering.rendererAPI);
+
+	//m_systemManager.emplace<InputSystem>(inputHandler);
+	systemManager->emplace<InteractionSystem>();
+	systemManager->emplace<TransformSystem>(); // this or hierarchy system?
+	systemManager->emplace<CameraSystem>(*ctx.settings); // run after TransformSystem -> sets final position (bounds, follow, etc)
+	systemManager->emplace<UISystem>(ctx.platform.input, ctx.actionRegistry); // OR Accept action registry (and event bus) by pointer?
+	systemManager->emplace<TextSystem>(ctx.resources.textManager/*, context.resources.textFactory*/, ctx.assets.localization);
+	systemManager->emplace<AudioSystem>(ctx.resources.audioManager, ctx.audio.audioController, ctx.eventBus); // FIX eventbus ptr
+	systemManager->emplace<PlayerControllerSystem>();
+	systemManager->emplace<MovementSystem>();
+	systemManager->emplace<HierarchySystem>();
+	systemManager->emplace<InputSystem>(ctx.platform.input);
+	systemManager->emplace<HUDSystem>(*ctx.eventBus, *ctx.ecs.entityFactory);
+	// just use engine ctx instead?
+
+	ce::ComponentInitContext componentInitContext = ce::createComponentInitContext(ctx); // or pass it since already created in onCreated!
+	//cursed_engine::ComponentInitContext componentInitContext{
+	//	ctx.assets.assetManager,
+	//	ctx.assets.localization,
+	//	ctx.rendering.rendererAPI,
+	//	ctx.resources.audioManager,
+	//	ctx.resources.fontManager,
+	//	ctx.resources.textureManager,
+	//	ctx.resources.textManager,
+	//	//context.resources.textFactory
+	//};
+
+	systemManager->emplace<SceneSystem>(
+		componentInitContext,
+		ctx.eventBus,
+		m_sceneManager);
+	systemManager->emplace<cursed_engine::AnimationSystem>(*ctx.assets.assetManager);
+	//systemManager->emplace<MapSystem>(m_mapGenerator); - currentyl done in overworld scene!
+	systemManager->emplace<MapDecorationSystem>(*ctx.ecs.entityFactory, *ctx.eventBus);
+	systemManager->emplace<DebugSystem>(*ctx.platform.timer); // only add in debug...
+	systemManager->emplace<ce::PhysicsSystem>();
+}
+
+void Game::registerComponents(const ce::EngineContext& ctx)
+{
 	// No player controller component?
 	/*componentRegistry->registerComponent<PlayerControllerComponent>("player_controller",
-		[](EntityHandle& handle, const ComponentProperties& properties)
-		{},
+	[](EntityHandle& handle, const ComponentProperties& properties)
+	{},
+	[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+	{
+		handle.attachComponent<PlayerControllerComponent>();
+	});*/
+
+	// Component registration
+	ce::ComponentRegistry* componentRegistry = ctx.ecs.componentRegistry;
+
+	ce::registerComponent<DebugComponent>(*componentRegistry, "debug",
+		[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
+		{
+			handle.attachComponent<DebugComponent>();
+		},
 		[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
 		{
-			handle.attachComponent<PlayerControllerComponent>();
-		});*/
+			handle.attachComponent<DebugComponent>();
+		});
 
-	// or engine?
-	componentRegistry->registerComponent<InputComponent>("input",
-		[](EntityHandle& handle, const ComponentProperties& properties)
+	ce::registerComponent<HealthComponent>(*componentRegistry, "health",
+		[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
+		{
+			handle.attachComponent<HealthComponent>();
+		},
+		[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+		{
+			handle.attachComponent<HealthComponent>();
+		});
+
+	// or input in engine?
+	ce::registerComponent<InputComponent>(*componentRegistry, "input",
+		[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
 		{},
 		[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
 		{
 			handle.attachComponent<InputComponent>();
 		});
 
-	m_sceneFactory.init({ context.ecs.entityFactory, context.ecs.componentRegistry, context.ecs.systemManager, context.eventBus });
 
-	const auto& configs = context.settings->getEngineConfig();
+	ce::registerComponent<InteractionComponent>(*componentRegistry, "interaction",
+		[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
+		{
+			handle.attachComponent<InteractionComponent>();
+		},
+		[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+		{
+			handle.attachComponent<InteractionComponent>();
+		});
 
-	m_sceneFactory.registerScene("title_scene", configs.resource.assetRoot.string() + "scenes/title_scene.json", [](SceneContext context) { return std::make_unique<TitleScene>(std::move(context)); });
-	m_sceneFactory.registerScene("settings_scene", configs.resource.assetRoot.string() + "scenes/settings_scene.json", [](SceneContext context) { return std::make_unique<SettingsScene>(std::move(context)); });
-	m_sceneFactory.registerScene("overworld_scene", configs.resource.assetRoot.string() + "scenes/overworld_scene.json", [](SceneContext context) { return std::make_unique<OverworldScene>(std::move(context)); });
+	ce::registerComponent<PlayerComponent>(*componentRegistry, "player",
+		[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
+		{
+			handle.attachComponent<PlayerComponent>();
+		},
+		[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+		{
+			handle.attachComponent<PlayerComponent>();
+		});
+}
 
-	//m_sceneStack.addPath("TitleScene", configs.resource.assetRoot.string() + "scenes/title_scene.json" ); // Force user to specify path?
-	//m_sceneStack.addPath("OverworldScene", configs.resource.assetRoot.string() + "scenes/overworld_scene.json");
+void Game::registerActions(const ce::EngineContext& ctx)
+{
+	ActionRegistry* registry = ctx.actionRegistry;
 
-	m_tileRegistry.load(*context.assets.assetManager, "../assets/map/tile_types.json");
-
-	//m_sceneFactory.init(&systemManager, &context.ecs.entityFactory, m_appContext.eventBus, &context.ecs.componentRegistry);
+	assert(registry && "ActionRegistry is null!");
 
 	// or register in events file
-	context.actionRegistry->registerAction("NewGame",
-		[eventBus = context.eventBus](const cursed_engine::ActionArgs& args)
+	registry->registerAction("NewGame",
+		[eventBus = ctx.eventBus](const cursed_engine::ActionArgs& args)
 		{
 			eventBus->publishInstantly<cursed_engine::PlaySoundEvent>("ButtonClick");
-			// eventBus.publishInstantly(PlaySoundEvent{ "ButtonClick" });
 
+			// eventBus.publishInstantly(PlaySoundEvent{ "ButtonClick" });
 			// eventBus.publishInstantly(SceneTransitionEvent{ "GameScene" }); // should game know about scenes?
 
-			//m_mapGenerator.generateStartArea(m_tileMap, 1);
-
+			// m_mapGenerator.generateStartArea(m_tilemap, 1);
 
 			eventBus->publishInstantly<NewGameEvent>(); // or handle direclty in game class or change scene
 
-			eventBus->publishInstantly<SceneTransitionEvent>("overworld_scene", "push");
+			eventBus->publishInstantly<SceneTransitionRequestEvent>("overworld_scene", SceneTransitionType::Push);
 
-			int x = 20;
-		}); //  "NewGame"
+		});
 
-	context.actionRegistry->registerAction("SceneTransition",
-		[eventBus = context.eventBus](const cursed_engine::ActionArgs& args)
+	registry->registerAction("SceneTransition",
+		[eventBus = ctx.eventBus](const cursed_engine::ActionArgs& args)
 		{
 			std::string scene;
 			if (auto it = args.find("scene"); it != args.end())
@@ -174,28 +284,52 @@ void Game::onCreated(const cursed_engine::EngineContext& context)
 				transition = std::get<std::string>(it->second);
 			}
 
-			eventBus->publishInstantly<SceneTransitionEvent>(scene, transition);
+			// FIX!
+			static const std::unordered_map<std::string, SceneTransitionType> transitions
+			{
+				{ "push", SceneTransitionType::Push },
+				{ "pop", SceneTransitionType::Pop },
+				{ "replace", SceneTransitionType::Swap } // swpa or replace?
+			};
+			 
+			eventBus->publishInstantly<SceneTransitionRequestEvent>(scene, transitions.at(transition));
 
 			// send change 
 			int x = 20; // Need to pass string value...
 		});
 
-	//setupScenes();
-
-	//m_sceneStack.registerScene<TitleScene>("TitleScene", context.assetRoot.string() + "scenes/title_scene.json"); // Force user to specify path?
-
-	// DONT HERE? creates / enters scene before engine is done initializing...
-	//context.eventBus->publishInstantly<SceneTransitionEvent>("overworld_scene", "push");
-	context.eventBus->publishInstantly<SceneTransitionEvent>("title_scene", "push");
-	//m_sceneStack.push(std::make_unique<TitleScene>(&context.systemManager, &context.entityFactory, &context.componentRegistry, &context.eventBus)); // NOTE; (maybe problem) but every scene will need to accept systemmanager!
-
+	registry->registerAction("Board",
+		[](const cursed_engine::ActionArgs& args)
+		{
+			// pass entity? both?
+		});
 }
 
-void Game::onDestroyed()
+void Game::registerScenes(const ce::EngineContext& ctx)
 {
-	m_sceneStack.clear();
-}
+	const std::filesystem::path sceenPath = m_configs->resource.assetRoot / "scenes/";
 
-void Game::setupScenes()
-{
+	SceneRegistry sceneRegistry;
+
+	// pass root path instead?
+	registerScene<TitleScene>(sceneRegistry, "title_scene", sceenPath / "title_scene.json",
+		[](SceneContext context)
+		{
+			return std::make_unique<TitleScene>(std::move(context));
+		}); 
+
+	registerScene<SettingsScene>(sceneRegistry, "settings_scene", sceenPath / "settings_scene.json",
+		[](SceneContext context)
+		{
+			return std::make_unique<SettingsScene>(std::move(context));
+		});
+	
+	registerScene<OverworldScene>(sceneRegistry, "overworld_scene", sceenPath / "overworld_scene.json",
+		[physics = ctx.physics.physics](SceneContext context)
+		{
+			return std::make_unique<OverworldScene>(std::move(context), physics);
+			//return std::make_unique<OverworldScene>(std::move(context), physics->createWorld());
+		});
+
+	m_sceneManager.init(ctx, std::move(sceneRegistry));
 }

@@ -18,6 +18,8 @@ public:
 
 	virtual void onCreated() {};
 	virtual void onDestroyed() {};
+	
+	// virtual [[nodiscard]] const char* getName() const noexcept = 0; // or store in scene meta data??
 
 protected:
 	friend class SceneLoader;

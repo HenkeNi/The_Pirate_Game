@@ -1,18 +1,19 @@
 #pragma once
 #include <engine/ecs/system/system.h>
+#include <engine/platform/input_api.h>
 
 namespace cursed_engine
 {
-	class Input;
+	class InputAPI;
 }
 
 class InputSystem : public cursed_engine::System
 {
 public:
-	InputSystem(cursed_engine::Input* input);
+	InputSystem(cursed_engine::InputAPI input);
 
 	void update(cursed_engine::SystemContext& context) override;
 
 private:
-	cursed_engine::Input* m_input;
+	cursed_engine::InputAPI m_input;
 };

@@ -33,7 +33,7 @@ struct TileLayer
 	// or enums? can't read tile tyeps from json then...
 	std::array<TileId, tileCount> tileIds; // maybe store this in mapchunk instead? since only one tile id per tile...
 	cursed_engine::Geometry geometry;
-	TileSetId tileSetId;
+	TilesetId tilesetId;
 
 	bool isActive = false;
 	bool isDirty = true; // mutable?
@@ -66,6 +66,38 @@ inline std::pair<int, int> getMapChunkCoordinatesFromWorldPosition(const cursed_
 	return { static_cast<int>(std::floor(position.x / chunkWidth)),
 		static_cast<int>(std::floor(position.y / chunkHeight)) 
 	};
+}
+
+inline cursed_engine::FVec2 getTileWorldPosition(int mapChunkX, int mapChunkY, int tileIndex)
+{
+	// Chunk start position
+	const cursed_engine::IVec2 startPosition{
+		mapChunkX * (TileLayer::width * map_constants::TILE_SIZE),
+		mapChunkY * (TileLayer::height * map_constants::TILE_SIZE)
+	};
+
+	const int x = tileIndex % TileLayer::width;
+	const int y = tileIndex / TileLayer::width;
+
+	return cursed_engine::FVec2{ 
+		startPosition.x + (x * map_constants::TILE_SIZE),
+		startPosition.y + (y * map_constants::TILE_SIZE)
+	};
+
+	//const int chunkWidth = TileLayer::width * map_constants::TILE_SIZE;
+	//const int chunkHeight = TileLayer::height * map_constants::TILE_SIZE;
+
+	//cursed_engine::IVec2 worldPosition;
+	//worldPosition.x = mapChunkX * chunkWidth;
+	//worldPosition.y = mapChunkY * chunkHeight;
+
+	//const int x = tileIndex % TileLayer::width;
+	//const int y = tileIndex / TileLayer::width;
+
+	//worldPosition.x += x * map_constants::TILE_SIZE;
+	//worldPosition.y += y * map_constants::TILE_SIZE;
+
+	//return cursed_engine::FVec2{ worldPosition.x, worldPosition.y };
 }
 
 inline cursed_engine::IVec2 getWorldPosition(const MapChunk& mapChunk)
@@ -105,8 +137,9 @@ struct std::hash<ChunkCoord>
 };
 
 
+// make tile map an asset as well?
 // offload chunks? cache coords to map chunk index?
-class TileMap
+class Tilemap
 {
 public:
 	void insertMapChunk(MapChunk chunk); // send event? or mapgenerator?
@@ -167,7 +200,7 @@ public:
 	[[nodiscard]] std::vector<MapChunk*> getVisibleMapChunks() noexcept;
 
 private:
-	//TileMapConfig m_config;
+	//TilemapConfig m_config;
 	std::vector<MapChunk> m_mapChunks;
 	std::unordered_map<ChunkCoord, std::size_t> m_coordsToIndex;
 };
