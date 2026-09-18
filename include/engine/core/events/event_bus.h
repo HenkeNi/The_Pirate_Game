@@ -26,6 +26,9 @@ namespace cursed_engine
 		template <typename Event>
 		void publish(Event&& event);
 
+		template <typename Event, typename... Args>
+		void publish(Args&&... args);
+
 		template <typename Event>
 		void publishInstantly(Event&& event); // rename emit?
 
@@ -61,7 +64,13 @@ namespace cursed_engine
 	template <typename Event>
 	void EventBus::publish(Event&& event)
 	{
-		m_eventQueue.push(getTypeIndex<Event>(), std::forward<Event>(event));
+		m_eventQueue.push(QueuedEvent{ utils::getTypeIndex<Event>(), std::forward<Event>(event) });
+	}
+
+	template <typename Event, typename... Args>
+	void EventBus::publish(Args&&... args)
+	{
+		m_eventQueue.emplace(utils::getTypeIndex<Event>(), Event{ std::forward<Args>(args)... });
 	}
 
 	template <typename Event>
