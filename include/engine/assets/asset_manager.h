@@ -3,6 +3,7 @@
 #include "engine/utils/concepts.h"
 #include "engine/utils/utils.h"
 #include "engine/core/logger.h"
+#include "engine/core/result.h"
 #include <cstdint>
 #include <filesystem>
 #include <limits>
@@ -323,9 +324,9 @@ namespace cursed_engine
 			return AssetHandle{ AssetHandle::INVALID_INDEX, 0, utils::getTypeIndex<Asset>() };
 		}
 
-		std::optional<Asset> asset = assetLoader->load(it->second.path);
+		Result<Asset> result = assetLoader->load(it->second.path);
 
-		if (!asset)
+		if (!result.ok())
 		{
 			Logger::logError("[AssetManager::Load] - Failed to load asset!");
 			return AssetHandle{ AssetHandle::INVALID_INDEX, 0, utils::getTypeIndex<Asset>() };
@@ -349,7 +350,8 @@ namespace cursed_engine
 		//std::vector<Asset>& storage = static_cast<AssetCache<Asset>>(assetType.cache).storage;
 
 		std::vector<Asset>* storage = getOrCreateStorage<Asset>();
-		storage->push_back(std::move(asset.value()));
+		//storage->push_back(std::move(asset.value()));
+		storage->push_back(std::move(result.take()));
 
 		AssetHandle handle{ (uint32_t)storage->size() - 1, 0, utils::getTypeIndex<Asset>() }; // TODO; use 1 instaed of 0 for version
 		assetType.idToAssetHandle.insert_or_assign(id, handle);
