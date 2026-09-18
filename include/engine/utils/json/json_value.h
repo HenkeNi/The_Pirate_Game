@@ -2,6 +2,7 @@
 #include "json_fwd.h"
 #include "engine/utils/iterators/generic_iterator.hpp"
 #include <functional>
+#include <string_view>
 #include <vector>
 
 namespace cursed_engine
@@ -70,6 +71,9 @@ namespace cursed_engine
 			pointer m_ptr;
 			std::size_t m_index;
 		};
+
+		const JsonValue operator[](std::size_t index) const;
+		JsonValue operator[](std::size_t index);
 
 		std::size_t size() const; // noexcept?
 		[[nodiscard]] bool empty() const noexcept;
@@ -146,9 +150,11 @@ namespace cursed_engine
 			std::size_t m_index;
 		};
 
+		const JsonValue operator[](std::size_t index) const;
+		JsonValue operator[](std::size_t index);
+
 		[[nodiscard]] std::size_t size() const; // noexcept?
 	
-
 		Iterator begin() noexcept; // const iterator instead?
 		Iterator end() noexcept;
 
@@ -172,12 +178,14 @@ namespace cursed_engine
 		[[nodiscard]] bool isArray() const noexcept;
 		[[nodiscard]] bool isBool() const noexcept;
 		[[nodiscard]] bool isDouble() const noexcept;
+		[[nodiscard]] bool isFloat() const noexcept;
 		[[nodiscard]] bool isInt() const noexcept;
 		[[nodiscard]] bool isString() const noexcept;
 
 		[[nodiscard]] bool asBool() const;
 		[[nodiscard]] int asInt() const;
 		[[nodiscard]] double asDouble() const;
+		[[nodiscard]] double asFloat() const;
 		[[nodiscard]] const char* asString() const; // TODO; return string view? or string?
 		[[nodiscard]] JsonArrayView asArray() noexcept;
 		[[nodiscard]] JsonArrayConstView asArray() const noexcept; // return value as const?
@@ -190,9 +198,9 @@ namespace cursed_engine
 		[[nodiscard]] JsonValue operator[](size_t index) const;
 
 		// Object operations
-		[[nodiscard]] bool hasMember(const char* key) const;
-		JsonValue operator[](const char* key);
-		[[nodiscard]] JsonValue operator[](const char* key) const; // or string view?
+		[[nodiscard]] bool hasMember(std::string_view key) const; // string view?
+		JsonValue operator[](std::string_view key);
+		[[nodiscard]] JsonValue operator[](std::string_view key) const; // or string view?
 
 		void forEachProperty(const PropertyCallback& callback) const;
 

@@ -23,7 +23,7 @@ namespace cursed_engine
 
 		if (backend == "SDL")
 		{
-			outPlatformConfig.backend = PlatformConfig::Backend::SDL;
+			outPlatformConfig.backend = Backend::SDL;
 		}
 		else
 		{
@@ -36,17 +36,6 @@ namespace cursed_engine
 
 	bool loadRenderConfig(const JsonValue& jsonValue, RenderConfig& outRenderConfig)
 	{
-		std::string backend = jsonValue["backend"].asString();
-		if (backend == "SDL")
-		{
-			outRenderConfig.backend = RenderConfig::Backend::SDL;
-		}
-		else
-		{
-			Logger::logError("Unrecognized Render backend: " + backend);
-			return false;
-		}
-
 		return true;
 
 	}
@@ -163,14 +152,14 @@ namespace cursed_engine
 	{
 	}
 
-	Result Settings::loadConfig(const std::filesystem::path& path)
+	Result<void> Settings::loadConfig(const std::filesystem::path& path)
 	{
 		m_config.resource.assetRoot = "../assets/"; // find root instead?
 
 		JsonDocument document;
-		Result result = document.loadFromFile(path);
+		Result<void> result = document.loadFromFile(path);
 
-		if (!result.succeeded)
+		if (!result.ok())
 		{
 			return result;
 		}
@@ -186,7 +175,7 @@ namespace cursed_engine
 
 		success &= loadAssetPaths(m_config.resource);
 
-		return Result::success();
+		return Result<void>::success();
 	}
 
 	void Settings::saveConfig(const std::filesystem::path& path)
