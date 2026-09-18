@@ -1,8 +1,6 @@
 #pragma once
-#include "engine/utils/non_copyable.h"
 #include "engine/rendering/render_api.h"
 #include "engine/rendering/render_pipeline.h"
-#include "engine/core/settings/engine_config.h"
 #include "engine/core/result.h"
 #include <memory>
 
@@ -13,20 +11,26 @@ namespace cursed_engine
 		std::function<class Texture(Renderer&, struct Surface)> createTexture;
 	};*/
 
+	struct RenderConfig;
 	class ResourceCreator;
 	class RenderBackend;
 	class Window;
 
-	class RenderModule : public NonCopyable
+	enum class Backend;
+
+	class RenderModule
 	{
 	public:
 		RenderModule();
 		~RenderModule();
 
+		RenderModule(const RenderModule&) = delete;
 		RenderModule(RenderModule&&) = delete;
+		
+		RenderModule& operator=(const RenderModule&) = delete;
 		RenderModule& operator=(RenderModule&&) = delete;
 
-		bool init(Window& window, const RenderConfig& config);
+		bool init(Window& window, const RenderConfig& config, Backend backend);
 		void shutdown();
 
 		void beginFrame();

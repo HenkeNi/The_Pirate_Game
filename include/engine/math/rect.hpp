@@ -6,12 +6,12 @@ namespace cursed_engine
 	template <Numeric T>
 	struct Rect
 	{
-		Rect() = default;
+		constexpr Rect() = default; // needed?
 
-		Rect(T x, T y, T w, T h);
+		constexpr Rect(T x, T y, T w, T h);
 
 		template <Numeric U>
-		Rect(const Rect<U>& other);
+		constexpr Rect(const Rect<U>& other);
 
 		T x{};
 		T y{};
@@ -28,14 +28,14 @@ namespace cursed_engine
 #pragma region Methods
 
 	template <Numeric T>
-	Rect<T>::Rect(T x, T y, T w, T h)
+	constexpr Rect<T>::Rect(T x, T y, T w, T h)
 		: x{ x }, y{ y }, w{ w }, h{ h }
 	{
 	}
 
 	template <Numeric T>
 	template <Numeric U>
-	Rect<T>::Rect(const Rect<U>& other)
+	constexpr Rect<T>::Rect(const Rect<U>& other)
 		: x{ static_cast<T>(other.x) }, y{ static_cast<T>(other.y) }, w{ static_cast<T>(other.w) }, h{ static_cast<T>(other.h) }
 	{
 	}

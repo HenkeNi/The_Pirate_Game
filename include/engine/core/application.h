@@ -1,18 +1,20 @@
 #pragma once
-#include "engine/utils/non_copyable.h"
 
 namespace cursed_engine
 {
 	struct EngineContext;
 	struct RenderContext;
 
-	class Application : private NonCopyable
+	class Application
 	{
 	public:
 		Application() = default;
 		virtual ~Application() = default;
 
+		Application(const Application&) = delete;
 		Application(Application&&) = delete;
+
+		Application& operator=(const Application&) = delete;
 		Application& operator=(Application&&) = delete;
 
 		virtual void onUpdate(float deltaTime) = 0;

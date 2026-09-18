@@ -4,13 +4,15 @@
 
 namespace cursed_engine
 {
-	class Renderer;
 	class ResourceCreator;
+	struct ResourceConfig; 
+
+	enum class Backend;
 
 	class ResourceModule
 	{
 	public:		
-		bool init(ResourceCreator* creator, const cursed_engine::ResourceConfig& config);
+		bool init(ResourceCreator* creator, const ResourceConfig& config, Backend backend);
 		void shutdown();
 
 		void update(uint64_t currentFrame, float deltaTime); // rename? handle offloading...
@@ -20,7 +22,6 @@ namespace cursed_engine
 		[[nodiscard]] inline AudioManager& getAudioManager() noexcept { return m_audioManager; }
 		[[nodiscard]] inline FontManager& getFontManager() noexcept { return m_fontManager; }
 		[[nodiscard]] inline TextManager& getTextManager() noexcept { return m_textManager; }
-		//[[nodiscard]] inline TextFactory& getTextFactory() noexcept { return m_textFactory; }
 
 	private:
 		TextureManager m_textureManager;
@@ -28,6 +29,5 @@ namespace cursed_engine
 
 		FontManager m_fontManager; // Combine font manager and text manager?
 		TextManager m_textManager;
-		//TextFactory m_textFactory;
 	};
 }

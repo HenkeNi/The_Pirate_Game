@@ -1,22 +1,25 @@
 #pragma once
+#include "engine/ecs/component/component_registry.h"
 #include "engine/resources/resource_types.h"
 #include "engine/rendering/render_api.h"
+#include "engine/platform/input_api.h"
+
+#include "engine/physics/physics.h" // put in api class?
 
 namespace cursed_engine
 {
-	// remake into a ServiceRegistry? or AppContext?
 	struct EngineContext
 	{
 		struct PlatformServices
 		{
-			class Input* input{};
+			InputAPI input{};
 			class FrameTimer* timer{};
 		} platform;
 
 		struct RenderingServices
 		{
 			RenderAPI rendererAPI;
-			//class Renderer* renderer{};
+			class RenderPipeline& renderPipeline;
 		} rendering;
 
 		struct AssetServices
@@ -37,13 +40,14 @@ namespace cursed_engine
 		struct ECSServices
 		{
 			class EntityFactory* entityFactory{};
-			class ComponentRegistry* componentRegistry{};
+			ComponentRegistry* componentRegistry{};
 			class SystemManager* systemManager{};
 		} ecs;
 
 		struct PhysicsServices
 		{
-			class Physics* physics{};
+			PhysicsAPI physics{};
+			class PhysicsDebugDraw* physicsDebugDraw{};
 		} physics;
 
 		struct AudioServices

@@ -10,6 +10,8 @@ namespace cursed_engine
 		bool init();
 		void shutdown();
 		
+		void scanAssets();
+
 		[[nodiscard]] inline AssetManager& getAssetManager() noexcept { return m_assetManager; }
 		[[nodiscard]] inline Localization& getLocalization() noexcept { return m_localization; }
 
