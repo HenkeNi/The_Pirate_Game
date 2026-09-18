@@ -10,19 +10,10 @@
 #include "engine/modules/render_module.h"
 #include "engine/modules/resource_module.h"
 #include "engine/modules/physics_module.h"
-
-
-#include "engine/ecs/system/screen_space_render_system.h"
-
-#include "engine/math/noise.h"
-
 #include "engine/core/events/event_bus.h" 
 #include "engine/core/settings/settings.h"
 #include "engine/core/action/action_registry.h"
-//#include "engine/core/config/config_loader.h"
 #include <cassert>
-#include <string_view>
-
 
 namespace
 {
@@ -85,9 +76,9 @@ namespace cursed_engine
 
 		Result result = settings.loadConfig(Settings::getConfigPath());
 
-		if (!result.succeeded)
+		if (!result.ok())
 		{
-			Logger::logError(std::format("[Engine] - Error occured trying to read engine configs. Reason: {}", result.message));
+			Logger::logError(std::format("[Engine] - Error occured trying to read engine configs. Reason: {}", result.message()));
 			return false;
 		}
 
@@ -101,7 +92,7 @@ namespace cursed_engine
 		}
 
 		auto& rendering = m_impl->rendering;
-		if (!rendering.init(platform.getWindow(), configs.render))
+		if (!rendering.init(platform.getWindow(), configs.render, configs.platform.backend))
 		{
 			Logger::logError(std::format(initFailedMessage, "RenderModule"));
 			return false;
@@ -115,7 +106,7 @@ namespace cursed_engine
 		}
 
 		auto& physics = m_impl->physics;
-		if (!physics.init())
+		if (!physics.init(rendering.getRenderAPI()))
 		{
 			Logger::logError(std::format(initFailedMessage, "PhysicsModule"));
 			return false;
@@ -129,7 +120,7 @@ namespace cursed_engine
 		}
 
 		auto& resource = m_impl->resource;
-		if (!resource.init(rendering.getResourceCreator(), configs.resource))
+		if (!resource.init(rendering.getResourceCreator(), configs.resource, configs.platform.backend))
 		{
 			Logger::logError(std::format(initFailedMessage, "ResourceModule"));
 			return false;
@@ -153,13 +144,15 @@ namespace cursed_engine
 
 		m_impl->application.onCreated(ctx);
 
+		asset.scanAssets();
+
 		Logger::logInfo("[Engine] - Initialization successful!");
 		return true;
 	}
 
 	void Engine::shutdown()
 	{
-		Logger::logInfo("[Engine] - Began shutdown...");
+		Logger::logInfo("[Engine] - Shutdown began...");
 		assert(m_impl && "Engine::Impl is null!");
 
 		auto& impl = *m_impl;
@@ -225,7 +218,7 @@ namespace cursed_engine
 
 		return EngineContext{
 			EngineContext::PlatformServices{
-				&impl.platform.getInput(),
+				impl.platform.getInputAPI(),
 				&impl.platform.getFrameTimer()
 			},
 			EngineContext::RenderingServices {
@@ -248,7 +241,8 @@ namespace cursed_engine
 				&impl.ecs.getSystemManager(),
 			},
 			EngineContext::PhysicsServices{
-				&impl.physics.getPhysics(),
+				impl.physics.getPhysicsAPI(),
+				&impl.physics.getPhysicsDebugDraw()
 			},
 			EngineContext::AudioServices{
 				&impl.audio.getAudioController()

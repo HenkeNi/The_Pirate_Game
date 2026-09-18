@@ -21,6 +21,11 @@ namespace cursed_engine
 		// consider pixelRect and uvRect (cached uv calculation)
 		IRect rect;
 		//IVec2 pivot; // or in sprite definition?
+		FVec2 pivot{ 0.f, 0.f }; // normalized: (0,0)=top-left, (1,1)=bottom-right, (0.5,0.5)=center
+
+
+		// Good idea?
+		[[nodiscard]] FVec2 getSize() const noexcept { return FVec2{ rect.w, rect.h }; }
 	};
 
 	struct TextureAtlas
@@ -30,7 +35,13 @@ namespace cursed_engine
 
 		std::unordered_map<std::string, std::size_t> idToRegionIndex;
 
-		IVec2 textureSize; // set?
+		[[nodiscard]] inline const AtlasRegion& resolveRegion(const std::string& id) const
+		{
+			std::size_t index = idToRegionIndex.at(id);
+			return regions.at(index);
+		}
+
+		//IVec2 textureSize; // set?
 	};
 
 	//struct Grid ?
