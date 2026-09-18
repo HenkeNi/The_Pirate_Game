@@ -1,6 +1,6 @@
 #include "game/systems/map_system.h"
 #include "game/map/map_generator.h"
-#include "game/map/tile_map.h"
+#include "game/map/tilemap.h"
 #include "game/events/events.h"
 #include <engine/ecs/component/core_components.h>
 #include <engine/core/events/event_bus.h>
@@ -8,7 +8,7 @@
 #include <format>
 
 MapSystem::MapSystem(MapGenerator& mapGenerator, cursed_engine::EventBus* eventBus)
-	: m_mapGenerator{ mapGenerator }, m_tileMap{ nullptr }, m_eventBus{ eventBus }
+	: m_mapGenerator{ mapGenerator }, m_tilemap{ nullptr }, m_eventBus{ eventBus }
 { 
 }
 
@@ -33,16 +33,16 @@ void MapSystem::update(cursed_engine::SystemContext& context)
 	const auto& [xCoord, yCoord] = getMapChunkCoordinatesFromWorldPosition(worldPosition);
 	//cursed_engine::Logger::logInfo(std::format("Coords: {}, {}", xCoord, yCoord));
 	
-	if (!m_tileMap->isValidChunk(xCoord, yCoord))
+	if (!m_tilemap->isValidChunk(xCoord, yCoord))
 	{
 		// generate new mapchunk
 		auto mapChunk = m_mapGenerator.generateMapChunk(xCoord, yCoord);
-		m_tileMap->insertMapChunk(std::move(mapChunk));
+		m_tilemap->insertMapChunk(std::move(mapChunk));
 
 		m_eventBus->publishInstantly<MapChunkCreatedEvent>(xCoord, yCoord);
 	}
 
-	//auto* chunk = m_tileMap->getChunkAtPosition((int)worldPosition.x, (int)worldPosition.y); // pass floats?
+	//auto* chunk = m_tilemap->getChunkAtPosition((int)worldPosition.x, (int)worldPosition.y); // pass floats?
 	//
 	//if (chunk)
 	//{
@@ -56,7 +56,7 @@ void MapSystem::update(cursed_engine::SystemContext& context)
 	//	
 	//	// 
 	//	// m_mapGenerator.generateMapChunk(x, y);
-	//	// m_tileMap->insertMapChunk(std::move(mapChunk));
+	//	// m_tilemap->insertMapChunk(std::move(mapChunk));
 	//}
 	// check if needing to generate new chunk...
 	// 
@@ -64,7 +64,7 @@ void MapSystem::update(cursed_engine::SystemContext& context)
 
 }
 
-void MapSystem::setMap(TileMap* map)
+void MapSystem::setTilemap(Tilemap* map)
 {
-	m_tileMap = map;
+	m_tilemap = map;
 }

@@ -1,7 +1,7 @@
-#include "game/map/tile_map.h"
+#include "game/map/tilemap.h"
 #include <ranges>
 
-void TileMap::insertMapChunk(MapChunk mapChunk)
+void Tilemap::insertMapChunk(MapChunk mapChunk)
 {
 	m_mapChunks.push_back(std::move(mapChunk));
 
@@ -9,7 +9,7 @@ void TileMap::insertMapChunk(MapChunk mapChunk)
 	m_coordsToIndex.insert({ChunkCoord{ mapChunk.coords.x, mapChunk.coords.y }, m_mapChunks.size() - 1});
 }
 
-bool TileMap::isValidChunk(int x, int y) const noexcept
+bool Tilemap::isValidChunk(int x, int y) const noexcept
 {
 	// check unoredered map instead?
 
@@ -32,7 +32,7 @@ bool TileMap::isValidChunk(int x, int y) const noexcept
 	return it != m_mapChunks.end();
 }
 
-std::vector<const MapChunk*> TileMap::getVisibleMapChunks() const noexcept
+std::vector<const MapChunk*> Tilemap::getVisibleMapChunks() const noexcept
 {
 	auto visible = m_mapChunks
 		| std::views::filter([](const MapChunk& mapChunk) { return true; })   // TODO; filter!
@@ -41,7 +41,7 @@ std::vector<const MapChunk*> TileMap::getVisibleMapChunks() const noexcept
 	return std::vector<const MapChunk*>(visible.begin(), visible.end());
 }
 
-std::vector<MapChunk*> TileMap::getVisibleMapChunks() noexcept
+std::vector<MapChunk*> Tilemap::getVisibleMapChunks() noexcept
 {
 	// const cast?
 

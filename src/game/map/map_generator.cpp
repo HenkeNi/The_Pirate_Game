@@ -1,6 +1,6 @@
 #include "game/map/map_generator.h"
 #include "game/map/map_types.h"
-#include "game/map/tile_map.h"
+#include "game/map/tilemap.h"
 
 #include <engine/core/logger.h>
 #include <format>
@@ -17,7 +17,7 @@ MapGenerator::MapGenerator()
 	//terrainNoise.setFrequency(1.f);
 }
 
-void MapGenerator::generateStartArea(TileMap& map, int seed)
+void MapGenerator::generateStartArea(Tilemap& map, int seed)
 {
 	MapChunk mapChunk = generateMapChunk(0, 0); // pass seed?
 
@@ -36,6 +36,7 @@ MapChunk MapGenerator::generateMapChunk(int x, int y) const
 	// auto& waterLayer = mapChunk.layers[(std::size_t)LayerType::Water]; - todo, add water to water layer OR dont have different layers? (shore tiles need to contain sand underneath water)
 
 	std::vector<TerrainType> terrainTypes;
+	terrainTypes.reserve(groundLayer.tileIds.size()); // maybe cache / pool terrain types?
 
 	for (int i = 0; i < TileLayer::tileCount; ++i)
 	{
@@ -56,6 +57,7 @@ MapChunk MapGenerator::generateMapChunk(int x, int y) const
 	{
 		const TerrainType& terrainType = terrainTypes.at(i);
 				
+		// dont "know" the types (enum)
 		if (terrainType == TerrainType::DeepWater || terrainType == TerrainType::ShallowWater)
 		{ 
 			groundLayer.tileIds[i] = 3;
@@ -80,7 +82,7 @@ MapChunk MapGenerator::generateMapChunk(int x, int y) const
 	//	1, 1, 1
 	//};
 
-	groundLayer.tileSetId = "island_tileset";
+	groundLayer.tilesetId = "island_tileset";
 	groundLayer.isActive = true;
 
 	return mapChunk;
