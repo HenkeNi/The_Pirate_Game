@@ -16,13 +16,13 @@ namespace cursed_engine
 	{
 	}
 
-	Result SDLInput::init(const InputConfig& config)
+	Result<void> SDLInput::init(const InputConfig& config)
 	{
 		std::for_each(config.keyBindings.begin(), config.keyBindings.end(),
 			[&](const auto& pair) { m_keyInfo[(std::size_t)pair.first] = InputInfo{ InputState::None, false, false }; });
 	
 		
-		return Result::success();
+		return Result<void>::success();
 	}
 
 	void SDLInput::beginFrame()

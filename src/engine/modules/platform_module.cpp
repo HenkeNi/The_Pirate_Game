@@ -29,7 +29,7 @@ namespace cursed_engine
 
 		switch (backend)
 		{
-		case PlatformConfig::Backend::SDL:
+		case Backend::SDL:
 			m_platform = std::make_unique<SDLPlatform>(m_eventBus);
 			Logger::logInfo(std::format("{}[PlatformModule] - Selected platform: SDL", log_format::INDENT));
 			break;
@@ -41,9 +41,9 @@ namespace cursed_engine
 
 		const Result result = m_platform->init(config);
 
-		if (!result.succeeded)
+		if (!result.ok())
 		{
-			Logger::logInfo(std::format("{}[PlatformModule] - Initialization failed! Reason: {}", log_format::INDENT, result.message));
+			Logger::logInfo(std::format("{}[PlatformModule] - Initialization failed! Reason: {}", log_format::INDENT, result.message()));
 			return false;
 		}
 
@@ -114,8 +114,8 @@ namespace cursed_engine
 		return m_platform->getCursor();
 	}
 
-	Input& PlatformModule::getInput() noexcept
-	{
-		return m_platform->getInput();
+	InputAPI PlatformModule::getInputAPI() noexcept 
+	{ 
+		return &m_platform->getInput(); 
 	}
 }
