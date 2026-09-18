@@ -5,7 +5,8 @@
 
 namespace cursed_engine
 {
-	// [Consider] having API push render commands to a queue instead...
+	// [Consider] - having API push render commands to a queue instead...
+	// [Consider] - renaming RenderFacade?
 
 	class Text;
 	class Texture;
@@ -32,6 +33,12 @@ namespace cursed_engine
 
 		void drawFillRect(FRect rect, Color color = Color::black);
 		void drawFillRect(float x, float y, float w, float h, Color color = Color::black);
+
+		void drawOutlineCircle(FVec2 pos, float radius, Color color = Color::black);
+		void drawOutlineCircle(float x, float y, float radius, Color color = Color::black);
+
+		void drawFillCircle(FVec2 pos, float radius, Color color = Color::black);
+		void drawFillCircle(float x, float y, float radius, Color color = Color::black);
 
 		void drawLine(FVec2 start, FVec2 end, Color color = Color::black);
 		void drawLine(float startX, float startY, float endX, float endY, Color color = Color::black); // replace with Line struct?

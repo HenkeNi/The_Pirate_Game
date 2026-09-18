@@ -72,6 +72,26 @@ namespace cursed_engine
 		m_backend->drawFillRect(FRect{ x, y, w, h }, color);
 	}
 
+	void RenderAPI::drawOutlineCircle(FVec2 pos, float radius, Color color)
+	{
+		m_backend->drawOutlineCircle(pos, radius, color);
+	}
+
+	void RenderAPI::drawOutlineCircle(float x, float y, float radius, Color color)
+	{
+		m_backend->drawOutlineCircle(FVec2{ x, y }, radius, color);
+	}
+
+	void RenderAPI::drawFillCircle(FVec2 pos, float radius, Color color)
+	{
+		m_backend->drawFillCircle(pos, radius, color);
+	}
+
+	void RenderAPI::drawFillCircle(float x, float y, float radius, Color color)
+	{
+		m_backend->drawFillCircle(FVec2{ x, y }, radius, color);
+	}
+
 	void RenderAPI::drawLine(FVec2 start, FVec2 end, Color color)
 	{
 		m_backend->drawLine(start, end, color);

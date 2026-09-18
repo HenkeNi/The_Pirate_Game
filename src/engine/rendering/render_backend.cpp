@@ -5,6 +5,12 @@
 #include "engine/core/result.h"
 #include <SDL3_ttf/SDL_ttf.h>
 #include <SDL3/SDL_render.h>
+#include <numbers>
+
+namespace
+{
+	constexpr int CIRCLE_SEGMENTS = 32;
+}
 
 namespace cursed_engine
 {
@@ -35,6 +41,16 @@ namespace cursed_engine
 	SDL_FColor toSDLColor(const Color& color)
 	{
 		return toSDLColor(color.r, color.g, color.b, color.a);
+	}
+
+	SDL_FPoint toSDLPoint(const FVec2& v)
+	{ 
+		return SDL_FPoint(v.x, v.y);
+	}
+
+	SDL_FPoint toSDLPoint(float x, float y)
+	{ 
+		return SDL_FPoint(x, y);
 	}
 
 	SDL_Vertex toSDLVertex(const FVec2& position, const FVec2& uv, const Color& color)
@@ -72,12 +88,12 @@ namespace cursed_engine
 	{
 	}
 
-	Result SDLRenderBackend::init(Window& window)
+	Result<void> SDLRenderBackend::init(Window& window)
 	{
 		auto* nativeHandle = window.getNativeHandle();
 		if (!nativeHandle)
 		{
-			return Result::failure("Invalid native window handle");
+			return Result<void>::failure("Invalid native window handle");
 		}
 
 		SDL_Window* sdlWindow = static_cast<SDL_Window*>(nativeHandle); // or cast? or pass handle direclty in function?
@@ -86,19 +102,19 @@ namespace cursed_engine
 
 		if (!m_renderer)
 		{
-			return Result::failure(std::format("SDL_CreateRenderer failed: {}", SDL_GetError()));
+			return Result<void>::failure(std::format("SDL_CreateRenderer failed: {}", SDL_GetError()));
 		}
 
 		m_textEngine = TTF_CreateRendererTextEngine(m_renderer);
 
 		if (!m_textEngine)
 		{
-			return Result::failure(std::format("TTF_CreateRendererTextEngine failed: {}", SDL_GetError()));
+			return Result<void>::failure(std::format("TTF_CreateRendererTextEngine failed: {}", SDL_GetError()));
 		}
 
 		m_resourceCreator.init(m_textEngine, m_renderer);
 
-		return Result::success();
+		return Result<void>::success();
 	}
 
 	void SDLRenderBackend::shutdown()
@@ -127,13 +143,13 @@ namespace cursed_engine
 
 	void SDLRenderBackend::drawTexture(Texture& texture, FRect src, FRect dst, Color mod)
 	{
-		SDL_SetTextureColorMod(texture.getTexture(), mod.r, mod.g, mod.b);
-		
 		const FVec2 screenPosition = worldToScreen(FVec2{ dst.x, dst.y }, m_renderState.projection, m_renderState.view);
 
  		const SDL_FRect dstRect = toSDLRect(screenPosition.x, screenPosition.y, dst.w, dst.h);
 		const SDL_FRect srcRect = toSDLRect(src.x, src.y, src.w, src.h);
-		
+
+		SDL_SetTextureColorMod(texture.getTexture(), mod.r, mod.g, mod.b);
+		SDL_SetTextureAlphaMod(texture.getTexture(), mod.a);
 		SDL_RenderTexture(m_renderer, texture.getTexture(), &srcRect, &dstRect);
 	}
 
@@ -145,31 +161,84 @@ namespace cursed_engine
 
 	void SDLRenderBackend::drawOutlineRect(FRect dst, Color color)
 	{
-		SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
-
 		const FVec2 screenPosition = worldToScreen(FVec2{ dst.x, dst.y }, m_renderState.projection, m_renderState.view);
 		const SDL_FRect rect = toSDLRect(screenPosition.x, screenPosition.y, dst.w, dst.h);
 
+		SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
 		SDL_RenderRect(m_renderer, &rect);
 	}
 
 	void SDLRenderBackend::drawFillRect(FRect dst, Color color)
 	{
-		SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
-
 		const FVec2 screenPosition = worldToScreen(FVec2{ dst.x, dst.y }, m_renderState.projection, m_renderState.view);
 		const SDL_FRect rect = toSDLRect(screenPosition.x, screenPosition.y, dst.w, dst.h);
 
+		SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
 		SDL_RenderFillRect(m_renderer, &rect);
+	}
+
+	void SDLRenderBackend::drawOutlineCircle(FVec2 pos, float radius, Color color)
+	{
+		SDL_FPoint points[CIRCLE_SEGMENTS + 1];
+
+		FVec2 worldPosition = worldToScreen(pos, m_renderState.projection, m_renderState.view);
+
+		for (int i = 0; i < CIRCLE_SEGMENTS; ++i)
+		{
+			const float theta = (2.0f * std::numbers::pi_v<float> * i) / CIRCLE_SEGMENTS;
+			points[i].x = worldPosition.x + std::cos(theta) * radius;
+			points[i].y = worldPosition.y + std::sin(theta) * radius;
+		}
+		
+		points[CIRCLE_SEGMENTS] = points[0];
+
+		SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
+		SDL_RenderLines(m_renderer, points, CIRCLE_SEGMENTS + 1);
+	}
+
+	void SDLRenderBackend::drawFillCircle(FVec2 pos, float radius, Color color)
+	{
+		FVec2 worldPosition = worldToScreen(pos, m_renderState.projection, m_renderState.view);
+		SDL_FColor sdlColor = toSDLColor(color);
+
+		constexpr int vertexCount = CIRCLE_SEGMENTS + 2;
+		SDL_Vertex vertices[vertexCount];
+
+		// Center vertex		
+		vertices[0].position = toSDLPoint(worldPosition);
+		vertices[0].color = toSDLColor(color);
+		vertices[0].tex_coord = { 0.f, 0.f };
+
+		for (int i = 0; i <= CIRCLE_SEGMENTS; ++i)
+		{
+			const float theta = (2.0f * std::numbers::pi_v<float> * i) / CIRCLE_SEGMENTS;
+
+			SDL_Vertex& v = vertices[i + 1];
+			v.position.x = worldPosition.x + std::cos(theta) * radius;
+			v.position.y = worldPosition.y + std::sin(theta) * radius;
+			v.color = sdlColor;
+			v.tex_coord = { 0.f, 0.f };
+		}
+
+		constexpr int indexCount = CIRCLE_SEGMENTS * 3;
+		int indices[indexCount];
+
+		for (int i = 0; i < CIRCLE_SEGMENTS; ++i)
+		{
+			indices[i * 3 + 0] = 0;
+			indices[i * 3 + 1] = i + 1;
+			indices[i * 3 + 2] = i + 2;
+		}
+
+		SDL_RenderGeometry(m_renderer, nullptr, vertices, vertexCount, indices, indexCount);
 	}
 
 	void SDLRenderBackend::drawLine(FVec2 start, FVec2 end, Color color)
 	{
-		SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
-
 		const FVec2 screenStart = worldToScreen(FVec2{ start.x, start.y }, m_renderState.projection, m_renderState.view);
 		const FVec2 screenEnd = worldToScreen(FVec2{ end.x, end.y }, m_renderState.projection, m_renderState.view);
 
+		SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
 		SDL_RenderLine(m_renderer, screenStart.x, screenStart.y, screenEnd.x, screenEnd.y);
 	}
 
