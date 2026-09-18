@@ -3,9 +3,11 @@
 #include "engine/resources/texture/texture.h"
 #include "engine/resources/text/text.h"
 #include "engine/resources/text/font.h"
+#include "engine/core/result.h"
 #include <SDL3_ttf/SDL_ttf.h>
 #include <SDL3/SDL_render.h>
 #include <cassert>
+#include <format>
 
 namespace cursed_engine
 {
@@ -15,28 +17,33 @@ namespace cursed_engine
 		m_renderer = renderer;
 	}
 
-	Texture SDLResourceCreator::createTextureFromSurface(Surface surface) const noexcept
+	Result<Texture> SDLResourceCreator::createTextureFromSurface(Surface surface) const
 	{
-		assert(m_renderer && "Trying to create texture with an invalid renderer!");
+		assert(m_renderer && "[SDLResourceCreator::createTextureFromSurface] - Invalid renderer!");
 
 		SDL_Texture* texture = SDL_CreateTextureFromSurface(m_renderer, surface.surface);
-		SDL_DestroySurface(surface.surface); // destroy where?
+		
+		if (!texture)
+		{
+			return Result<Texture>::failure(std::format("Failed to generate texture! Reason: {}", SDL_GetError()));
+		}
 
-		return Texture(texture);
+		SDL_DestroySurface(surface.surface);
+
+		return Result<Texture>::success(texture);
 	}
 
-	Text SDLResourceCreator::createText(const std::string& text, Font& font) const noexcept
+	Result<Text> SDLResourceCreator::createText(const std::string& text, Font& font) const
 	{
-		assert(m_textEngine && "Trying to create text with an invalid text engine!");
+		assert(m_renderer && "[SDLResourceCreator::createText] - Invalid text engine!");
 
 		TTF_Text* textObject = TTF_CreateText(m_textEngine, font.getInternal(), text.c_str(), text.size());
 
 		if (!textObject)
 		{
-			Logger::logError("Unable to generate text: " + text + ", error: " + SDL_GetError());
-			return Text{ nullptr };
+			return Result<Text>::failure(std::format("Failed to create text! Reason: {}", SDL_GetError()));
 		}
 
-		return Text{ textObject };
+		return Result<Text>::success(textObject);
 	}
 }

@@ -1,4 +1,5 @@
 #include "engine/utils/json/json_document.h"
+#include "engine/core/result.h"
 #include <rapidjson/document.h>
 #include <fstream>
 #include <format>
@@ -26,18 +27,18 @@ namespace cursed_engine
 
 	JsonDocument::~JsonDocument() = default;
 
-	Result JsonDocument::loadFromFile(const fs::path& path)
+	Result<void> JsonDocument::loadFromFile(const fs::path& path)
 	{
 		if (!fs::exists(path))
 		{
-			return Result::failure(std::format("Not valid file: {}", path.string()));
+			return Result<void>::failure(std::format("Not valid file: {}", path.string()));
 		}
 
 		std::ifstream ifs(path, std::ios::binary | std::ios::ate);
 
 		if (!ifs)
 		{
-			return Result::failure(std::format("File could not be opened: {}", path.string()));
+			return Result<void>::failure(std::format("File could not be opened: {}", path.string()));
 		}
 
 		std::streamsize size = ifs.tellg();
@@ -46,7 +47,7 @@ namespace cursed_engine
 		std::string content(static_cast<size_t>(size), '\0');
 		if (!ifs.read(content.data(), size))
 		{
-			return Result::failure(std::format("File could not be read: {}", path.string()));
+			return Result<void>::failure(std::format("File could not be read: {}", path.string()));
 		}
 
 		rapidjson::Document document;
@@ -54,11 +55,11 @@ namespace cursed_engine
 
 		if (document.HasParseError())
 		{
-			return Result::failure(std::format("Document had parse errors. Path {}", path.string())); // TODO: use document.GetParseError()?
+			return Result<void>::failure(std::format("Document had parse errors. Path {}", path.string())); // TODO: use document.GetParseError()?
 		}
 
 		m_impl->document.CopyFrom(document, m_impl->document.GetAllocator());
-		return Result::success();
+		return Result<void>::success();
 	}
 
 	JsonValue JsonDocument::root() const
@@ -81,9 +82,9 @@ namespace cursed_engine
 		return m_impl && !m_impl->document.HasParseError(); // or store own member; bool isLoaded in impl
 	}
 
-	JsonValue JsonDocument::operator[](const char* key) const
+	JsonValue JsonDocument::operator[](std::string_view key) const
 	{
-		assert(m_impl->document.HasMember(key) && "JsonDocument::operator[] - Member not found!");
-		return JsonValue{ &m_impl->document[key]};
+		assert(m_impl->document.HasMember(rapidjson::StringRef(key.data(), key.size())) && "JsonDocument::operator[] - Member not found!");
+		return JsonValue{ &m_impl->document[key.data()]};
 	}
 }

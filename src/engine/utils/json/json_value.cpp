@@ -10,6 +10,16 @@ namespace cursed_engine
 	{
 	}
 
+	const JsonValue JsonArrayView::operator[](std::size_t index) const
+	{
+		return m_value[index];
+	}
+
+	JsonValue JsonArrayView::operator[](std::size_t index)
+	{
+		return m_value[index];
+	}
+
 	std::size_t JsonArrayView::size() const
 	{
 		return m_value.size();
@@ -264,6 +274,16 @@ namespace cursed_engine
 		return !(lhs < rhs);
 	}
 
+	const JsonValue JsonArrayConstView::operator[](std::size_t index) const
+	{
+		return m_value[index];
+	}
+
+	JsonValue JsonArrayConstView::operator[](std::size_t index)
+	{
+		return m_value[index];
+	}
+
 	std::size_t JsonArrayConstView::size() const
 	{
 		return m_value.size();
@@ -322,6 +342,11 @@ namespace cursed_engine
 		return m_value->IsDouble();
 	}
 
+	bool JsonValue::isFloat() const noexcept
+	{
+		return m_value->IsFloat();
+	}
+
 	bool JsonValue::isInt() const noexcept
 	{
 		return m_value->IsInt();
@@ -345,6 +370,11 @@ namespace cursed_engine
 	double JsonValue::asDouble() const
 	{
 		return m_value->GetDouble();
+	}
+
+	double JsonValue::asFloat() const
+	{
+		return m_value->GetFloat();
 	}
 
 	const char* JsonValue::asString() const
@@ -390,38 +420,38 @@ namespace cursed_engine
 		return JsonValue{ &(*m_value)[index] };
 	}
 
-	bool JsonValue::hasMember(const char* key) const
+	bool JsonValue::hasMember(std::string_view key) const
 	{
 		if (!m_value || !m_value->IsObject())
 			return false;
 
-		return m_value->HasMember(key);
+		return m_value->HasMember(rapidjson::StringRef(key.data(), key.size()));
 	}
 
-	JsonValue JsonValue::operator[](const char* key)
+	JsonValue JsonValue::operator[](std::string_view key)
 	{
 		// use const cast instead?
-		if (!m_value || !m_value->IsObject() || !m_value->HasMember(key))
+		if (!m_value || !m_value->IsObject() || !m_value->HasMember(rapidjson::StringRef(key.data(), key.size())))
 			return JsonValue{ nullptr };
 
-		return JsonValue{ &(*m_value)[key] };
+		return JsonValue{ &(*m_value)[key.data()] };
 	}
 
-	JsonValue JsonValue::operator[](const char* key) const
+	JsonValue JsonValue::operator[](std::string_view key) const
 	{
-		if (!m_value || !m_value->IsObject() || !m_value->HasMember(key))
+		if (!m_value || !m_value->IsObject() || !m_value->HasMember(rapidjson::StringRef(key.data(), key.size())))
 			return JsonValue{ nullptr };
 
-		return JsonValue{ &(*m_value)[key] };
+		return JsonValue{ &(*m_value)[key.data()] };
 	}
 
 	void JsonValue::forEachProperty(const PropertyCallback& callback) const
 	{
-		assert(m_value->IsObject() && "forEachProperty failed - json value is not an object!");
+		assert(m_value->IsObject() && "Error: JsonValue is not an object!");
 
 		for (auto& [name, value] : m_value->GetObject())
 		{
-			callback(name.GetString(), JsonValue{ &value }); // Pass copy or const ref? - prefer copy!?
+			callback(name.GetString(), JsonValue{ &value });
 		}
 	}
 }

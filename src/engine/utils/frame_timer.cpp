@@ -11,6 +11,8 @@ namespace cursed_engine
 		m_current = SDL_GetPerformanceCounter();
 		m_deltaTime = static_cast<double>(m_current - m_previous) / SDL_GetPerformanceFrequency();
 	
+		m_fps = 1.0f / m_deltaTime;
+
 		m_previous = m_current;
 	}
 
@@ -21,7 +23,7 @@ namespace cursed_engine
 
 	double FrameTimer::getFPS() const
 	{
-		return 0.0;
+		return m_fps;
 	}
 
 }

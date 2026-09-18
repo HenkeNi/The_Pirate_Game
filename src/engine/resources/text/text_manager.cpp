@@ -40,18 +40,19 @@ namespace cursed_engine
 		if (auto* font = m_fontManager->get(fontHandle))
 		{
 			
-			Text textObject = m_creator->createText(text, *font);
+			Result<Text> result = m_creator->createText(text, *font);
 			//TTF_Text* textObject = TTF_CreateText(m_renderer->getTextEngine(), font->getInternal(), text.c_str(), text.size());
 
 			//if (!textObject)
-			if (!textObject.isValid())
+			if (!result.ok())
 			{
 				Logger::logError("Unable to generate text: " + text + ", error: " + SDL_GetError());
 				return Text{ nullptr };
 			}
 
 			//return Text{ textObject };
-			return textObject;
+			//return textObject;
+			return result.take();
 		}
 
 		Logger::logError("Text creation failed! Could not find the required font!");
