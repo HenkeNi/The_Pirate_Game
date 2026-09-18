@@ -2,7 +2,6 @@
 #include "entity/entity_manager.h"
 #include "component/component_view.hpp"
 #include "component/component_manager.hpp"
-#include "engine/utils/non_copyable.h"
 #include "engine/core/logger.h"
 #include "ecs_types.h"
 
@@ -11,6 +10,7 @@
 #include <memory>
 #include <string>
 #include <cassert>
+#include <tuple>
 #include <type_traits>
 
 namespace cursed_engine
@@ -38,9 +38,17 @@ Mark the cache dirty if so.
 
 	class EntityHandle;
 
-	class ECSRegistry : private NonCopyable
+	class ECSRegistry
 	{
 	public:
+		ECSRegistry() = default;
+
+		ECSRegistry(const ECSRegistry&) = delete;
+		ECSRegistry(ECSRegistry&&) = delete; // delete move?
+
+		ECSRegistry& operator=(const ECSRegistry&) = delete;
+		ECSRegistry& operator=(ECSRegistry&&) = delete;
+
 		// ==================== Entity Lifecycle ====================
 
 		EntityHandle createEntity(); // nodiscard?
@@ -75,8 +83,14 @@ Mark the cache dirty if so.
 
 		// ==================== Component Access ====================
 
+		template <ComponentType... Ts>
+		[[nodiscard]] std::tuple<const Ts&...> getComponents(Entity entity) const;
+
+		template <ComponentType... Ts>
+		[[nodiscard]] std::tuple<Ts&...> getComponents(Entity entity);
+
 		template <ComponentType T>
-		[[nodiscard]] const T& getComponent(Entity entity) const;
+		[[nodiscard]] const T& getComponent(Entity entity) const; // always reutrn refernece? (i mean - dont allow user to specify the vlaue type?) decay_
 
 		template <ComponentType T>
 		[[nodiscard]] T& getComponent(Entity entity);
@@ -197,7 +211,7 @@ Mark the cache dirty if so.
 
 		auto entities = m_entityManager.getEntities(signature);
 
-		auto [it, success] = m_cachedQueries.insert({ signature, QueryCache{ std::move(entities), false } });
+		auto [it, success] = m_cachedQueries.insert_or_assign(signature, QueryCache{ std::move(entities), false });
 
 		//if (it == m_cachedQueries.end()) HANDLE OR NOT???
 			//return std::nullopt;
@@ -267,6 +281,18 @@ Mark the cache dirty if so.
 
 		invalidateCache(componentId);
 		return false;
+	}
+
+	template <ComponentType... Ts>
+	std::tuple<const Ts&...> ECSRegistry::getComponents(Entity entity) const
+	{
+		return std::tie(getComponent<Ts>(entity)...);
+	}
+
+	template <ComponentType... Ts>
+	std::tuple<Ts&...> ECSRegistry::getComponents(Entity entity)
+	{
+		return std::tie(getComponent<Ts>(entity)...);
 	}
 
 	template <ComponentType T>

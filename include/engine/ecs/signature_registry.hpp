@@ -2,6 +2,7 @@
 //#include "ecs_types.h"
 #include "engine/utils/concepts.h"
 #include <array>
+#include <cassert>
 #include <bitset>
 #include <ranges>
 #include <cstddef>

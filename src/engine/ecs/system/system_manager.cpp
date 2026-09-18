@@ -9,4 +9,9 @@ namespace cursed_engine
 			system->update(context);
 		}
 	}
+
+	void SystemManager::clear()
+	{
+
+	}
 }

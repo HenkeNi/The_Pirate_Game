@@ -1,10 +1,9 @@
 #pragma once
-#include "engine/core/logger.h"
 #include "engine/core/settings/engine_config.h"
 #include "resource_handle.h"
 #include "resource_cache.hpp"
 #include <algorithm>
-#include <filesystem>
+//#include <filesystem>
 #include <functional>
 #include <memory>
 
@@ -15,8 +14,11 @@ namespace cursed_engine
 	// Handle if resource doesnt unload...
 	// Find better name; ResourceService, ResourceHandler? ResourceStore? ResourceAcessor? ResourceCache
 
+	template <typename T>
+	class Result;
+
 	template <typename Resource, typename Descriptor, typename Loader>
-	class ResourceManager final
+	class ResourceManager
 	{
 	public:
 		ResourceManager();
@@ -46,7 +48,7 @@ namespace cursed_engine
 		[[nodiscard]] Resource& operator[](ResourceHandle<Resource> handle);
 
 		// ==================== Resource unloading / cleanup ====================
-		void unload(const Descriptor& descriptor); // release 
+		Result<void> unload(const Descriptor& descriptor); // release 
 		
 		void preload(const Descriptor& descriptor);
 
@@ -66,7 +68,7 @@ namespace cursed_engine
 		const ResourceConfig* m_resourceConfig; // resource registry instead? (path, metadata, debug name)
 		HandleMap m_descriptorToHandle;
 		
-		std::unique_ptr<Loader> m_loader;
+		std::unique_ptr<Loader> m_loader; // does this need to be a pointer?
 	};
 
 #pragma region Definitions
@@ -133,13 +135,19 @@ namespace cursed_engine
 			if (m_cache.isValid(handle))
 				return handle;
 		}
+		
+		//Resource resource = (*m_loader)(descriptor);
+		Result<Resource> result = (*m_loader)(descriptor);
 
-		Resource resource = (*m_loader)(descriptor); // TODO; fix... bit awkward..
+		if (result.ok())
+		{
+			auto handle = m_cache.store(std::move(result.take()));
+			m_descriptorToHandle.insert_or_assign(descriptor, handle);
 
-		auto handle = m_cache.store(std::move(resource));
-		m_descriptorToHandle.insert_or_assign(descriptor, handle);
+			return handle;	
+		}
 
-		return handle;	
+		return ResourceHandle<Resource>::invalid(); // Valid?
 	}
 	
 	template <typename Resource, typename Descriptor, typename Loader>
@@ -183,7 +191,7 @@ namespace cursed_engine
 	}
 
 	template <typename Resource, typename Descriptor, typename Loader>
-	void ResourceManager<Resource, Descriptor, Loader>::unload(const Descriptor& descriptor)
+	Result<void> ResourceManager<Resource, Descriptor, Loader>::unload(const Descriptor& descriptor)
 	{
 		if (auto it = m_descriptorToHandle.find(descriptor); it != m_descriptorToHandle.end())
 		{
@@ -193,11 +201,11 @@ namespace cursed_engine
 
 			++handle.generation;
 			handle.index = -1;
+
+			return Result<void>::success();
 		}
-		else
-		{
-			Logger::logWarning("[ResourceCache::unload] - Descriptor not found!");
-		}
+		
+		return Result::failure("Descriptor not found!");
 	}
 
 	template <typename Resource, typename Descriptor, typename Loader>

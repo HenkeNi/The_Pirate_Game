@@ -1,67 +1,17 @@
 #pragma once
 #include "engine/resources/texture/texture.h"
 #include "engine/resources/text/font.h"
-#include "engine/resources/resource_types.h"
 #include "engine/resources/text/text.h"
-//#include "engine/resources/texture_manager.h"
-//#include "engine/resources/font_manager.h"
-
-//#include "engine/resources/resource_cache.hpp"
-//#include "engine/rendering/render_types.h"
+#include "engine/resources/resource_types.h"
 
 namespace cursed_engine
 {
-	struct TextKey // move to text file...
-	{
-		std::string id;
-		int fontSize;
-
-		// font??
-
-		bool operator==(const TextKey& other) const noexcept
-		{
-			return id == other.id && fontSize == other.fontSize;
-		}
-
-	};
-}
-
-template<>
-struct std::hash<cursed_engine::TextKey>
-{
-	std::size_t operator()(const cursed_engine::TextKey& key) const noexcept
-	{
-		std::size_t h = std::hash<std::string>{}(key.id);
-
-		h ^= std::hash<int>{}(key.fontSize)
-			+ 0x9e3779b9 + (h << 6) + (h >> 2);
-
-		return h;
-		//return std::hash<std::string>{}(key.fontId) ^ std::hash<std::size_t>{}(key.fontSize);	
-	}
-};
-
-namespace cursed_engine
-{
-	//struct Text
-	//{
-	//	std::unique_ptr<Texture> texture;
-	//	Font& font;
-	//	// size?
-	//};
-
-	//	struct DynamicText
-	//	{ };
-
-	
-
-	
-
-	//class FontManager;
 	class ResourceCreator;
 	class Texture;
 	struct Color;
 	// TODO; currently text's are stored by id (not path), maybe should be separate storage?
+
+	// SDLTextManager?
 
 	class TextManager
 	{
@@ -72,7 +22,7 @@ namespace cursed_engine
 
 		void init(FontManager* fontManager, ResourceCreator* creator);
 
-
+		// Dont return the actual text instance? -> return ptr?
 		// TEST - insert text as well? or do lazy loading?
 		[[nodiscard]] Text createText(const std::string& text, ResourceHandle<Font> fontHandle) const; // accept a font or hold fontmanager?
 
@@ -95,7 +45,7 @@ namespace cursed_engine
 		//Texture createTexture(const char* text, Font& font, const Color& color) const;
 
 	
-		using HandleMap = std::unordered_map<TextKey, ResourceHandle<Texture>>;
+		using HandleMap = std::unordered_map<TextDescriptor, ResourceHandle<Texture>>;
 
 		// create a storage class for runtime resources??
 		//ResourceCache<Texture> m_cache; 
@@ -108,18 +58,3 @@ namespace cursed_engine
 		ResourceCreator* m_creator;
 	};
 }
-
-//template<>
-//struct std::hash<cursed_engine::TextKey>
-//{
-//	std::size_t operator()(const cursed_engine::TextKey& key) const noexcept
-//	{
-//		std::size_t h = std::hash<std::string>{}(key.id);
-//
-//		h ^= std::hash<int>{}(key.fontSize)
-//			+ 0x9e3779b9 + (h << 6) + (h >> 2);
-//
-//		return h;
-//		//return std::hash<std::string>{}(key.fontId) ^ std::hash<std::size_t>{}(key.fontSize);	
-//	}
-//};

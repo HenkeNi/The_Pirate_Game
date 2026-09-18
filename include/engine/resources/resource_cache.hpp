@@ -1,4 +1,5 @@
 #pragma once
+#include "engine/core/result.h"
 #include "resource_handle.h"
 #include <cassert>
 #include <cstdint>
@@ -41,7 +42,7 @@ namespace cursed_engine
 		[[nodiscard]] T& operator[](Handle handle);
 
 		// ==================== Resource eviction ====================
-		void release(Handle handle);
+		Result<void> release(Handle handle);
 
 		void clear();
 
@@ -146,18 +147,18 @@ namespace cursed_engine
 	}
 
 	template <typename T>
-	void ResourceCache<T>::release(Handle handle)
+	Result<void> ResourceCache<T>::release(Handle handle)
 	{
 		if (!isValid(handle))
 		{
-			Logger::logWarning("[ResourceCaceh::evict] - Trying to evict with invalid handle");
-			return;
+			return Result<void>::failure("Trying to release resource with an invalid handle");
 		}
 
 		uint32_t index = handle.index;
 		resetEntry(m_entries[index]);
 
 		m_freeList.push_back(index);
+		return Result<void>::success();
 	}
 
 	template <typename T>

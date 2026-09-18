@@ -9,11 +9,11 @@ namespace cursed_engine
 	{
 		Logger::logInfo(std::format("{}[AudioModule] - Initialization started...", log_format::INDENT));
 
-		const Result result = m_audioController.init();
+		const Result<void> result = m_audioController.init();
 
-		if (!result.succeeded)
+		if (!result.ok())
 		{
-			Logger::logInfo(std::format("{}[AudioModule] - Initialization failed! Reason: {}", log_format::INDENT, result.message));
+			Logger::logInfo(std::format("{}[AudioModule] - Initialization failed! Reason: {}", log_format::INDENT, result.message()));
 			return false;
 		}
 

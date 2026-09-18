@@ -1,6 +1,5 @@
 #pragma once
 #include "engine/ecs/signature_registry.hpp"
-#include "engine/utils/non_copyable.h"
 #include "engine/utils/containers/sparse_set.hpp"
 #include "engine/ecs/ecs_types.h"
 #include "entity.h"
@@ -12,15 +11,18 @@ namespace cursed_engine
 {
 	struct Entity;
 
-	class EntityManager : private NonCopyable
+	class EntityManager
 	{
 	public:
 		// ==================== Construction/Destruction ====================
 		EntityManager();
 		~EntityManager() = default;
 
+		EntityManager(const EntityManager&) = delete;
 		EntityManager(EntityManager&&) = default;
-		EntityManager& operator=(EntityManager&&) = default;
+
+		EntityManager& operator=(const EntityManager&) = delete;
+		EntityManager& operator=(EntityManager&&) = default; // or delete move?
 
 		// ==================== Lifecycle ====================
 

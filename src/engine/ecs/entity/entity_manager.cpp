@@ -92,7 +92,7 @@ namespace cursed_engine
 		{
 			if ((m_signatures[entity.id] & signature) == signature)
 			{
-				matches.emplace_back(entity);
+				matches.push_back(entity);
 			}
 		}
 

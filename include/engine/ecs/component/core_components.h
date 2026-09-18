@@ -1,5 +1,6 @@
 #pragma region
 #include "engine/math/vec2.hpp"
+#include "engine/math/aabb.hpp"
 #include "engine/assets/asset_types.h"
 #include "engine/assets/asset_manager.h" // remove include?
 #include "engine/rendering/animation_types.h"
@@ -10,56 +11,19 @@
 #include <optional>
 #include <array>
 #include <unordered_map>
+#include <optional>
 
 namespace cursed_engine
 {
-	/*class ComponentRegistry;
-	class EngineResources;
-	class Localization;
-	struct ResourceConfig;
-*/
+	// Consider TransformComponent; have localPosition, localScale, localRotation instead?
+	// UITransformComponent as well?
 
-// Separet ui transform and world transform? or screen space / world space?
-
-//struct TransformComponent
-//{
-//	// TODO; add 2 constructors? one for each individual argument?
-
-//	FVec2 localPosition{ 0.f, 0.f };
-//	FVec2 localScale{ 1.f, 1.f };
-//	float localRotation = 0.f;
-//	
-//	FVec2 pivot{ 0.f, 0.f }; // helper functions or add funct in struct?
-//
-//	mat4 worldTransform; // dont store? compute?
-//};
-
-//struct RenderLayer
-//{
-//	Texture* texture;
-//	Vector2 offset;
-//	float rotation = 0.0f;
-//	Vector2 scale = { 1,1 };
-//	int order = 0;
-//};
-
-//struct RenderComponent
-//{
-//	std::vector<RenderLayer> layers;
-//};
-
-// UITransformComponent as well?
+	// Core
 	struct TransformComponent
 	{
-		// TODO; add 2 constructors? one for each individual argument?
-
 		FVec2 position{ 0.f, 0.f };
-		FVec2 scale{ 1.f, 1.f };
-		FVec2 pivot{ 0.f, 0.f }; // helper functions or add funct in struct?
+		FVec2 scale{ 1.f, 1.f }; // use this as scale not size!!!
 		float rotation = 0.f;
-
-
-		float zIndex = 0.f;
 	};
 
 	struct VelocityComponent
@@ -75,13 +39,20 @@ namespace cursed_engine
 	// here or game?
 	struct CameraComponent
 	{
+		CameraComponent() = default;
+
+		CameraComponent(IVec2 viewport)
+			: viewportSize{ viewport }
+		{
+		}
+
 		FVec2 position = { 0.f, 0.f }; // offset instead? or use heirarchy component..
 		float aspectRatio = 0.f;
 		float rotation = 0.f;
 		float zoom = 1.f;
 
 		// FRect rect; // or i Rect? or just size and width?
-
+		IVec2 viewportSize; // update when screen changes?! camera system?
 
 		bool isActive = true;
 	};
@@ -89,10 +60,10 @@ namespace cursed_engine
 	struct SpriteComponent
 	{
 		AssetHandle atlasHandle; // id to atlas instead?
-		AtlasRegion atlasRegion; // use region ID instead?
+		AtlasRegion atlasRegion; // source rect? // use region ID instead? - find better way to handle single textures than 
 
 		Color color = Color::white;
-		float zOrder;
+		float zIndex = 0.f; 
 	};
 
 	struct AnimationComponent
@@ -134,28 +105,24 @@ namespace cursed_engine
 	//	FVec2 mousePosition;
 	//};
 
+	// or BoundsComponent?
 	struct BoundingBoxComponent
 	{
+		// FAABB aabb;
 		FVec2 offset;
-		FVec2 halfSize; // figure out a good way where you dont have to specify bounding box size in json (if change transform size, you need to remebe to update bounding box as well)
-
-		//Vec2 center;
-		//Vec2 halfSize;
-
-		//Vec2 min() const { return center - halfSize; }
-		//Vec2 max() const { return center + halfSize; }
-		//Vec2 size() const { return halfSize * 2.0f; }
-
-		//FVec2 position;
-		//int xOffset, yOffset;
-		//float x, y; // or offset instead?
-		//int width, height;
-
-		// rotation?
+		FVec2 halfSize;
 	};
 
 	struct HierarchyComponent // or name ParentComponent
 	{
+		HierarchyComponent() = default;
+		
+		HierarchyComponent(FVec2 offset)
+			: offsetToParent{ offset }
+		{
+		}
+
+		FVec2 offsetToParent;
 		// handles? optionals?
 		EntityHandle parent = EntityHandle::invalid();
 		EntityHandle nextSibling = EntityHandle::invalid();
@@ -164,23 +131,23 @@ namespace cursed_engine
 		//	// also children?
 	};
 
-	struct ParentComponent
-	{
-		ParentComponent() = default;
+	//struct ParentComponent
+	//{
+	//	ParentComponent() = default;
 
-		ParentComponent(std::string parentIdentifier)
-			: parentIdentifier{ std::move(parentIdentifier) }
-		{
-		}
+	//	ParentComponent(std::string parentIdentifier)
+	//		: parentIdentifier{ std::move(parentIdentifier) }
+	//	{
+	//	}
 
-		ParentComponent(EntityHandle parent, std::string parentIdentifier)
-			: parent{ std::move(parent) }, parentIdentifier{ std::move(parentIdentifier) }
-		{
-		}
+	//	ParentComponent(EntityHandle parent, std::string parentIdentifier)
+	//		: parent{ std::move(parent) }, parentIdentifier{ std::move(parentIdentifier) }
+	//	{
+	//	}
 
-		EntityHandle parent; // or just entity?
-		std::string parentIdentifier;
-	};
+	//	EntityHandle parent; // or just entity?
+	//	std::string parentIdentifier;
+	//};
 
 	//struct ButtonAction
 	//{
@@ -241,6 +208,21 @@ namespace cursed_engine
 		// could store a Texture here.... 
 	};
 
+	// StackPanelComponent?
+	struct LayoutComponent
+	{
+		// UI types? or where?
+		enum class Direction
+		{
+			Horizontal, Vertical
+		};
+
+		Direction direction;
+		// vector of entities? or children have a parent? or have a HeartContainerComponnet?
+	};
+
+	//struct RepeaterComponent
+
 	struct CheckboxComponent
 	{
 		//ResourceHandle<Texture> uncheckedTexture;
@@ -264,6 +246,12 @@ namespace cursed_engine
 		float currentValue;
 	};
 
+	// or TargetComponent??
+	struct FollowComponent
+	{
+		EntityHandle target = EntityHandle::invalid();
+	};
+
 	struct InputFieldComponent // or TextField
 	{
 
@@ -283,6 +271,32 @@ namespace cursed_engine
 	{
 
 	};
+
+
+	//struct TransformComponent
+	//{
+	//	FVec2 localPosition{ 0.f, 0.f };
+	//	FVec2 localScale{ 1.f, 1.f };
+	//	float localRotation = 0.f;
+	//	
+	//	FVec2 pivot{ 0.f, 0.f }; // helper functions or add funct in struct?
+	//
+	//	mat4 worldTransform; // dont store? compute?
+	//};
+
+	//struct RenderLayer
+	//{
+	//	Texture* texture;
+	//	Vector2 offset;
+	//	float rotation = 0.0f;
+	//	Vector2 scale = { 1,1 };
+	//	int order = 0;
+	//};
+
+//struct RenderComponent
+//{
+//	std::vector<RenderLayer> layers;
+//};
 
 
 	// Tab? View? Tooltip? ProgressBar?

@@ -1,15 +1,14 @@
 #pragma once
-#include "entity.h"
-#include "../ecs_registry.h"
-#include "engine/utils/non_copyable.h"
+#include "engine/ecs/entity/entity.h"
+#include "engine/ecs/ecs_registry.h"
 #include "engine/utils/concepts.h"
 
 namespace cursed_engine
 {
 	// TODO; add hash?
 	// Rename Entity? stores entity id and generation... and pointer to registry?
-
-	class EntityHandle // : private NonCopyable
+	// delete copy?
+	class EntityHandle
 	{
 	public:
 		EntityHandle();
@@ -21,6 +20,8 @@ namespace cursed_engine
 
 		EntityHandle& operator=(const EntityHandle&) = default;
 		EntityHandle& operator=(EntityHandle&&) = default;
+
+		[[nodiscard]] inline static EntityHandle invalid() noexcept { return EntityHandle{ Entity::invalid(), nullptr }; };
 
 		template <ComponentType T, typename... Args>
 		std::pair<T*, bool> attachComponent(Args&&... args); // rename addComponent?
@@ -43,10 +44,6 @@ namespace cursed_engine
 		template <ComponentType... Ts>
 		[[nodiscard]] bool hasComponents() const;
 
-		[[nodiscard]] static EntityHandle invalid()
-		{
-			return EntityHandle(Entity::invalid(), nullptr);
-		}
 
 		// add destroy... (cant store as const then)? - strore bool 'alive'?
 

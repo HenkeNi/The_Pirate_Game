@@ -4,7 +4,7 @@
 #include "engine/core/events/event_bus.h"
 #include "engine/core/events/events.h"
 #include "engine/core/action/action_registry.h"
-#include "engine/platform/input.h"
+#include "engine/platform/input_api.h"
 #include "engine/math/vec2.hpp"
 // TODO; move boundingbox checks to an interaction system?
 
@@ -16,7 +16,7 @@ namespace cursed_engine
 			&& point.y >= min.y && point.y <= max.y;
 	}
 
-	UISystem::UISystem(Input* input, ActionRegistry* actionRegistry)
+	UISystem::UISystem(InputAPI input, ActionRegistry* actionRegistry)
 		: m_input{ input }, m_actionRegistry{ actionRegistry }
 	{
 		// need to pull events, doesnt have access to registry class otherwise...
@@ -43,7 +43,7 @@ namespace cursed_engine
 	// TODO; pass mouse pos to each function?
 	void UISystem::handleButtonInteractions(ECSRegistry& registry)
 	{
-		FVec2 mousePosition = m_input->getMousePosition();
+		FVec2 mousePosition = m_input.getMousePosition();
 
 		auto view = registry.view<TransformComponent, ButtonComponent, BoundingBoxComponent>();
 		view.forEach([&](Entity entity, TransformComponent& transformComponent, ButtonComponent& buttonComponent, BoundingBoxComponent& boundingBoxComponent)
@@ -58,13 +58,13 @@ namespace cursed_engine
 
 				auto& spriteComponent = registry.getComponent<SpriteComponent>(entity);
 
-				// TODO; make sure max is larger than min!
+				// TODO; make sure max is larger than min! use intersections...
 				bool isInside = isMouseInsideBoundingBox(transformComponent, boundingBoxComponent, mousePosition.x, mousePosition.y);
 
 				if (isInside)
 				{
 
-					switch (m_input->getMouseInputState(MouseButton::Left))
+					switch (m_input.getMouseInputState(MouseButton::Left))
 					{
 					case InputState::None:
 						buttonComponent.currentState = ButtonComponent::State::Hovered; // func? handleButtonHoverState
@@ -102,7 +102,7 @@ namespace cursed_engine
 	void UISystem::handleCheckboxInteractions(ECSRegistry& registry)
 	{
 		// pass in mouse pos instead?
-		FVec2 mousePosition = m_input->getMousePosition();
+		FVec2 mousePosition = m_input.getMousePosition();
 
 		// TODO; handle bounding box in physics or collision system?
 		auto view = registry.view<TransformComponent, CheckboxComponent, BoundingBoxComponent>();
@@ -112,7 +112,7 @@ namespace cursed_engine
 
 				if (isInside)
 				{
-					switch (m_input->getMouseInputState(MouseButton::Left))
+					switch (m_input.getMouseInputState(MouseButton::Left))
 					{
 						//case InputState::Pressed:
 					case InputState::Released:
@@ -137,7 +137,7 @@ namespace cursed_engine
 		view.forEach([&](Entity entity, SliderComponent& sliderComponent) 
 			{				
 				// "Thumb"...
-				if (registry.hasComponents<ParentComponent>(entity))
+				if (registry.hasComponents<HierarchyComponent>(entity))
 				{
 					int x = 20; 
 				}
@@ -180,7 +180,14 @@ namespace cursed_engine
 	{
 		FVec2 buttonPosition = transformComponent.position + boundingBoxComponent.offset;
 		FVec2 size = boundingBoxComponent.halfSize * 2.f;
-		buttonPosition -= size * transformComponent.pivot;
+
+		const FVec2 scaledSize = size * transformComponent.scale;
+		buttonPosition -= scaledSize;
+
+
+		//FVec2 buttonPosition = transformComponent.position + boundingBoxComponent.offset;
+		//FVec2 size = boundingBoxComponent.halfSize * 2.f;
+		//buttonPosition -= size * transformComponent.pivot;
 
 		return isInside(buttonPosition, buttonPosition + size, FVec2{ mousePosX, mousePosY });
 	}

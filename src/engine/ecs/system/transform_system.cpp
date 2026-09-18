@@ -6,8 +6,8 @@ namespace cursed_engine
 	void TransformSystem::update(SystemContext& context)
 	{
 		// need to update parent first, then child...
-		auto componentView = context.registry.view<ParentComponent>();
-		componentView.forEach([&](ParentComponent& parentComponent)
+		auto componentView = context.registry.view<HierarchyComponent>();
+		componentView.forEach([&](HierarchyComponent& hierarchyComponent)
 			{
 				// want all root nodes.. (maybe with WorldTransfromComponent)
 				// all with local transforms
@@ -16,12 +16,12 @@ namespace cursed_engine
 				
 				// create a tree?
 				
-				auto parentHandle = parentComponent.parent;
+				auto parentHandle = hierarchyComponent.parent;
 				if (!parentHandle.isValid())
 					return;
 
 				// if root...
-				if (!parentHandle.hasComponents<ParentComponent>())
+				if (!parentHandle.hasComponents<HierarchyComponent>())
 				{
 					// updaet position...
 

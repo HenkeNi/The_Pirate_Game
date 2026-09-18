@@ -57,6 +57,7 @@ namespace cursed_engine
 		}
 	};
 
+	// TODO; SDLFont
 	class Font
 	{
 	public:
@@ -65,7 +66,7 @@ namespace cursed_engine
 		Font();
 		Font(TTF_Font* font, FontDescriptor descriptor);
 
-		[[nodiscard]] inline TTF_Font* getInternal() { return m_font; }
+		[[nodiscard]] inline TTF_Font* getInternal() { return m_font; } // inject instead?
 		[[nodiscard]] inline const TTF_Font* getInternal() const { return m_font; }
 
 		// maybe find a better name than size?
@@ -81,11 +82,6 @@ namespace cursed_engine
 	private:
 		TTF_Font* m_font;
 		FontDescriptor m_descriptor;
-	};
-
-	struct FontLoader
-	{
-		[[nodiscard]] Font operator()(const FontDescriptor& descriptor) const;
 	};
 }
 
