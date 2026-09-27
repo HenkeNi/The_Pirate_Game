@@ -1,6 +1,7 @@
 #pragma once
 #include <engine/utils/containers/registry.hpp>
 #include <engine/ecs/component/component_registry.h>
+#include <engine/rendering/render_api.h>
 #include <filesystem>
 #include <functional>
 #include <memory>
@@ -24,6 +25,7 @@ struct SceneContext
 	cursed_engine::SystemManager* systemManager;
 	cursed_engine::EventBus* eventBus;
 	cursed_engine::AssetManager* assetManager;
+	cursed_engine::RenderAPI renderAPI;
 };
 
 

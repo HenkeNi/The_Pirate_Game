@@ -15,6 +15,8 @@ public:
 	void onEnter();
 	void onExit();
 
+	ce::PhysicsWorld* getPhysicsWorld() noexcept override { return &m_physicsWorld; } // maybe find a better idea?
+
 private:
 	Tilemap m_tilemap; // or pointer? mapgenerator returns map?
 	MapGenerator m_mapGenerator; // put in GameScene? (base)

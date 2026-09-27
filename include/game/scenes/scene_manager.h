@@ -43,8 +43,9 @@ private:
 	void init(const ce::EngineContext& context, SceneRegistry registry);
 	void shutdown();
 
-	void update(float deltaTime);
 	void applyPendingTransition();
+	void update(float deltaTime);
+	void render();
 
 	void push(SceneName name);
 	void swap(SceneName name);
