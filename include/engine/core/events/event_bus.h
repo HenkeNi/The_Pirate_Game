@@ -55,7 +55,7 @@ namespace cursed_engine
 	{
 		auto& vec = m_listeners[utils::getTypeIndex<Event>()];
 
-		vec.push_back([cb = std::move(callback)](const std::any& e) // why any here?
+		vec.push_back([cb = std::move(callback)](const std::any& e)
 			{
 				cb(std::any_cast<const Event&>(e));
 			});
