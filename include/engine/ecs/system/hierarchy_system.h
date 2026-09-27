@@ -21,10 +21,10 @@ namespace cursed_engine
 	class EntityHandle;
 	struct TransformComponent;
 
-	class HierarchySystem : public System
+	class HierarchySystem : public UpdateSystem
 	{
 	public:
-		void update(cursed_engine::SystemContext& context) override;
+		void update(cursed_engine::SystemUpdateContext& context) override;
 		//void update()
 		//{
 		//	// listen to entity created.... -> need to use string id...

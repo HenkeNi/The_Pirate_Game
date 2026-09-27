@@ -19,12 +19,12 @@ struct Tileset;
 struct TileLayer;
 
 // cull chunks? 
-class MapRenderSystem : public cursed_engine::System
+class MapRenderSystem : public cursed_engine::RenderSystem
 {
 public:
 	MapRenderSystem(cursed_engine::RenderAPI renderAPI, cursed_engine::TextureManager* textureManager);
 
-	void update(cursed_engine::SystemContext& context) override;
+	void render(cursed_engine::SystemRenderContext& context) override;
 
 	void setTilemap(Tilemap* tilemap);
 	void setTileset(const Tileset* tileset);

@@ -13,7 +13,7 @@ struct Tileset;
 //class TileRegistry;
 //class AssetManager;
 
-class MapDecorationSystem : public cursed_engine::System
+class MapDecorationSystem : public cursed_engine::UpdateSystem
 {
 public:
 	MapDecorationSystem(cursed_engine::EntityFactory& factory, cursed_engine::EventBus& eventBus);

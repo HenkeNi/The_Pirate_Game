@@ -8,12 +8,12 @@ namespace cursed_engine
 	class AssetManager;
 	class ECSRegistry;
 
-	class ScreenSpaceRenderSystem : public System
+	class ScreenSpaceRenderSystem : public RenderSystem
 	{
 	public:
 		ScreenSpaceRenderSystem(TextureManager* textureManager, AssetManager* assetManager, RenderAPI renderer);
 
-		void update(SystemContext& context) override; // or pass managers in update (renmae render)?
+		void render(SystemRenderContext& context) override; // or pass managers in update (renmae render)?
 
 	private:
 		void renderSprites(ECSRegistry& registry);

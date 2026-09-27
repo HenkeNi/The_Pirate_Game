@@ -10,11 +10,11 @@ namespace cursed_engine
 
 namespace ce = cursed_engine;
 
-class HUDSystem : public ce::System
+class HUDSystem : public ce::UpdateSystem
 {
 public:
 	HUDSystem(ce::EventBus& eventBus, ce::EntityFactory& factory);
-	void update(cursed_engine::SystemContext& context) override;
+	void update(ce::SystemUpdateContext& context) override;
 
 	void setECSRegistry(ce::ECSRegistry* registry); // or setWorld(); ?
 

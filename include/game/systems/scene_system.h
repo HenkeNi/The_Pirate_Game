@@ -17,7 +17,7 @@ class SceneManager;
 struct SceneTransitionRequestEvent;
 
 // or scene_transition_system?
-class SceneSystem : public cursed_engine::System
+class SceneSystem : public cursed_engine::UpdateSystem
 {
 public:
 	SceneSystem(const cursed_engine::ComponentInitContext& ctx, cursed_engine::EventBus* eventBus, SceneManager& sceneManager);

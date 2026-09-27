@@ -9,6 +9,50 @@
 
 namespace cursed_engine
 {
+#ifdef _DEBUG
+
+	static void renderTest(RenderAPI& renderer, ECSRegistry& registry)
+	{
+		// Draw camera bounds
+		auto view = registry.view<CameraComponent>();
+		auto activeCamera = view.findFirst([](const cursed_engine::CameraComponent& cameraComponent)
+			{
+				return cameraComponent.isActive;
+			});
+
+		cursed_engine::Bounds cameraBounds{};
+
+		if (activeCamera.has_value())
+		{
+			const auto& cameraComponent = registry.getComponent<cursed_engine::CameraComponent>(activeCamera.value());
+			//worldPosition = cameraTransformComponent.position;
+			cameraBounds = registry.getComponent<cursed_engine::CameraComponent>(activeCamera.value()).bounds;
+
+			const auto position = registry.getComponent<cursed_engine::TransformComponent>(activeCamera.value()).position;
+
+			std::array<cursed_engine::FVec2, 4> corners
+			{
+				cursed_engine::FVec2{ cameraBounds.min.x, cameraBounds.min.y }, // top left
+				cursed_engine::FVec2{ cameraBounds.max.x, cameraBounds.min.y }, // top right
+				cursed_engine::FVec2{ cameraBounds.min.x, cameraBounds.max.y }, // bottom left
+				cursed_engine::FVec2{ cameraBounds.max.x, cameraBounds.max.y } // bottom right
+			};
+
+			std::array<Color, 4> colors{ Color::green, Color::blue, Color::gray, Color::red };
+			std::array<float, 4> radiuses{ 100.f, 100.f, 100.f, 100.f };
+			//for (const cursed_engine::FVec2& corner : corners)
+			for (int i = 0; i < 4; ++i)
+			{
+				renderer.drawFillCircle(corners[i], radiuses[i], colors[i]); // why not working? wrong space? (screen space / world space)?
+			}
+		}
+
+		//renderer.drawOutlineCircle(200, 200, 100);
+		//renderer.drawFillCircle(400, 400, 50);
+	}
+
+#endif
+
 #pragma region Helper
 
 	FVec2 computeDrawPosition(const FVec2& position, const FVec2& size, const FVec2& pivot) 
@@ -25,7 +69,7 @@ namespace cursed_engine
 		m_entityBuffer.reserve(1000);
 	}
 
-	void WorldRenderSystem::update(SystemContext& context)
+	void WorldRenderSystem::render(SystemRenderContext& context)
 	{
 		ECSRegistry& registry = context.registry;
 
@@ -86,10 +130,18 @@ namespace cursed_engine
 		//};
 
 		renderSprites(registry, viewBounds);
+
+#ifdef _DEBUG
+
 		renderDebug(registry, viewBounds);
 
 		if (m_physicsDebugDraw)
 			m_physicsDebugDraw->draw();
+
+		renderTest(m_renderer, registry);
+#endif
+
+		// TODO; render text!
 	}
 
 	void WorldRenderSystem::renderSprites(ECSRegistry& registry, const FAABB& viewBounds)

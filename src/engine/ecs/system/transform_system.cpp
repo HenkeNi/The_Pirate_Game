@@ -3,7 +3,7 @@
 
 namespace cursed_engine
 {
-	void TransformSystem::update(SystemContext& context)
+	void TransformSystem::update(SystemUpdateContext& context)
 	{
 		// need to update parent first, then child...
 		auto componentView = context.registry.view<HierarchyComponent>();

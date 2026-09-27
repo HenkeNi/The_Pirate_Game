@@ -11,7 +11,7 @@ namespace cursed_engine
 	{
 	}
 
-	void TextSystem::update(SystemContext& context)
+	void TextSystem::update(SystemUpdateContext& context)
 	{
 		auto& registry = context.registry;
 
@@ -50,7 +50,7 @@ namespace cursed_engine
 			{
 				if (!textComponent.textObj.isValid())
 				{
-					auto fontHandle = textComponent.fontHandle;
+					/*auto fontHandle = textComponent.fontHandle;
 
 
 					if (!fontHandle.isValid())
@@ -59,7 +59,7 @@ namespace cursed_engine
 						return;
 					}
 
-					const std::string& text = m_localization->getText(textComponent.textID);
+					const std::string& text = m_localization->getText(textComponent.textID);*/
 
 					//m_textFactory->createText(text, fontHandle);
 				}

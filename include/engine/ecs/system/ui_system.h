@@ -10,12 +10,12 @@ namespace cursed_engine
 
 	class ActionRegistry;
 	
-	class UISystem : public System
+	class UISystem : public UpdateSystem
 	{
 	public:
 		UISystem(InputAPI input, ActionRegistry* actionRegistry);
 
-		void update(SystemContext& context) override;
+		void update(SystemUpdateContext& context) override;
 
 	private:
 		void handleButtonInteractions(ECSRegistry& registry); // renaeme func?

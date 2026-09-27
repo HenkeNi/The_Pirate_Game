@@ -4,7 +4,7 @@
 
 namespace cursed_engine
 {
-	void HierarchySystem::update(cursed_engine::SystemContext& context)
+	void HierarchySystem::update(cursed_engine::SystemUpdateContext& context)
 	{
 		auto componentView = context.registry.view<HierarchyComponent>();
 		componentView.forEach([&](Entity entity, HierarchyComponent& hierarchyComponent)

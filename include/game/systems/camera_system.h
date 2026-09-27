@@ -10,11 +10,11 @@ namespace cursed_engine
 
 namespace ce = cursed_engine;
 
-class CameraSystem : public ce::System
+class CameraSystem : public ce::UpdateSystem
 {
 public:
 	CameraSystem(ce::Settings& settings);
-	void update(ce::SystemContext& context) override;
+	void update(ce::SystemUpdateContext& context) override;
 
 private:
 	void updateFollow(ce::CameraComponent& cameraComponent, ce::TransformComponent& transformComponent);

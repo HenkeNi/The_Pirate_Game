@@ -30,7 +30,7 @@ namespace cursed_engine
 			});*/
 	}
 
-	void AudioSystem::update(SystemContext& context)
+	void AudioSystem::update(SystemUpdateContext& context)
 	{
 		// holds map of which sound id to sound?
 

@@ -9,7 +9,7 @@ DebugSystem::DebugSystem(cursed_engine::FrameTimer& timer)
 { 
 }
 
-void DebugSystem::update(cursed_engine::SystemContext& context)
+void DebugSystem::update(cursed_engine::SystemUpdateContext& context)
 {
 	auto view = context.registry.view<cursed_engine::TextComponent, DebugComponent>();
 

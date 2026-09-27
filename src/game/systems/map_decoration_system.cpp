@@ -44,30 +44,28 @@ MapDecorationSystem::MapDecorationSystem(cursed_engine::EntityFactory& factory, 
 					{
 						if (cursed_engine::random::generateRandomFloatingPoint(0.f, 1.f) < spawnable.chance)
 						{
-							auto entityHandle = m_entityFactory.createFromPrefab(spawnable.id);
+							ce::FVec2 position = getTileWorldPosition(mapChunk->coords.x, mapChunk->coords.y, i);
+							
+							auto entityHandle = m_entityFactory.createFromPrefab(spawnable.id, position);
 							//auto entityHandle = m_entityFactory.createFromPrefab("palm_tree");
-							if (entityHandle.has_value())
-							{
-								auto& transformComponent = entityHandle.value().getComponent<cursed_engine::TransformComponent>();
+							//if (entityHandle.has_value())
+							//{
+							//	//auto& transformComponent = entityHandle.value().getComponent<cursed_engine::TransformComponent>();
 
-								transformComponent.position = getTileWorldPosition(mapChunk->coords.x, mapChunk->coords.y, i);
+							//	// TEST
+							//	//auto& spriteComponent = entityHandle.value().getComponent<cursed_engine::SpriteComponent>();
+							//	//if (!spriteComponent.atlasHandle.isValid())
+							//	//{
+							//	//	int x = 20;
 
+							//	//}
+							//		// set atlasregion???
 
-
-								// TEST
-								//auto& spriteComponent = entityHandle.value().getComponent<cursed_engine::SpriteComponent>();
-								//if (!spriteComponent.atlasHandle.isValid())
-								//{
-								//	int x = 20;
-
-								//}
-									// set atlasregion???
-
-								//if (spriteComponent.atlasRegion.rect.w < 1 || spriteComponent.atlasRegion.rect.h < 1)
-								//{
-								//	int x = 20;
-								//}
-							}
+							//	//if (spriteComponent.atlasRegion.rect.w < 1 || spriteComponent.atlasRegion.rect.h < 1)
+							//	//{
+							//	//	int x = 20;
+							//	//}
+							//}
 							break;
 						}
 					}

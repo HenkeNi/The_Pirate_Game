@@ -13,12 +13,12 @@ namespace cursed_engine
 	class ECSRegistry;
 	class PhysicsDebugDraw;
 
-	class WorldRenderSystem : public System
+	class WorldRenderSystem : public RenderSystem
 	{
 	public:
 		WorldRenderSystem(TextureManager* textureManager, AssetManager* assetManager, RenderAPI renderer, PhysicsDebugDraw* physicsDebugDraw = nullptr);
 
-		void update(SystemContext& context) override;
+		void render(SystemRenderContext& context) override;
 	
 	private:
 		void renderSprites(ECSRegistry& registry, const FAABB& viewBounds);

@@ -9,7 +9,7 @@ CameraSystem::CameraSystem(ce::Settings& settings)
 {
 }
 
-void CameraSystem::update(ce::SystemContext& context)
+void CameraSystem::update(ce::SystemUpdateContext& context)
 {
 	//auto view = context.registry.view<ce::CameraComponent, ce::HierarchyComponent, ce::TransformComponent>();
 	//view.forEach([](const ce::CameraComponent& cameraComponent, const ce::HierarchyComponent& hierarchyComponent, ce::TransformComponent& transformComponent)
@@ -17,7 +17,7 @@ void CameraSystem::update(ce::SystemContext& context)
 	
 
 	auto view = context.registry.view<ce::CameraComponent, ce::TransformComponent, ce::FollowComponent>();
-	view.forEach([&](const ce::CameraComponent& cameraComponent, ce::TransformComponent& transformComponent, const ce::FollowComponent& followComponent) // TODO; find first instead??
+	view.forEach([&](ce::CameraComponent& cameraComponent, ce::TransformComponent& transformComponent, const ce::FollowComponent& followComponent) // TODO; find first instead??
 		{
 			if (!followComponent.target.isValid())
 				return;
@@ -26,10 +26,28 @@ void CameraSystem::update(ce::SystemContext& context)
 
 			const ce::FVec2& windowSize = m_settings.getWindowSize();
 
+			//float windowHalfWidth = windowSize.x * 0.5f;
+			//float windowHalfHeight = windowSize.y * 0.5f;
+
+			//transformComponent.position.x = targetTransformComponent.position.x - (windowSize.x * 0.5f);
+			//transformComponent.position.y = targetTransformComponent.position.y - (windowSize.y * 0.5f);
+
 			transformComponent.position.x = targetTransformComponent.position.x - (windowSize.x * 0.5f);
 			transformComponent.position.y = targetTransformComponent.position.y - (windowSize.y * 0.5f);
 
-			// maybe target is not needed??
+
+			ce::Bounds& bounds = cameraComponent.bounds;
+			bounds.min.x = transformComponent.position.x;
+			bounds.min.y = transformComponent.position.y;
+
+			bounds.max.x = transformComponent.position.x + windowSize.x;
+			bounds.max.y = transformComponent.position.y + windowSize.y;
+			//ce::Bounds& bounds = cameraComponent.bounds;
+			//bounds.min.x = transformComponent.position.x - windowHalfSize.x;
+			//bounds.min.y = transformComponent.position.y - windowHalfSize.y;
+
+			//bounds.max.x = transformComponent.position.x + windowHalfSize.x;
+			//bounds.max.y = transformComponent.position.y + windowHalfSize.y;
 		});
 }
 

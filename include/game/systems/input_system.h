@@ -7,12 +7,12 @@ namespace cursed_engine
 	class InputAPI;
 }
 
-class InputSystem : public cursed_engine::System
+class InputSystem : public cursed_engine::UpdateSystem
 {
 public:
 	InputSystem(cursed_engine::InputAPI input);
 
-	void update(cursed_engine::SystemContext& context) override;
+	void update(cursed_engine::SystemUpdateContext& context) override;
 
 private:
 	cursed_engine::InputAPI m_input;

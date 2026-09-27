@@ -33,7 +33,7 @@ namespace cursed_engine
 			});*/
 	}
 
-	void UISystem::update(SystemContext& systemContext)
+	void UISystem::update(SystemUpdateContext& systemContext)
 	{
 		handleButtonInteractions(systemContext.registry); // here or in an interaction system? might make more sense here?
 		handleCheckboxInteractions(systemContext.registry);

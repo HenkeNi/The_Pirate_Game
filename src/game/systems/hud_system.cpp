@@ -56,7 +56,7 @@ HUDSystem::HUDSystem(ce::EventBus& eventBus, ce::EntityFactory& factory)
 		});
 }
 
-void HUDSystem::update(cursed_engine::SystemContext& context)
+void HUDSystem::update(cursed_engine::SystemUpdateContext& context)
 {
 	// TODO; probably need to be able to update max health and current health at runtime!
 	// OR; construct HUD at start... hide some elements (unlocked heart containers) => need to "unlock" at runtime (undimmm damaged)
@@ -94,7 +94,7 @@ void HUDSystem::createHealthContainer(int currentHealth, int maxHealth)
 
 	for (int i = 0; i < maxHealth; ++i)
 	{
-		std::optional<ce::EntityHandle> heartHandle = m_entityFactory.createFromPrefab("heart");
+		std::optional<ce::EntityHandle> heartHandle = m_entityFactory.createFromPrefab("heart", ce::FVec2{ 10.f, 10.f });
 		
 		if (heartHandle)
 		{

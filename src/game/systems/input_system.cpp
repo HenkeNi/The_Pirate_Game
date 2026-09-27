@@ -9,7 +9,7 @@ InputSystem::InputSystem(cursed_engine::InputAPI input)
 {
 }
 
-void InputSystem::update(cursed_engine::SystemContext& context)
+void InputSystem::update(cursed_engine::SystemUpdateContext& context)
 {
 	auto componentView = context.registry.view<InputComponent>();
 	componentView.forEach([&](InputComponent& inputComponent)

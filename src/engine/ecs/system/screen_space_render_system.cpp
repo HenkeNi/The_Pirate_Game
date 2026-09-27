@@ -4,20 +4,35 @@
 
 namespace cursed_engine
 {
+#ifdef _DEBUG
+
+	static void renderTest(RenderAPI& renderer, ECSRegistry& registry)
+	{
+		//renderer.drawOutlineCircle(200, 200, 100);
+		//renderer.drawFillCircle(400, 400, 50);
+	}
+
+#endif
+
 	ScreenSpaceRenderSystem::ScreenSpaceRenderSystem(TextureManager* textureManager, AssetManager* assetManager, RenderAPI renderer)
 		: m_textureManager{ std::move(textureManager) }, m_assetManager{ assetManager }, m_renderer{ std::move(renderer) }
 	{
 	}
 
-	void ScreenSpaceRenderSystem::update(SystemContext& context)
+	void ScreenSpaceRenderSystem::render(SystemRenderContext& context)
 	{
 		m_renderer.setRenderState(cursed_engine::RenderState{ cursed_engine::View{ { 0.f, 0.f } , 0.0, 1.f}, cursed_engine::Projection{ { 1280.f, 720.f }, { 0.f, 0.f } } }); // view, projection				
 
-		m_renderer.drawOutlineCircle(200, 200, 100);
-		m_renderer.drawFillCircle(400, 400, 50);
-		//renderSprites(context.registry);
-		//renderDebug(context.registry);
-		//renderText(context.registry);
+		renderSprites(context.registry);
+
+#ifdef _DEBUG
+
+		renderDebug(context.registry);
+		renderTest(m_renderer, context.registry);
+
+#endif // _DEBUG
+
+		renderText(context.registry);
 	}
 
 	void ScreenSpaceRenderSystem::renderSprites(ECSRegistry& registry)
@@ -36,9 +51,6 @@ namespace cursed_engine
 					const FVec2 scaledSize = spriteComponent.atlasRegion.getSize() * transformComponent.scale;
 					position -= spriteComponent.atlasRegion.pivot * scaledSize;*/
 
-
-
-
 					FVec2 position = transformComponent.position;
 
 					const AtlasRegion& region = spriteComponent.atlasRegion;
@@ -54,7 +66,6 @@ namespace cursed_engine
 					FRect dst{ position.x, position.y, scaledSize.x, scaledSize.y };
 
 					m_renderer.drawTexture(*texture, std::move(src), std::move(dst), spriteComponent.color);
-
 
 					/*auto position = transformComponent.position;
 					const auto& scale = transformComponent.scale;
@@ -122,17 +133,10 @@ namespace cursed_engine
 		//// TODO; check if possible to have one argument const ref and one argument just ref...
 		view.forEach([&](const TransformComponent& transformComponent, TextComponent& textComponent, const UIComponent&)
 			{
-				/*FVec2 position = transformComponent.position;
-				const FVec2 size = (FVec2)textComponent.textObj.getSize();
-				
-				position -= size * transformComponent.pivot;*/
-
 				FVec2 position = transformComponent.position;
-
 				const FVec2 scaledSize = (FVec2)textComponent.textObj.getSize() * transformComponent.scale;
 
-				//position -= textObj.pivot() * scaledSize;
-				position -= scaledSize;
+				position -= textComponent.pivot * scaledSize;
 
 				m_renderer.drawText(textComponent.textObj, position.x, position.y);
 			});

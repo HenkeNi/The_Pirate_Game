@@ -3,10 +3,10 @@
 
 namespace cursed_engine
 {
-	class InteractionSystem : public System
+	class InteractionSystem : public UpdateSystem
 	{
 	public:
-		void update(SystemContext& context) override;
+		void update(SystemUpdateContext& context) override;
 
 	private:
 		void handleMouseInput();

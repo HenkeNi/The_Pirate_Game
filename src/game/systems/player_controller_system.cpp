@@ -7,7 +7,7 @@ PlayerControllerSystem::PlayerControllerSystem()
 {
 }
 
-void PlayerControllerSystem::update(cursed_engine::SystemContext& context)
+void PlayerControllerSystem::update(cursed_engine::SystemUpdateContext& context)
 {
 	auto componentView = context.registry.view<InputComponent, cursed_engine::VelocityComponent>();
 

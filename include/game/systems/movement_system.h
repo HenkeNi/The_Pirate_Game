@@ -1,8 +1,10 @@
 #pragma once
 #include <engine/ecs/system/system.h>
 
-class MovementSystem : public cursed_engine::System
+namespace ce = cursed_engine;
+
+class MovementSystem : public ce::UpdateSystem
 {
 public:
-	void update(cursed_engine::SystemContext& context) override;
+	void update(ce::SystemUpdateContext& context) override;
 };

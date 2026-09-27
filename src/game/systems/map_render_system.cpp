@@ -13,7 +13,7 @@ MapRenderSystem::MapRenderSystem(cursed_engine::RenderAPI renderAPI, cursed_engi
 {
 }
 
-void MapRenderSystem::update(cursed_engine::SystemContext& context)
+void MapRenderSystem::render(cursed_engine::SystemRenderContext& context)
 {
 	//assert(m_tilemap && m_tileset && "Not valid map data");
 
@@ -62,7 +62,7 @@ void MapRenderSystem::update(cursed_engine::SystemContext& context)
 
 				// TODO; do  before loop instead... - not every frame!!!
 				// update chunk position - TODO, mabe only do if havent built geomtry this frame (pass in camera pos to build geometry)
-
+				
 				auto view = context.registry.view<cursed_engine::CameraComponent>();
 				auto activeCamera = view.findFirst([](const cursed_engine::CameraComponent& cameraComponent)
 					{
