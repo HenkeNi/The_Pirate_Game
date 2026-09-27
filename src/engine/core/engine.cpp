@@ -177,35 +177,49 @@ namespace cursed_engine
 		auto& impl = *m_impl;
 
 		bool running = true; // EngineState struct that contains paused, minimized, hasFocus?
+		
+		constexpr float fixedTimeStep = 1.0f / 60.0f;
+		double accumulator = 0.0;
 
 		while (running)
 		{
+			const double deltaTime = impl.platform.getDeltaTime(); // Do here (first)?
+
 			impl.platform.beginFrame();
-			impl.platform.processEvents();
+			impl.platform.processEvents(); // tick delta time first of all?
 
 			if (impl.platform.exitRequested())
 			{
 				running = false;
+				continue;
 			}
 
-			impl.rendering.beginFrame();
 
-			double deltaTime = impl.platform.getDeltaTime();
+			accumulator += deltaTime;
 
-			impl.application.onUpdate(deltaTime);
-			impl.application.onRender(RenderContext{ impl.rendering.getRenderPipeline() }); // DONT PASS rendering api and pipeline?
+			while (accumulator >= fixedTimeStep)
+			{
+				impl.eventBus.dispatchAll();
+
+				impl.application.onUpdate(fixedTimeStep);
+
+				// update game
+				// update physics (physics.step())
+
+				// dispatch events again?
+
+				accumulator -= fixedTimeStep;
+			}
+
+			impl.resource.update(impl.platform.getFrameCount(), deltaTime);
 			
+			impl.rendering.beginFrame();
+			impl.application.onRender(RenderContext{ impl.rendering.getRenderPipeline() }); // DONT PASS rendering api and pipeline?
+
 			// Update ecs systems here?
 			//m_impl->systemManager.update(deltaTime); // After application update?
 
-			impl.eventBus.dispatchAll();
-			impl.resource.update(impl.platform.getFrameCount(), deltaTime);
-
-			//float currentTime = platform.getTime();
-			//frameTimer.tick(currentTime);
-			// timer.getFPS();
-			// system sets fps?
-			// window.setTitle(std::format("The Cursed Pirate - Fps: {}", (int)fps).c_str()); // render debug text instead?
+			Logger::logInfo("[Engine] - End frame..");
 
 			impl.rendering.endFrame();
 			impl.platform.endFrame();
