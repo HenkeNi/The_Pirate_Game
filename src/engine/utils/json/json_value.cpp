@@ -372,7 +372,7 @@ namespace cursed_engine
 		return m_value->GetDouble();
 	}
 
-	double JsonValue::asFloat() const
+	float JsonValue::asFloat() const
 	{
 		return m_value->GetFloat();
 	}
