@@ -2,7 +2,7 @@
 #include "engine/ecs/component/core_components.h"
 #include "engine/ecs/component/component_registry.h"
 
-
+#include "engine/core/result.h"
 
 #include "engine/utils/json/json_value.h"
 #include "engine/resources/resource_types.h" // res managers
@@ -10,17 +10,78 @@
 #include "engine/resources/text/text_manager.h"
 #include "engine/rendering/render_types.h"
 
+#include "engine/physics/physics.h"
+
 #include "engine/core/engine_context.h"
 #include "engine/core/localization/localization.h"
 #include "engine/core/logger.h"
 //#include "engine/platform/input/input.h"
 #include "engine/audio/audio_controller.h"
-
-
+#include <format>
+#include <string>
+#include <unordered_map>
 // TODO; handle missing values in json (registerComponents)
 
 namespace cursed_engine
 {
+#pragma region Helpers
+
+	static Result<ColliderType> parseColliderType(const std::string& type)
+	{
+		static const std::unordered_map<std::string, ColliderType> colliderTypes
+		{
+			{ "dynamic", ColliderType::Dynamic },
+			{ "kinematic", ColliderType::Kinematic },
+			{ "static", ColliderType::Static }
+		};
+
+		if (auto it = colliderTypes.find(type); it != colliderTypes.end())
+		{
+			return Result<ColliderType>::success(it->second);
+		}
+
+		return Result<ColliderType>::failure(std::format("Unknown collider type found: {}", type));
+	}
+
+	static Result<Shape> parseShape(const JsonValue& value)
+	{
+		static const std::unordered_map<std::string, Shape::ShapeType> shapeTypes
+		{
+			{ "square", Shape::ShapeType::Square },
+			{ "rectangle", Shape::ShapeType::Rectangle },
+			{ "circle", Shape::ShapeType::Circle }
+		};
+
+		const std::string shapeType = value["type"].asString();
+
+		auto it = shapeTypes.find(shapeType);
+		if (it == shapeTypes.end())
+		{
+			return Result<Shape>::failure(std::format("Unknown shape type found: {}", shapeType));
+		}
+
+		Shape shape;
+		shape.type = it->second;
+
+		switch (shape.type)
+		{
+		case Shape::ShapeType::Square:
+			shape.data.Square.halfExtent = value["half_extent"].asFloat();
+			break;
+		case Shape::ShapeType::Rectangle:
+			shape.data.Rectangle.width = value["width"].asFloat(); 
+			shape.data.Rectangle.height = value["height"].asFloat();
+			break;
+		case Shape::ShapeType::Circle:
+			shape.data.Circle.radius = value["radius"].asFloat();
+			break;
+		}
+
+		return Result<Shape>::success(shape);
+	}
+
+#pragma endregion
+
 	ECSModule::ECSModule()
 		: m_entityFactory{ m_componentRegistry }
 	{
@@ -462,7 +523,15 @@ namespace cursed_engine
 
 					textObj.setTextColor(textColor); // TODO: do in factory? or use abuilder....
 
-					handle.attachComponent<TextComponent>(textId, fontHandle, std::move(textObj), textColor); // Only if suceesful??
+					FVec2 pivot{};
+					if (value.hasMember("pivot"))
+					{
+						pivot.x = value["pivot"]["x"].asFloat();
+						pivot.y = value["pivot"]["y"].asFloat();
+					}
+
+					handle.attachComponent<TextComponent>(std::move(textObj), pivot); // Only if suceesful??
+					//handle.attachComponent<TextComponent>(textId, fontHandle, std::move(textObj), pivot, textColor); // Only if suceesful??
 				}
 				else
 				{
@@ -585,6 +654,59 @@ namespace cursed_engine
 			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
 			{
 				handle.attachComponent<FollowComponent>();
+			});
+
+		registerComponent<PhysicsComponent>(m_componentRegistry, "physics",
+			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
+			{
+				handle.attachComponent<PhysicsComponent>();
+			},
+			[&](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+			{
+				BodyDefinition bodyDefinition;
+
+				Result<ColliderType> colliderTypeResult = parseColliderType(value["collider_type"].asString());
+
+				if (!colliderTypeResult.ok())
+				{
+					// LOG error?
+					return;
+				}
+
+				bodyDefinition.type = colliderTypeResult.take();
+				
+				Result<Shape> shapeResult = parseShape(value["shape"]);
+				
+				if (!shapeResult.ok())
+				{
+					return;
+				}
+
+				bodyDefinition.shape = shapeResult.take();
+
+				bodyDefinition.linearDamping = 0.0f;
+				bodyDefinition.angularDamping = 0.0f;
+		
+				handle.attachComponent<PhysicsComponent>(std::move(bodyDefinition));
+			},
+			[](EntityHandle& handle, const ComponentPostInitContext& ctx)
+			{
+				assert(ctx.physicsWorld && "Invalid PhysicsWorld");
+
+				PhysicsComponent& physicsComponent = handle.getComponent<PhysicsComponent>();				
+				TransformComponent& transformComponent = handle.getComponent<TransformComponent>(); // Is this the best approach?
+
+				// either store collider type, shae, etc directly in physics component or store a "BOdy" and then call body init to actually create?
+
+				physicsComponent.bodyDefinition.position = transformComponent.position;
+				physicsComponent.bodyDefinition.rotation = transformComponent.rotation;
+
+				// DONT use position directly! -> use pivot to? or just center body? (center is middle)
+
+				PhysicsBody body = ctx.physicsWorld->createBody(physicsComponent.bodyDefinition); // This requires body definition data to be stored in component...
+				physicsComponent.physicsBody = std::move(body);
+				// int x = 20;
+				//ctx.physicsWorld->createBody();
 			});
 	}
 }
