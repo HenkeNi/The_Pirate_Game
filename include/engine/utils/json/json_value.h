@@ -185,7 +185,7 @@ namespace cursed_engine
 		[[nodiscard]] bool asBool() const;
 		[[nodiscard]] int asInt() const;
 		[[nodiscard]] double asDouble() const;
-		[[nodiscard]] double asFloat() const;
+		[[nodiscard]] float asFloat() const;
 		[[nodiscard]] const char* asString() const; // TODO; return string view? or string?
 		[[nodiscard]] JsonArrayView asArray() noexcept;
 		[[nodiscard]] JsonArrayConstView asArray() const noexcept; // return value as const?

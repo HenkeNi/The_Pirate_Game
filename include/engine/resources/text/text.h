@@ -70,9 +70,10 @@ namespace cursed_engine
 
 		bool setWrapWidth(int width);
 		bool setWrapWhitespaceVisibility(bool visible);
-
+		
 	private:
 		TTF_Text* m_text;
+
 		//std::string m_text; // create a TextDescriptor
 	};
 }
