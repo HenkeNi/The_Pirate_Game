@@ -1,7 +1,6 @@
 #include "engine/platform/platform.h"
 #include "engine/core/settings/engine_config.h"
 #include "engine/resources/sdl_resource_loaders.h" // -- maybe make a generic surface loader?
-//#include "engine/resources/texture/surface_loader.h"
 #include "engine/resources/texture/surface.h"
 #include "engine/platform/window.h"
 #include "engine/core/result.h"
@@ -107,7 +106,7 @@ namespace cursed_engine
 
 			default:
 				m_window.processEvent(event);
-				m_input.processInput(event); // TODO- name both processEvents?
+				m_input.processInput(event);
 				break;
 			}
 		}
