@@ -8,6 +8,10 @@
 #include "engine/ecs/entity/entity_handle.h"
 #include "engine/rendering/render_types.h" // remove?
 #include "engine/resources/text/text.h"
+
+#include "engine/physics/physics.h"
+#include "engine/physics/physics_types.h"
+
 #include <optional>
 #include <array>
 #include <unordered_map>
@@ -53,6 +57,10 @@ namespace cursed_engine
 
 		// FRect rect; // or i Rect? or just size and width?
 		IVec2 viewportSize; // update when screen changes?! camera system?
+
+		// DONT USE FRECT?? bit confusing that width and height are not actual width and heights but positions
+		//FRect viewport; // TEST! -> if using, maybe could use when rendering as well... USE BOUNDS? or calculate each frame?
+		Bounds bounds;
 
 		bool isActive = true;
 	};
@@ -188,22 +196,30 @@ namespace cursed_engine
 
 	struct TextComponent
 	{
-		TextComponent(std::string id, ResourceHandle<Font> fontHandle, Text text, Color color = Color::black)
-			: textID{ std::move(id) }, fontHandle{ fontHandle }, textObj{ std::move(text) }, color{ color }
+		TextComponent() = default;
+
+		TextComponent(Text text, FVec2 pivot)
+			: textObj{ std::move(text) }, pivot{ pivot }
 		{
 		}
 
-		std::string textID = "";
+		//TextComponent(std::string id, ResourceHandle<Font> fontHandle, Text text, FVec2 pivot, Color color = Color::black)
+		//	: textID{ std::move(id) }, fontHandle{ fontHandle }, textObj{ std::move(text) }, pivot{ pivot }, color{ color }
+		//{
+		//}
 
-		std::string text = "";
-		ResourceHandle<Texture> textureHandle; // Test...
-		ResourceHandle<Font> fontHandle; // Store handles?? or just raw data (id, font type, size)? handles invalidated -> but genrated again in text system
-		Color color = Color::black; // store here??? or always have a sprite component to texts?
-		int fontSize = 12;
-		bool isDirty = true; // false;
+		//std::string textID = "";
+
+		//std::string text = "";
+		//ResourceHandle<Texture> textureHandle; // Test...
+		//ResourceHandle<Font> fontHandle; // Store handles?? or just raw data (id, font type, size)? handles invalidated -> but genrated again in text system
+		//Color color = Color::black; // store here??? or always have a sprite component to texts?
+		//int fontSize = 12;
+		//bool isDirty = true; // false;
 
 
 		Text textObj;
+		FVec2 pivot{}; // or store in text class?
 
 		// could store a Texture here.... 
 	};
@@ -272,6 +288,18 @@ namespace cursed_engine
 
 	};
 
+	struct PhysicsComponent
+	{
+		PhysicsComponent() = default;
+
+		PhysicsComponent(BodyDefinition bodyDefinition)
+			: bodyDefinition{ std::move(bodyDefinition) }
+		{
+		}
+
+		BodyDefinition bodyDefinition; // Good to store, or only for creation?
+		PhysicsBody physicsBody = PhysicsBody::invalid();
+	};
 
 	//struct TransformComponent
 	//{
