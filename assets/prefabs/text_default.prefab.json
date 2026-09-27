@@ -1,11 +1,7 @@
 {
 	"name": "DefaultText",
 	"components": {
-		"Transform": {
-			"position": [ 0, 0 ],
-			"scale": [ 1.0, 1.0 ],
-			"rotation": 0.0
-		},
+		"Transform": {},
 		"Text": {
 			"font": "JackPirate_PERSONAL_USE_ONLY",
 			"size": 100,

@@ -1,0 +1,44 @@
+{
+  "name": "overworld",
+  "atlas_id": "island_tileset",
+  "tiles": [
+    {
+      "id": 1,
+      "name": "Grass",
+      "spawnables": [
+        {
+          "id": "palm_tree",
+          "chance": 0.05
+        },
+        {
+          "id": "grass",
+          "chance": 0.30
+        },
+        {
+          "id": "rock",
+          "chance": 0.07
+        }
+      ],
+      "column": 7,
+      "row": 1,
+      "walkable": true,
+      "layer": 1
+    },
+    {
+      "id": 2,
+      "name": "Sand",
+      "column": 3,
+      "row": 4,
+      "walkable": true,
+      "layer": 1
+    },
+    {
+      "id": 3,
+      "name": "Water",
+      "column": 8,
+      "row": 4,
+      "walkable": true,
+      "layer": 2
+    }
+  ]
+}

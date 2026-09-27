@@ -5,7 +5,9 @@
 namespace cursed_engine
 {
 	class EventBus;
-	struct Result;
+	
+	template <typename T>
+	class Result;
 	
 	// SettingsChangedEvent?
 
@@ -15,7 +17,7 @@ namespace cursed_engine
 	public:
 		Settings(EventBus& eventBus); // used for what?
 
-		Result loadConfig(const std::filesystem::path& path);
+		Result<void> loadConfig(const std::filesystem::path& path);
 		void saveConfig(const std::filesystem::path& path);
 
 		void applySettings();
@@ -50,6 +52,9 @@ namespace cursed_engine
 
 		bool save();
 		// load();
+
+		// temp!! use IVEc??
+		inline FVec2 getWindowSize() const { return FVec2{ 1280, 720 }; }
 
 
 

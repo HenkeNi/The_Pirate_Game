@@ -3,7 +3,6 @@
 #include "engine/math/rect.hpp"
 #include "engine/resources/resource_creator.h"
 #include "engine/rendering/render_types.h"
-#include "engine/utils/non_copyable.h"
 #include <SDL3/SDL.h>
 #include <vector>
 
@@ -19,20 +18,25 @@ namespace cursed_engine
 	class Texture;
 	class Text;
 	class Window;
-	struct Result;
+	
+	template <typename T>
+	class Result;
 
 #pragma region Render_Backend
 
-	class RenderBackend : public NonCopyable
+	class RenderBackend
 	{
 	public:
 		RenderBackend() = default;
 		virtual ~RenderBackend() = default;
 
+		RenderBackend(const RenderBackend&) = delete;
 		RenderBackend(RenderBackend&&) = delete;
+
+		RenderBackend& operator=(const RenderBackend&) = delete;
 		RenderBackend& operator=(RenderBackend&&) = delete;
 
-		[[nodiscard]] virtual Result init(Window& window) = 0;
+		[[nodiscard]] virtual Result<void> init(Window& window) = 0;
 		virtual void shutdown() = 0;
 
 		virtual void beginFrame() = 0;
@@ -49,6 +53,9 @@ namespace cursed_engine
 		virtual void drawOutlineRect(FRect dst, Color color) = 0;
 		virtual	void drawFillRect(FRect dst, Color color) = 0;
 
+		virtual void drawOutlineCircle(FVec2 pos, float radius, Color color) = 0;
+		virtual void drawFillCircle(FVec2 pos, float radius, Color color) = 0;
+
 		virtual	void drawLine(FVec2 start, FVec2 end, Color color) = 0;
 		virtual void drawText(Text& text, FVec2 pos) = 0;
 	};
@@ -63,7 +70,7 @@ namespace cursed_engine
 		SDLRenderBackend();
 		~SDLRenderBackend() = default;
 
-		[[nodiscard]] Result init(Window& window) override;
+		[[nodiscard]] Result<void> init(Window& window) override;
 		void shutdown() override;
 
 		void beginFrame() override;
@@ -79,6 +86,9 @@ namespace cursed_engine
 
 		void drawOutlineRect(FRect dst, Color color) override;
 		void drawFillRect(FRect dst, Color color) override;
+
+		void drawOutlineCircle(FVec2 pos, float radius, Color color);
+		void drawFillCircle(FVec2 pos, float radius, Color color);
 
 		void drawLine(FVec2 start, FVec2 end, Color color) override;
 		void drawText(Text& text, FVec2 pos) override;

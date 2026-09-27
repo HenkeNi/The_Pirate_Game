@@ -5,27 +5,32 @@
       "id": "background",
       "components": {
         "transform": {
-          "x": 0,
-          "y": 0,
-          "width": 1280,
-          "height": 720
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "scale": {
+            "x": 1280,
+            "y": 720
+          }
         },
         "sprite": {
-          "id": "settings_screen"
-        }
+          "texture_id": "settings_screen"
+        },
+        "ui": {}
       }
     },
     {
       "id": "title",
       "components": {
         "transform": {
-          "x": 640,
-          "y": 10,
-          "width": 500,
-          "height": 100,
-          "pivot": {
-            "x": 0.5,
-            "y": 0.0
+          "position": {
+            "x": 640,
+            "y": 10
+          },
+          "scale": {
+            "x": 50,
+            "y": 10
           }
         },
         "text": {
@@ -38,21 +43,30 @@
             "b": 255,
             "a": 255
           },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.0
+          },
           "outline": 0
-        }
+        },
+        "ui": {}
       }
     },
     {
       "id": "back_button",
       "components": {
         "transform": {
-          "x": 10,
-          "y": 10,
-          "width": 50,
-          "height": 50
+          "position": {
+            "x": 10,
+            "y": 10
+          },
+          "scale": {
+            "x": 50,
+            "y": 50
+          }
         },
         "sprite": {
-          "id": "sideswipe"
+          "texture_id": "sideswipe"
         },
         "button": {
           "action": "SceneTransition",
@@ -87,7 +101,8 @@
             "width": 50,
             "height": 50
           }
-        }
+        },
+        "ui": {}
       }
     },
     {
@@ -100,7 +115,7 @@
           "height": 50
         },
         "sprite": {
-          "id": "square"
+          "texture_id": "square"
         },
         "checkbox": {
           "is_checked": false,
@@ -119,7 +134,8 @@
             "width": 50,
             "height": 50
           }
-        }
+        },
+        "ui": {}
       }
     },
     {
@@ -127,20 +143,22 @@
       "components": {
         "transform": {
           "x": 200,
-          "y": 200, 
+          "y": 200,
           "width": 50,
           "height": 250
         },
         "sprite": {
-          "id": "square"
+          "texture:id": "square"
         },
         "slider": {
-         
-        }
+
+        },
+        "ui": {}
       }
     },
     {
       "id": "master_volume_slider_thumb",
+      "parent": "master_volume_slider_base",
       "components": {
         "transform": {
           "x": 200,
@@ -149,10 +167,7 @@
           "height": 50
         },
         "sprite": {
-          "id": "pirate-flag"
-        },
-        "parent": {
-          "parent_id": "master_volume_slider_base"
+          "texture_id": "pirate-flag"
         },
         "bounding_box": {
           "offset": {
@@ -163,8 +178,8 @@
             "width": 50,
             "height": 50
           }
-        }
-
+        },
+        "ui": {}
       }
     }
   ]

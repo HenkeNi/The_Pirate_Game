@@ -3,6 +3,7 @@
 #include "engine/utils/concepts.h"
 #include "engine/utils/utils.h"
 #include "engine/core/logger.h"
+#include "engine/core/result.h"
 #include <cstdint>
 #include <filesystem>
 #include <limits>
@@ -10,6 +11,7 @@
 #include <mutex>
 #include <string>
 #include <type_traits>
+#include <vector>
 #include <unordered_map>
 
 namespace cursed_engine
@@ -46,16 +48,18 @@ namespace cursed_engine
 	class AssetManager
 	{
 	public:
-		// void preload?
+		void addSearchPath(std::filesystem::path path);
+		void scanAssets();
+
 		template <typename Asset> // Dont use nodiscard here? 
-		[[nodiscard]] AssetHandle loadAsset(const std::filesystem::path& path); // Return optional handle? take in name insteaD?
+		AssetHandle preload(const std::string& id); // Return optional handle?
 
 		template <typename Asset>
-		[[nodiscard]] AssetHandle getAssetHandle(const std::string& name) const; // name or id? return optional?
+		[[nodiscard]] AssetHandle getAssetHandle(const std::string& id); // name or id? return optional?
 		// TODO; getAssetHandle(const char* name) const;
 
 		template <typename Asset>
-		[[nodiscard]] const Asset& getAsset(AssetHandle handle);
+		[[nodiscard]] const Asset& getAsset(AssetHandle handle) const; // make const?
 
 		template <typename Asset>
 		[[nodiscard]] const Asset* tryGetAsset(AssetHandle handle);
@@ -69,9 +73,23 @@ namespace cursed_engine
 		template <typename Asset>
 		[[nodiscard]] bool isLoaderRegistered() const;
 
+		template <typename Asset>
+		[[nodiscard]] bool isValidHandle(AssetHandle handle) const noexcept;
+
 		void unloadAll();
 
 	private:
+		template <typename Asset>
+		[[nodiscard]] AssetHandle load(const std::string& id);
+
+		template <typename Asset>
+		[[nodiscard]] std::vector<Asset>* getOrCreateStorage();
+
+		template <typename Asset>
+		[[nodiscard]] const std::vector<Asset>* findStorage() const;
+		
+		[[nodiscard]] std::string extractAssetId(const std::filesystem::path& path, const std::string& format) const;
+
 		struct AssetCacheBase { virtual ~AssetCacheBase() = default; };
 
 		template <typename Asset>
@@ -80,100 +98,93 @@ namespace cursed_engine
 			std::vector<Asset> storage;
 		};
 
-		template <typename Asset>
+		struct AssetMetaData
+		{
+			/*AssetMetaData(std::filesystem::path path, AssetLoaderBase* loader = nullptr)
+				: path{ std::move(path) }, loader{ loader }
+			{
+			}*/
+
+			std::filesystem::path path;
+			//AssetLoaderBase* loader;
+		};
+
+		struct AssetType
+		{
+			std::unordered_map<std::string, AssetMetaData> idToMetaData;
+			std::unordered_map<std::string, AssetHandle> idToAssetHandle;
+
+			std::unique_ptr<AssetCacheBase> cache = nullptr;
+			std::unique_ptr<AssetLoaderBase> loader = nullptr;
+		};
+
+
+		/*template <typename Asset>
 		AssetCache<Asset>& getOrCreateCache();
 
 		template <typename Asset>
-		[[nodiscard]] AssetLoader<Asset>* getLoader();
+		AssetCache<Asset>* findCache() const;
+
+		template <typename Asset>
+		[[nodiscard]] AssetLoader<Asset>* getLoader();*/
+
+		
 
 		//[[nodiscard]] std::string extractIdentifier(const std::filesystem::path& path); // TODO; make utlity function?
 
-		using TypeToAssetCache = std::unordered_map<std::type_index, std::unique_ptr<AssetCacheBase>>;
-		using TypeToLoaderMap = std::unordered_map<std::type_index, std::unique_ptr<AssetLoaderBase>>;
+		//using TypeToAssetCache = std::unordered_map<std::type_index, std::unique_ptr<AssetCacheBase>>;
+		//using TypeToLoader = std::unordered_map<std::type_index, std::unique_ptr<AssetLoaderBase>>;
 
-		TypeToAssetCache m_cachesByType;
-		TypeToLoaderMap m_loadersByType;
+		//TypeToAssetCache m_cachesByType; // m_cache or asset storage
+		//TypeToLoader m_loadersByType; // m_loaders
 
-		std::unordered_map<std::filesystem::path, AssetHandle> m_pathToHandles;
-		std::unordered_map<std::string, std::filesystem::path> m_idsToPaths;
+		//std::unordered_map<std::string, AssetMetaData> m_idToMetaData;
+		//std::unordered_map<std::string, AssetHandle> m_idToAssetHandle;
+
+		//std::unordered_map<std::filesystem::path, AssetHandle> m_pathToHandles;
+		//std::unordered_map<std::string, std::filesystem::path> m_idsToPaths;
+
+
+		std::unordered_map<std::type_index, AssetType> m_assetTypes;
+
+		std::vector<std::filesystem::path> m_searchPaths;
 
 		// TODO; id's to paths or ids to handles?
-
 		mutable std::mutex m_mutex; // put in archive?
 	};
 
 #pragma region Definitions
 
 	template <typename Asset>
-	[[nodiscard]] AssetHandle AssetManager::loadAsset(const std::filesystem::path& path)
+	AssetHandle AssetManager::preload(const std::string& id)
 	{
-		std::lock_guard<std::mutex> lock(m_mutex);
-
-		//std::string normalizedPath = NormalizePath(path);
-
-		const std::string keyPath = path.string();
-
-		if (auto it = m_pathToHandles.find(keyPath); it != m_pathToHandles.end())
-		{
-
-			// TODO; assert handle is same type?!
-			// todo; check if valid handle (else remove handle/pa th)
-
-			return it->second;
-		}
-
-		auto* assetLoader = getLoader<Asset>();
-
-		assert(assetLoader && "Not a valid asset loader!");
-
-		if (!assetLoader)
-		{
-			Logger::logError("No asset loader for type found!");
-			return AssetHandle{ AssetHandle::INVALID_INDEX, 0, utils::getTypeIndex<Asset>() }; // TODO; throw instead!?
-		}
-
-		auto assetOpt = assetLoader->load(keyPath);
-
-		if (!assetOpt.has_value())
-		{
-			Logger::logError("Failed to load asset!");
-			return AssetHandle{ AssetHandle::INVALID_INDEX, 0, utils::getTypeIndex<Asset>() }; // TODO; throw instead!?
-		}
-
-		auto& storage = getOrCreateCache<Asset>().storage;
-		storage.push_back(std::move(assetOpt.value()));
-
-		AssetHandle handle{ (uint32_t)storage.size() - 1, 0, utils::getTypeIndex<Asset>() };
-		m_pathToHandles.insert({ keyPath, handle });
-
-		m_idsToPaths.insert({ utils::extractAssetId(path), path});
-		//m_idsToPaths.insert({ extractIdentifier(path), path});
-
-		return handle;
+		return load<Asset>(id);
 	}
 
 	template <typename Asset>
-	[[nodiscard]] AssetHandle AssetManager::getAssetHandle(const std::string& name) const
+	[[nodiscard]] AssetHandle AssetManager::getAssetHandle(const std::string& id)
 	{
-		if (auto it = m_idsToPaths.find(name); it != m_idsToPaths.end())
-		{
-			const auto path = it->second;
-			return m_pathToHandles.at(path); // TODO; make sure function works!
-		}
-
-		assert(false && "Asset not loaded");
-		return AssetHandle(-1, -1, utils::getTypeIndex<Asset>()); // FIX!
+		return load<Asset>(id);
 	}
 
 	template <typename Asset>
-	[[nodiscard]] const Asset& AssetManager::getAsset(AssetHandle handle)
+	[[nodiscard]] const Asset& AssetManager::getAsset(AssetHandle handle) const
 	{
+		//assert(handle.IsValid());
+
 		std::lock_guard<std::mutex> lock(m_mutex);
 
+		//auto* assetCache = findCache<Asset>();
+
+		//assert(assetCache && "Not a valid asset cache");
 		// TODO; handle missing?
+		//const AssetType& assetType = m_assetTypes.at(utils::getTypeIndex<Asset>());
+		//return assetType.cache->storage.at(handle.index);
 
-		auto& assetCache = getOrCreateCache<Asset>();
-		return assetCache.storage.at(handle.index);
+		const auto* storage = findStorage<Asset>();
+		return storage->at(handle.index);
+
+		// Throw?
 	}
 
 	template <typename Asset>
@@ -183,16 +194,25 @@ namespace cursed_engine
 
 		// TODO; handle missing?
 
-		auto& assetCache = findOrCreateCache<Asset>();
-		return &assetCache.storage.at(handle.index);
+		return getOrCreateStorage<Asset>()->at(handle.index);
+
+		//const AssetType& assetType = m_assetTypes.at(utils::getTypeIndex<Asset>());
+
+		//auto& assetCache = findOrCreateCache<Asset>();
+		//return &assetType.cache.storage.at(handle.index);
 	}
 
 	template <DerivedFrom<AssetLoaderBase> Loader, typename... Args>
 	void AssetManager::addLoader(Args&&... args)
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
+
+		auto& assetType = m_assetTypes[utils::getTypeIndex<typename Loader::AssetType>()];
+		//auto& assetType = m_assetTypes.at();
+		assetType.loader = std::make_unique<Loader>(std::forward<Args>(args)...);
+
 		//m_loadersByType.insert({ getTypeIndex<typename Loader::AssetType>(), nullptr });
-		m_loadersByType.insert({ utils::getTypeIndex<typename Loader::AssetType>(), std::make_unique<Loader>(std::forward<Args>(args)...) });
+		//m_loadersByType.insert_or_assign(utils::getTypeIndex<typename Loader::AssetType>(), std::make_unique<Loader>(std::forward<Args>(args)...));
 	}
 
 	template <typename Asset>
@@ -203,17 +223,39 @@ namespace cursed_engine
 		// TEST
 		//auto type = getTypeIndex<int>(); // if works, dont have to pass asset
 		//auto type = getTypeIndex<typename loader::AssetType>(); // if works, dont have to pass asset
+		//auto& assetType = m_assetTypes.at(utils::getTypeIndex<Asset>());
 
-		m_loadersByType.insert({ utils::getTypeIndex<Asset>(), std::move(loader) });
+		auto& assetType = m_assetTypes[utils::getTypeIndex<Asset >()];
+		assetType.loader = std::move(loader);
 	}
 
 	template <typename Asset>
-	[[nodiscard]] bool AssetManager::isLoaderRegistered() const
+	bool AssetManager::isLoaderRegistered() const
 	{
-		return m_loadersByType.contains(utils::getTypeIndex<Asset>());
+		auto type = utils::getTypeIndex<Asset>();
+
+		if (!m_assetTypes.contains(type))
+			return false;
+
+		auto& assetType = m_assetTypes.at(type);
+		return assetType.loader != nullptr;
+		//return m_loadersByType.contains(utils::getTypeIndex<Asset>());
 	}
 
 	template <typename Asset>
+	bool AssetManager::isValidHandle(AssetHandle handle) const noexcept
+	{
+		auto type = utils::getTypeIndex<Asset>();
+
+		if (!m_assetTypes.contains(type))
+			return false;
+
+		auto& assetType = m_assetTypes.at(type);
+		return assetType.idToAssetHandle.contains(handle);
+		//return m_idToAssetHandle.find(handle); // make sure work
+	}
+
+	/*template <typename Asset>
 	AssetManager::AssetCache<Asset>& AssetManager::getOrCreateCache()
 	{
 		auto typeIndex = utils::getTypeIndex<Asset>();
@@ -222,9 +264,20 @@ namespace cursed_engine
 			m_cachesByType[typeIndex] = std::make_unique<AssetCache<Asset>>();
 
 		return *static_cast<AssetCache<Asset>*>(m_cachesByType[typeIndex].get());
-	}
+	}*/
 
-	template <typename Asset>
+	/*template <typename Asset>
+	AssetManager::AssetCache<Asset>* AssetManager::findCache() const
+	{
+		auto typeIndex = utils::getTypeIndex<Asset>();
+
+		if (m_cachesByType.contains(typeIndex))
+			return static_cast<AssetCache<Asset>*>(m_cachesByType.at(typeIndex).get());
+
+		return nullptr;
+	}*/
+
+	/*template <typename Asset>
 	[[nodiscard]] AssetLoader<Asset>* AssetManager::getLoader()
 	{
 		auto typeIndex = utils::getTypeIndex<Asset>();
@@ -235,183 +288,139 @@ namespace cursed_engine
 		}
 
 		return nullptr;
+	}*/
+
+	template <typename Asset>
+	AssetHandle AssetManager::load(const std::string& id)
+	{
+		//std::lock_guard<std::mutex> lock(m_mutex); // if loading resource cause other esource to load, error two locks!!
+
+		auto& assetType = m_assetTypes[utils::getTypeIndex<Asset>()];
+
+		// If already loaded...
+		if (auto it = assetType.idToAssetHandle.find(id); it != assetType.idToAssetHandle.end())
+		{
+			return it->second;
+		}
+
+		auto it = assetType.idToMetaData.find(id);
+		const bool found = it != assetType.idToMetaData.end();
+
+		assert(found && "Asset path not registered!");
+
+		if (!found)
+		{
+			Logger::logError("[AssetManager::Load] - Failed to find meta data for asset!");
+			return AssetHandle{ AssetHandle::INVALID_INDEX, 0, utils::getTypeIndex<Asset>() };
+		}
+
+		AssetLoader<Asset>* assetLoader = static_cast<AssetLoader<Asset>*>(assetType.loader.get());
+		
+		assert(assetLoader && "Not a valid asset loader!");
+
+		if (!assetLoader)
+		{
+			Logger::logError("[AssetManager::Load] - Invalid asset loader!");
+			return AssetHandle{ AssetHandle::INVALID_INDEX, 0, utils::getTypeIndex<Asset>() };
+		}
+
+		Result<Asset> result = assetLoader->load(it->second.path);
+
+		if (!result.ok())
+		{
+			Logger::logError("[AssetManager::Load] - Failed to load asset!");
+			return AssetHandle{ AssetHandle::INVALID_INDEX, 0, utils::getTypeIndex<Asset>() };
+		}
+
+		// Check if cache is null, allocate memory, cast to correct 
+	
+
+		/*if (!assetType.cache)
+		{
+			std::unique_ptr<AssetCache<Asset>> cache = std::make_unique<AssetCache<Asset>>();
+			storage = &cache->storage;
+		} 
+		else
+		{
+			AssetCache<Asset>* cache = static_cast<AssetCache<Asset>*>(it->cache.get());
+			storage = &cache->storage;
+		}*/
+
+		//fix this line....
+		//std::vector<Asset>& storage = static_cast<AssetCache<Asset>>(assetType.cache).storage;
+
+		std::vector<Asset>* storage = getOrCreateStorage<Asset>();
+		//storage->push_back(std::move(asset.value()));
+		storage->push_back(std::move(result.take()));
+
+		AssetHandle handle{ (uint32_t)storage->size() - 1, 0, utils::getTypeIndex<Asset>() }; // TODO; use 1 instaed of 0 for version
+		assetType.idToAssetHandle.insert_or_assign(id, handle);
+
+		return handle;
+
+		/*if (auto* loader = it->second.loader)
+		{
+			assetLoader = static_cast<AssetLoader<Asset>*>(loader);
+		}
+		else
+		{
+			assetLoader = getLoader<Asset>();
+			loader = assetLoader;
+		}*/
+
+
+		/*if (!loader)
+		{
+			AssetLoader<Asset>* assetLoader = getLoader<Asset>();
+			loader = assetLoader;
+		}*/
+
+		//AssetLoader<Asset>* assetLoader = static_cast<AssetLoader<Asset>*>(loader);
+
+		//assert(assetLoader && "Not a valid asset loader!");
+
+		// assert(it->second.path is valid path)
+
+
+		//if (auto asset = assetLoader->load(it->second.path))
+		//{
+		//	auto& storage = getOrCreateCache<Asset>().storage;
+
+		//	storage.push_back(std::move(asset.value()));
+
+		//	AssetHandle handle{ (uint32_t)storage.size() - 1, 0, utils::getTypeIndex<Asset>() }; // TODO; use 1 instaed of 0 for version
+		//	m_idToAssetHandle.insert_or_assign(id, handle);
+
+		//	return handle;
+		//}
+		
+	}
+
+	template <typename Asset>
+	std::vector<Asset>* AssetManager::getOrCreateStorage()
+	{
+		AssetType& assetType = m_assetTypes[utils::getTypeIndex<Asset>()];
+
+		if (!assetType.cache)
+		{
+			assetType.cache = std::make_unique<AssetCache<Asset>>();
+		}
+
+		return &static_cast<AssetCache<Asset>*>(assetType.cache.get())->storage;
+	}
+
+	template <typename Asset>
+	const std::vector<Asset>* AssetManager::findStorage() const
+	{
+		const AssetType& assetType = m_assetTypes.at(utils::getTypeIndex<Asset>());
+
+		if (assetType.cache)
+		{
+			return &static_cast<AssetCache<Asset>*>(assetType.cache.get())->storage;
+		}
+
+		return nullptr;
 	}
 
 #pragma endregion
 }
-
-
-/*
-*
-* class AssetManager : public Subsystem
-	{
-	public:
-		template <typename Handle>
-		[[nodiscard]] Handle load(const std::filesystem::path& path);
-
-		template <typename Handle>
-		[[nodiscard]] const typename Handle::AssetType& getAsset(Handle handle);
-
-		template <typename Handle>
-		[[nodiscard]] const typename Handle::AssetType* tryGetAsset(Handle handle);
-
-		template <typename Loader, typename Asset, typename... Args>
-		void addLoader(Args&&... args);
-
-		template <typename Asset> // templated?
-		void addLoader(std::unique_ptr<AssetLoaderBase> loader);
-
-		template <typename Asset>
-		[[nodiscard]] bool isLoaderRegistered() const;
-
-	private:
-		struct AssetCacheBase { virtual ~AssetCacheBase() = default; };
-
-		template <typename Asset>
-		struct AssetCache : AssetCacheBase
-		{
-			std::vector<Asset> storage;
-		};
-
-		template <typename Asset>
-		AssetCache<Asset>& getOrCreateCache();
-
-		template <typename Asset>
-		[[nodiscard]] AssetLoader<Asset>* findLoader();
-
-		template <typename Handle>
-		[[nodiscard]] Handle* findHandle(const std::string& path); // make const?
-
-		using TypeToLoaderMap = std::unordered_map<std::type_index, std::unique_ptr<AssetLoaderBase>>;
-		using TypeToAssetCache = std::unordered_map<std::type_index, std::unique_ptr<AssetCacheBase>>;
-		using PathToHandleMap = std::unordered_map<std::string, std::unique_ptr<AssetHandleBase>>;
-
-		TypeToAssetCache m_cachesByType;  // TODO; create AssetCache class in separate file isntead??
-		TypeToLoaderMap m_loadersByType;
-
-		std::unordered_map<std::type_index, PathToHandleMap> m_handlesByType;
-
-		mutable std::mutex m_mutex;
-	};
-
-#pragma region Definitions
-
-	template <typename Handle>
-	[[nodiscard]] Handle AssetManager::load(const std::filesystem::path& path)
-	{
-		std::lock_guard<std::mutex> lock(m_mutex);
-
-		//std::string normalizedPath = NormalizePath(path);
-
-		if (auto* handle = findHandle<Handle>(path.string()))
-		{
-			return *handle;
-		}
-
-		using Asset = typename Handle::AssetType;
-
-		auto* assetLoader = findLoader<Asset>();
-		if (!assetLoader)
-		{
-			Logger::logError("No asset loader for type found!");
-			return Handle{ -1, -1 }; // TODO; FIX! return INVALID_ID....
-		}
-
-		auto asset = assetLoader->load(path);
-
-		// TODO; use a cache instead?
-		auto& assetContainer = getOrCreateCache<Asset>();
-		assetContainer.storage.push_back(std::move(asset));
-
-		// TODO; add to paths...
-		auto& handles = m_handlesByType[getTypeIndex<Asset>()];
-
-		Handle insertedHandle = Handle{ (uint32_t)assetContainer.size() - 1, 0 };
-		handles.insert({ path.string(), insertedHandle });
-
-		return insertedHandle;
-	}
-
-	template <typename Handle>
-	[[nodiscard]] const typename Handle::AssetType& AssetManager::getAsset(Handle handle)
-	{
-		std::lock_guard<std::mutex> lock(m_mutex);
-
-		// TODO; handle missing?
-
-		using Asset = typename Handle::AssetType;
-		auto& assetCache = getOrCreateCache<Asset>();
-
-		return assetCache.storage.at(handle.index);
-	}
-
-	template <typename Handle>
-	[[nodiscard]] const typename Handle::AssetType* tryGetAsset(Handle handle)
-	{
-
-	}
-
-	template <typename Loader, typename Asset, typename... Args>
-	void AssetManager::addLoader(Args&&... args)
-	{
-		std::lock_guard<std::mutex> lock(m_mutex);
-		m_loadersByType.insert({ getTypeIndex<Asset>(), std::make_unique<Loader>(std::forward<Args>(args)... });
-	}
-
-	template <typename Asset>
-	void AssetManager::addLoader(std::unique_ptr<AssetLoaderBase> loader)
-	{
-		std::lock_guard<std::mutex> lock(m_mutex);
-		m_loadersByType.insert({ getTypeIndex<Asset>(), std::move(loader) });
-	}
-
-	template <typename Asset>
-	[[nodiscard]] bool AssetManager::isLoaderRegistered() const
-	{
-		return m_loadersByType.contains(getTypeIndex<Asset>());
-	}
-
-	template <typename Asset>
-	AssetManager::AssetCache<Asset>& AssetManager::getOrCreateCache()
-	{
-		auto typeIndex = getTypeIndex<Asset>();
-
-		if (!m_cachesByType.contains(typeIndex))
-			m_cachesByType[typeIndex] = std::make_unique<AssetCache<Asset>>();
-
-		return *static_cast<AssetCache<Asset>*>(m_cachesByType[typeIndex].get());
-	}
-
-	template <typename Asset>
-	[[nodiscard]] AssetLoader<Asset>* AssetManager::findLoader()
-	{
-		auto typeIndex = getTypeIndex<Asset>();
-
-		if (auto it = m_loadersByType.find(typeIndex); it != m_loadersByType.end())
-		{
-			return static_cast<AssetLoader<Asset>*>(it->second.get());
-		}
-
-		return nullptr;
-	}
-
-	template <typename Handle>
-	[[nodiscard]] Handle* AssetManager::findHandle(const std::string& path) // make const?
-	{
-		using Asset = typename Handle::AssetType;
-
-		auto typeIndex = getTypeIndex<Asset>();
-
-		if (auto mapIt = m_handlesByType.find(typeIndex); mapIt != m_handlesByType.end())
-		{
-			if (auto handleIt = mapIt->second.find(path); handleIt != mapIt->second.end())
-			{
-				return handleIt->second;
-			}
-		}
-
-		return nullptr;
-	}
-
-#pragma endregion
-*/

@@ -5,14 +5,13 @@ struct SDL_Texture;
 
 namespace cursed_engine
 {	
-	// Consider using NonCopyable instead?
 	class Texture
 	{
 	public:
-		struct Tag{}; // Remove?
+		//struct Tag{}; // Remove?
 
-		Texture();
-		Texture(SDL_Texture* texture);  // TODO; pass in width / height as well?
+		//Texture();
+		Texture(SDL_Texture* texture = nullptr);  // TODO; pass in width / height as well?
 		~Texture();
 
 		Texture(const Texture&) = delete;

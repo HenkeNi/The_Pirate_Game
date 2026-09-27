@@ -15,8 +15,36 @@ struct InputComponent
 	bool down;
 	bool left;
 	bool right;
+
+	bool interact;
 };
 
+struct DebugComponent
+{
+	// store update frequency?
+};
+
+
+struct InteractionComponent
+{
+	std::string action;
+};
+
+// TODO; to find player (player.playerId == networkSession.localPlayerId())
+struct PlayerComponent
+{
+	using PlayerId = uint32_t;
+	PlayerId id;
+};
+
+// Gameplay
+struct HealthComponent
+{
+	int currentLife;
+	int maxLife;
+};
+
+// 
 
 //struct MovementComponent
 //{

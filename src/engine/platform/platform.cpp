@@ -1,6 +1,6 @@
 #include "engine/platform/platform.h"
 #include "engine/core/settings/engine_config.h"
-#include "engine/resources/texture/surface_loader.h"
+#include "engine/resources/sdl_resource_loaders.h" // -- maybe make a generic surface loader?
 #include "engine/resources/texture/surface.h"
 #include "engine/platform/window.h"
 #include "engine/core/result.h"
@@ -21,39 +21,43 @@ namespace cursed_engine
 		shutdown();
 	}
 
-	Result SDLPlatform::init(const EngineConfig& config)
+	Result<void> SDLPlatform::init(const EngineConfig& config)
 	{
 		const auto& appInfo = config.appInfo;
 
 		if (!SDL_SetAppMetadata(appInfo.name.c_str(), appInfo.version.c_str(), appInfo.identifier.c_str()))
 		{
-			return Result::failure(std::format("Failed to set SDL_AppMetadata. Reason: {}", SDL_GetError()));
+			return Result<void>::failure(std::format("Failed to set SDL_AppMetadata. Reason: {}", SDL_GetError()));
 		}
 
 		// SDL initialization
 		if (!SDL_Init(SDL_INIT_AUDIO | SDL_INIT_GAMEPAD | SDL_INIT_VIDEO))
 		{
-			return Result::failure(std::format("Failed to initialize SDL. Reason: {}", SDL_GetError()));
+			return Result<void>::failure(std::format("Failed to initialize SDL. Reason: {}", SDL_GetError()));
 		}
 
 		// TTF initialization
 		if (!TTF_Init())
 		{
-			return Result::failure(std::format("Failed to initialize TTF. Reason: {}", SDL_GetError()));
+			return Result<void>::failure(std::format("Failed to initialize TTF. Reason: {}", SDL_GetError()));
 		}
 
 		// Window creation
-		Result result = m_window.create(config.window);
+		Result<void> result = m_window.create(config.window);
 
-		if (!result.succeeded)
+		if (!result.ok())
 		{
 			return result;
 		}
 
 		SurfaceLoader surfaceLoader;
-		Surface surface = surfaceLoader(config.window.iconPath);
+		Result<Surface> surfaceResult = surfaceLoader(config.window.iconPath);
 
-		m_window.setIcon(surface);
+		if (surfaceResult.ok())
+		{
+			m_window.setIcon(surfaceResult.take());
+			
+		}
 
 		// Input 
 		return m_input.init(config.input);		
@@ -102,7 +106,7 @@ namespace cursed_engine
 
 			default:
 				m_window.processEvent(event);
-				m_input.processInput(event); // TODO- name both processEvents?
+				m_input.processInput(event);
 				break;
 			}
 		}

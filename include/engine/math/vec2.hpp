@@ -17,7 +17,11 @@ namespace cursed_engine
 		constexpr Vec2(Vec2&&) = default;
 
 		template <Numeric U>
-		constexpr explicit Vec2(const Vec2<U>& other);
+		constexpr Vec2(U x, U y); // mark explicit? needed?
+
+		template <Numeric U>
+		constexpr Vec2(const Vec2<U>& other); // overload with U x, U y?
+		//constexpr explicit Vec2(const Vec2<U>& other);
 
 		Vec2& operator=(const Vec2&) = default;
 		Vec2& operator=(Vec2&&) = default;
@@ -48,6 +52,13 @@ namespace cursed_engine
 	template <Numeric T>
 	constexpr Vec2<T>::Vec2(T x, T y) 
 		: x{ x }, y{ y }
+	{
+	}
+
+	template <Numeric T>
+	template <Numeric U>
+	constexpr Vec2<T>::Vec2(U x, U y)
+		: x{ static_cast<T>(x) }, y{ static_cast<T>(y) }
 	{
 	}
 

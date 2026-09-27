@@ -2,28 +2,32 @@
 #include "engine/platform/cursor.h"
 #include "engine/platform/window.h"
 #include "engine/platform/input.h"
-#include "engine/utils/non_copyable.h"
 
 // [Consider] - having window process window events (enum class EventType, struct WindowResizedEvent : public Event)
 
 namespace cursed_engine
 {
 	struct EngineConfig;
-	struct Result;
 	class EventBus;
+
+	template <typename T>
+	class Result;
 
 #pragma region Platform
 
-	class Platform : public NonCopyable
+	class Platform
 	{
 	public:
 		Platform() = default;
 		virtual ~Platform() = default;
 
+		Platform(const Platform&) = delete;
 		Platform(Platform&&) = delete;
+		
+		Platform& operator=(const Platform&) = delete;
 		Platform& operator=(Platform&&) = delete;
 		 
-		virtual Result init(const EngineConfig& config) = 0;
+		virtual Result<void> init(const EngineConfig& config) = 0;
 		virtual void shutdown() = 0;
 
 		virtual void beginFrame() = 0;
@@ -48,7 +52,7 @@ namespace cursed_engine
 		SDLPlatform(EventBus& eventBus);
 		~SDLPlatform();
 
-		Result init(const EngineConfig& config) override;
+		Result<void> init(const EngineConfig& config) override;
 		void shutdown() override;
 
 		void beginFrame() override;

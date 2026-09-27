@@ -1,22 +1,20 @@
 #include "engine/assets/asset_loader.h"
 #include "engine/utils/json/json_document.h"
 #include "engine/utils/json/json_value.h"
-#include "engine/core/logger.h"
-#include "engine/resources/resource_manager.hpp"
+#include "engine/core/result.h"
 
 namespace cursed_engine
 {
 	PropertyValue parsePropertyValue(const JsonValue& value); // In this file?
 
-	std::optional<TextureAtlas> cursed_engine::TextureAtlasLoader::load(const std::filesystem::path& path) const
+	Result<TextureAtlas> cursed_engine::TextureAtlasLoader::load(const std::filesystem::path& path) const
 	{
 		JsonDocument document;
 
-		const auto [success, message] = document.loadFromFile(path);
-		if (!success)
+		const Result<void> result = document.loadFromFile(path);		
+		if (!result.ok())
 		{
-			Logger::logError("Failed to load SpriteSheet: " + message);
-			return std::nullopt;
+			return Result<TextureAtlas>::failure(std::format("Failed to load SpriteSheet: ", result.message()));
 		}
 
 		TextureAtlas textureAtlas;
@@ -26,30 +24,46 @@ namespace cursed_engine
 		{
 			for (const auto& region : document["regions"].asArray())
 			{
-				textureAtlas.regions.emplace_back(IRect{
-					region["x"].asInt(),
-					region["y"].asInt(),
-					region["width"].asInt(),
-					region["height"].asInt()
-				});
+				int x = region["rect"]["x"].asInt();
+				int y = region["rect"]["y"].asInt();
 
+				int w = region["rect"]["w"].asInt();
+				int h = region["rect"]["h"].asInt();
+
+				FVec2 pivot{};
+
+				if (region.hasMember("pivot"))
+				{
+					pivot.x = region["pivot"]["x"].asFloat();
+					pivot.y = region["pivot"]["y"].asFloat();
+				}
+				else
+				{
+					int x = 20;
+				}
+
+				textureAtlas.regions.emplace_back(IRect{ x, y, w, h, }, pivot);
 				textureAtlas.idToRegionIndex.insert({ region["identifier"].asString(), textureAtlas.regions.size() - 1 });
 			}
 		}
 
-		return textureAtlas;
+		return Result<TextureAtlas>::success(textureAtlas);
 	}
 
-	std::optional<AnimationSet> AnimationLoader::load(const std::filesystem::path& path) const
+	const char* TextureAtlasLoader::format() const
+	{
+		return ".texture_atlas.json";
+	}
+
+	Result<AnimationSet> AnimationLoader::load(const std::filesystem::path& path) const
 	{
 		JsonDocument document;
 
-		const auto [success, message] = document.loadFromFile(path);
+		const Result<void> result = document.loadFromFile(path);
 
-		if (!success)
+		if (!result.ok())
 		{
-			Logger::logError("Failed to load SpriteSheet: " + message);
-			return std::nullopt;
+			return Result<AnimationSet>::failure(std::format("Failed to load SpriteSheet: ", result.message()));
 		}
 
 		// TODO; pass in texture manager? to get texture handle...
@@ -75,49 +89,64 @@ namespace cursed_engine
 			animationSet.animations.insert({ std::move(name), Animation{ std::move(frames), isLooping } });
 		}
 
-		return animationSet;
+		return Result<AnimationSet>::success(animationSet);
 	}
 
-	std::optional<Prefab> PrefabLoader::load(const std::filesystem::path& path) const
+	const char* AnimationLoader::format() const
+	{
+		return ".animation.json";
+	}
+
+	Result<Prefab> PrefabLoader::load(const std::filesystem::path& path) const
 	{
 		JsonDocument document;
 
-		const auto [success, message] = document.loadFromFile(path);
-		if (!success)
+		const Result<void> result = document.loadFromFile(path);
+		if (!result.ok())
 		{
-			Logger::logError("Failed to load prefab: " + message);
-			return std::nullopt;
+			return Result<Prefab>::failure(std::format("Failed to load prefab: ", result.message()));
 		}
 
 		Prefab prefab;
 
 		document["components"].forEachProperty([&](const char* name, JsonValue value)
 			{
+				if (!value.isObject())
+				{
+					// LogError?
+					return;
+				}
+
 				ComponentProperties properties;
 				//auto values = parsePropertyValue(value);
 
-				if (value.isObject())
-				{
-					// TODO; dont? or maybe do?
+				// TODO; dont? or maybe do?
 
-					value.forEachProperty([&](const char* name, JsonValue jsonValue) // rename value?
-						{
-							auto property = parsePropertyValue(jsonValue);
-							properties.insert({ name, std::move(property) });
-						});
+				value.forEachProperty([&](const char* name, JsonValue jsonValue) // rename value?
+					{
+						auto n = name;
 
-					//for (const auto& [name, val] : value.getObject())
-					//{
-					//	auto property = parsePropertyValue(val);
-					//	properties.insert({ name.GetString(), std::move(property) });
-					//}
-				}
+						auto property = parsePropertyValue(jsonValue);
+						properties.insert({ name, std::move(property) });
+					});
+
+				//for (const auto& [name, val] : value.getObject())
+				//{
+				//	auto property = parsePropertyValue(val);
+				//	properties.insert({ name.GetString(), std::move(property) });
+				//}
+
 
 				prefab.components.insert({ name, std::move(properties) });
 			});
 
 		prefab.name = document["name"].asString(); // TODO; use name! store in prefab!
-		return prefab;
+		return Result<Prefab>::success(prefab);
+	}
+
+	const char* PrefabLoader::format() const
+	{
+		return ".prefab.json";
 	}
 
 

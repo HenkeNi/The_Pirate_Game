@@ -8,11 +8,11 @@ namespace cursed_engine
 {
 #pragma region Window
 
-	Result Window::create(const WindowConfig& config)
+	Result<void> Window::create(const WindowConfig& config)
 	{
-		Result result = onCreate(config);
+		Result<void> result = onCreate(config);
 
-		if (result.succeeded)
+		if (result.ok())
 		{
 			m_preferences.title = config.title;
 			m_preferences.position = { config.xPos, config.yPos };
@@ -169,7 +169,7 @@ namespace cursed_engine
 		return m_window;
 	}
 
-	Result SDLWindow::onCreate(const WindowConfig& config)
+	Result<void> SDLWindow::onCreate(const WindowConfig& config)
 	{
 		if (m_window)
 		{
@@ -178,7 +178,7 @@ namespace cursed_engine
 
 		m_window = SDL_CreateWindow(config.title.c_str(), config.width, config.height, SDL_WINDOW_RESIZABLE);
 
-		return m_window ? Result::success() : Result::failure(SDL_GetError());
+		return m_window ? Result<void>::success() : Result<void>::failure(SDL_GetError());
 	}
 
 	void SDLWindow::onDestroy()

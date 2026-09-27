@@ -18,27 +18,7 @@ namespace cursed_engine
 		m_assetManager.addLoader<TextureAtlasLoader>();
 		m_assetManager.addLoader<PrefabLoader>();
 
-		for (const auto& entry : std::filesystem::recursive_directory_iterator("../assets/"))
-		{
-			if (!entry.is_regular_file())
-				continue;
-
-			const auto& path = entry.path();
-			std::string filename = path.string();
-
-			if (filename.ends_with("animation.json"))
-			{
-				auto handle = m_assetManager.loadAsset<AnimationSet>(path);
-			}
-			else if (filename.ends_with("texture_atlas.json"))
-			{
-				auto handle = m_assetManager.loadAsset<TextureAtlas>(path);
-			}
-			else if (filename.ends_with("prefab.json"))
-			{
-				auto handle = m_assetManager.loadAsset<Prefab>(entry.path());
-			}
-		}
+		m_assetManager.addSearchPath("../assets/");
 
 		Logger::logInfo(std::format("{}[AssetModule] - Initialization successful!", log_format::INDENT));
 		return true;
@@ -46,11 +26,11 @@ namespace cursed_engine
 
 	void AssetModule::shutdown()
 	{
-
+		m_assetManager.unloadAll();
 	}
 
-	//AssetServices AssetModule::getServices() noexcept
-	//{
-	//	return { &m_assetManager, &m_localization };
-	//}
+	void AssetModule::scanAssets()
+	{
+		m_assetManager.scanAssets();
+	}
 }

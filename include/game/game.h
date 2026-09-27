@@ -1,35 +1,39 @@
 #pragma once
-#include "game/scenes/scene_stack.h"
-#include "game/scenes/scene_factory.h"
-//#include "game/map/map_generator.h"
-#include "game/map/tile_registry.h"
+#include "game/scenes/scene_manager.h"
 #include <engine/core/application.h>
+#include <engine/utils/containers/registry.hpp>
 
 namespace cursed_engine
 {
 	class EventBus;
+	struct EngineConfig;
 }
 
-class Game : public cursed_engine::Application
+namespace ce = cursed_engine;
+
+class Game : public ce::Application
 {
 public:
 	Game();
 	~Game() = default;
 
 	void onUpdate(float deltaTime) override;
-	void onRender(const cursed_engine::RenderContext& ctx) override;
+	void onRender(const ce::RenderContext& ctx) override;
 	
-	void onCreated(const cursed_engine::EngineContext& ctx) override; // pass by value?
+	void onCreated(const ce::EngineContext& ctx) override; // pass by value?
 	void onDestroyed() override;
 
-private:
-	void setupScenes();
+private:	
+	void registerActions(const ce::EngineContext& ctx);
+	void registerScenes(const ce::EngineContext& ctx);
 
+	void registerComponents(const ce::EngineContext& ctx);
+	void setupSystems(const ce::EngineContext& ctx);
+	
 	// Pimpl??
-	SceneFactory m_sceneFactory;
-	SceneStack m_sceneStack;
-	//cursed_engine::EventBus* m_eventBus;
-
-	TileRegistry m_tileRegistry;
+	SceneManager m_sceneManager;
+	
+	ce::EventBus* m_eventBus;
+	const ce::EngineConfig* m_configs;
 	//MapGenerator m_mapGenerator; // put in GameScene? (base)
 };

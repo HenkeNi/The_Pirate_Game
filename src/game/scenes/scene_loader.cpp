@@ -2,33 +2,51 @@
 #include "game/scenes/scene.h"
 #include <engine/utils/json/json_document.h>
 #include <engine/utils/json/json_value.h> // TODO; odnt include? shared include for json or include in document?
-
+#include <engine/core/result.h>
 
 #include <engine/ecs/entity/entity_factory.h>
 #include <engine/ecs/component/component_registry.h>
 #include <engine/core/application.h>
 #include <engine/ecs/component/core_components.h>
 
-void SceneLoader::loadAssets(Scene& scene, const std::filesystem::path& path, const cursed_engine::ComponentInitContext& ctx) const
+#include <engine/core/events/event_bus.h>
+#include <engine/core/events/events.h>
+
+void SceneLoader::init(SceneContext sceneCtx, ce::ComponentInitContext initCtx, ce::EventBus* eventBus)
+{
+	m_sceneContext = std::move(sceneCtx); 
+	m_componentInitContext = std::move(initCtx);
+	//m_componentPostInitContext = std::move(postInitCtx);
+	m_eventBus = eventBus;
+}
+
+std::unique_ptr<Scene> SceneLoader::load(const SceneMeta& meta)
 {
 	cursed_engine::JsonDocument document;
-	auto [success, message] = document.loadFromFile(path);
+	const ce::Result<void> result = document.loadFromFile(meta.path);
 
-	if (!success)
+	//assert(result.ok() && "Failed to load json document!");
+
+	if (!result.ok())
 	{
-		cursed_engine::Logger::logError(message);
-		return;
+		// cursed_engine::Logger::logError(message);
+		return nullptr;
 	}
 
-	auto* componentRegistry = scene.m_context.componentRegistry;
+	std::unique_ptr<Scene> scene = meta.creator(m_sceneContext);
+
+	// TODO; attach physcis world? (specify in json, gravity. ect?)
+
+	auto* componentRegistry = m_sceneContext.componentRegistry;
+	//auto* componentRegistry = scene.m_context.componentRegistry;
 
 	if (!componentRegistry)
 	{
 		cursed_engine::Logger::logError("Invalid Component registry!"); // return result instead?
-		return;
+		return nullptr;
 	}
 
-	auto& ecsRegistry = scene.m_registry;
+	auto& ecsRegistry = scene->m_registry;
 
 	struct PendingParent
 	{
@@ -51,13 +69,38 @@ void SceneLoader::loadAssets(Scene& scene, const std::filesystem::path& path, co
 			pendingParents.emplace_back(entityHandle, entity["parent"].asString());
 		}
 
+		// ##################### Maybe find better way of calling post init function?? ###################3
+
+		std::vector<const char*> components;
+
+		// ###############################################################################3
+
 		entity["components"].forEachProperty([&](const char* name, cursed_engine::JsonValue value)
 			{
-				assert(componentRegistry->isValid(name) && "[SceneLoader::loadAssets] - Component Type not registered!"); // TODO; make sure program doesnt crahs if not registered
+				assert(componentRegistry->contains(name) && "[SceneLoader::loadAssets] - Component Type not registered!"); // TODO; make sure program doesnt crahs if not registered
+
+				components.push_back(name);
 
 				const auto& componentData = componentRegistry->get(name);
-				componentData.deserialize(entityHandle, value, ctx);
+				componentData.deserializeFromJson(entityHandle, value, m_componentInitContext);
 			});
+
+
+		ce::PhysicsWorld* physicsWorld = scene->getPhysicsWorld();
+
+		if (!physicsWorld)
+			continue; // return instead?
+
+
+		for (const auto& c : components)
+		{
+			const auto& componentData = componentRegistry->get(c);
+
+			if (!componentData.postInit)
+				continue;
+
+			componentData.postInit(entityHandle, { physicsWorld });
+		}
 	}
 
 	// -------------------------------- setup relationships ------------------------------------
@@ -124,93 +167,11 @@ void SceneLoader::loadAssets(Scene& scene, const std::filesystem::path& path, co
 		}
 
 		childHierarchyComponent->parent = parentIt->second;
-
-		// set next sibling? 
-
-		//*childHandle = pendingParent.childHandle;
 	}
 
-	//for (const auto& [parent, children] : parentIdToChildrenIds)
-	//{
-	//	if (auto it = idToHandle.find(parent); it != idToHandle.end())
-	//	{
-	//		auto* parentHierarchyComponent = it->second.tryGetComponent<cursed_engine::HierarchyComponent>();
-	//		if (!parentHierarchyComponent)
-	//		{
-	//			// log error/warning...
-	//			continue;
-	//		}
-
-	//		for (const auto& child : children)
-	//		{
-	//			//if (auto& firstChild = parentHierarchyComponent->firstChild; !firstChild.isValid())
-
-	//			auto& firstChildHandle = parentHierarchyComponent->firstChild;
-
-	//			if (!firstChildHandle.isValid())
-	//			{
-	//				// make function? get child?
-	//				if (auto childIt = entityIdToEntityHandle.find(child); childIt != entityIdToEntityHandle.end())
-	//				{
-	//					parentHierarchyComponent->firstChild = childIt->second; // or handle
-	//					// also update childs hei
-	//					childIt->second.tryGetComponent<cursed_engine::HierarchyComponent>()->parent = it->second;
-	//				}
-	//			}
-	//			else // maybe do this in if and let current if be the else? 
-	//			{
-
-	//				// TODO; remember to update child's hiearacrchy as well`!
-	//				auto* childHierarchyComponent = firstChildHandle.tryGetComponent<cursed_engine::HierarchyComponent>();
-
-	//				while (childHierarchyComponent->nextSibling.isValid())
-	//				{
-	//					auto nextChildHandle = childHierarchyComponent->nextSibling;
-	//					childHierarchyComponent = nextChildHandle.tryGetComponent<cursed_engine::HierarchyComponent>();
-	//				}
-
-	//				assert(!childHierarchyComponent->nextSibling.isValid() && "ERROR?");
-
-	//				if (auto childIt = entityIdToEntityHandle.find(child); childIt != entityIdToEntityHandle.end())
-	//				{
-	//					childHierarchyComponent->nextSibling = childIt->second;
-	//				}
-
-	//				/*while (true)
-	//				{
-	//					auto& childHierarchyComponent = childHandle.getComponent<cursed_engine::HierarchyComponent>();
-	//					
-	//					auto& nextSibling = childHierarchyComponent.nextSibling;
-	//					if (!nextSibling.isValid())
-	//					{
-	//						if (auto childIt = entityIdToEntityHandle.find(child); childIt != entityIdToEntityHandle.end())
-	//						{
-	//							nextSibling = childIt->second;
-	//							break;
-	//						}
-	//					}
-	//				}*/
-	//			}
-	//		}
-
-
-	//		//hierarchyComponent.parent do reveresed? have parent attach children / siblings? store paretn in json under "core data" not component data
-	//	}
-
-	//	// log errror?!
-	//	
-	//}
-
-
-
-	//std::unordered_map<std::string, std::string> entityToParent; // store relationship?????
 
 
 
 
+	return scene;
 }
-
-//void SceneLoader::createEntities(const class JsonArrayView& json, const cursed_engine::ComponentInitContext& ctx) const
-//{
-//
-//}

@@ -7,12 +7,12 @@ namespace cursed_engine
 	class TextManager;
 	class Localization;
 	
-	class TextSystem : public System
+	class TextSystem : public UpdateSystem
 	{
 	public:
 		TextSystem(TextManager* textManager/*,TextFactory* textFactory*/, Localization* localization);
 
-		void update(SystemContext& context) override;
+		void update(SystemUpdateContext& context) override;
 
 	private:
 		//void handleDynamicText();

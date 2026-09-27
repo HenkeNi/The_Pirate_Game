@@ -5,12 +5,12 @@ namespace cursed_engine
 {
 	class AssetManager;
 
-	class AnimationSystem : public System
+	class AnimationSystem : public UpdateSystem
 	{
 	public:
 		AnimationSystem(AssetManager& assetManager);
 
-		void update(SystemContext& context) override;
+		void update(SystemUpdateContext& context) override;
 	
 	private:
 		AssetManager& m_assetManager;

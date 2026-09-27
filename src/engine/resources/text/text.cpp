@@ -5,12 +5,7 @@
 #include <SDL3_ttf/SDL_ttf.h>
 
 namespace cursed_engine
-{
-	Text::Text()
-		: m_text{ nullptr }
-	{
-	}
-
+{	
 	Text::Text(TTF_Text* text)
 		: m_text{ text }
 	{

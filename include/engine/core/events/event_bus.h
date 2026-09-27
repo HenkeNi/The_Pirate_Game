@@ -26,6 +26,9 @@ namespace cursed_engine
 		template <typename Event>
 		void publish(Event&& event);
 
+		template <typename Event, typename... Args>
+		void publish(Args&&... args);
+
 		template <typename Event>
 		void publishInstantly(Event&& event); // rename emit?
 
@@ -52,7 +55,7 @@ namespace cursed_engine
 	{
 		auto& vec = m_listeners[utils::getTypeIndex<Event>()];
 
-		vec.push_back([cb = std::move(callback)](const std::any& e) // why any here?
+		vec.push_back([cb = std::move(callback)](const std::any& e)
 			{
 				cb(std::any_cast<const Event&>(e));
 			});
@@ -61,7 +64,13 @@ namespace cursed_engine
 	template <typename Event>
 	void EventBus::publish(Event&& event)
 	{
-		m_eventQueue.push(getTypeIndex<Event>(), std::forward<Event>(event));
+		m_eventQueue.push(QueuedEvent{ utils::getTypeIndex<Event>(), std::forward<Event>(event) });
+	}
+
+	template <typename Event, typename... Args>
+	void EventBus::publish(Args&&... args)
+	{
+		m_eventQueue.emplace(utils::getTypeIndex<Event>(), Event{ std::forward<Args>(args)... });
 	}
 
 	template <typename Event>

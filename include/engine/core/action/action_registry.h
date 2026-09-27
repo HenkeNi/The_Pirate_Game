@@ -13,6 +13,8 @@ namespace cursed_engine
 	using ActionValue = std::variant<bool, int, double, std::string, Entity>;
 	using ActionArgs = std::unordered_map<std::string, ActionValue>;
 
+	// TODO; use registry class?
+
 	class ActionRegistry
 	{
 	public:

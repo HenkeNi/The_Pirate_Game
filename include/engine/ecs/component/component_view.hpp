@@ -3,10 +3,9 @@
 #include "engine/ecs/ecs_types.h"
 #include "engine/ecs/signature_registry.hpp"
 #include "engine/utils/concepts.h"
-#include "engine/utils/non_copyable.h"
+#include <algorithm>
+#include <execution> // remove
 #include <span>
-#include <execution>
-
 
 namespace cursed_engine
 {
@@ -45,7 +44,7 @@ namespace cursed_engine
 
 	// TODO; make sure each type is unique!!
 	template <ComponentType... Ts>
-	class ComponentView //: private NonCopyable
+	class ComponentView
 	{
 	public:
 		// TODO, make private? friend class ECSRegistry..
@@ -54,8 +53,11 @@ namespace cursed_engine
 
 		~ComponentView() = default;
 
-		// Allow moving? Disable copying?
-		ComponentView(ComponentView&&) = default;
+
+		ComponentView(const ComponentView&) = delete;
+		ComponentView(ComponentView&&) = default; // Allow moving?
+
+		ComponentView& operator=(const ComponentView&) = delete;
 		ComponentView& operator=(ComponentView&&) = default;
 
 		// ==================== Core API ====================
@@ -87,7 +89,8 @@ namespace cursed_engine
 
 		[[nodiscard]] std::size_t size() const noexcept;
 
-		[[nodiscard]] inline const std::span<Entity> getEntities() const { return m_entities; } // return vector? or remove?
+		[[nodiscard]] inline const std::span<Entity> getAllEntities() const { return m_entities; } // CURRENTLY RETURNS ALL ENTITIES - DOES NOT FILTER!!
+		//[[nodiscard]] inline const std::span<Entity> getEntities() const { return m_entities; } // CURRENTLY RETURNS ALL ENTITIES - DOES NOT FILTER!!
 
 		// ==================== Search ====================
 		template <typename Predicate> // template <Callable Func>
@@ -140,13 +143,13 @@ namespace cursed_engine
 		//std::apply([](auto&... ptrs) { ((ptrs = nullptr), ...); }, m_components);
 	}
 
-	template <ComponentType ...Ts>
+	template <ComponentType... Ts>
 	ComponentView<Ts...>::ComponentView(const Signatures* signatures, ComponentContainer<Ts>*... containers, std::span<const Entity> entities)
 		: m_signatures{ signatures }, m_components{ containers... }, m_entities{ entities }
 	{
 	}
 
-	template <ComponentType ...Ts>
+	template <ComponentType... Ts>
 	template <typename Callback>
 	void ComponentView<Ts...>::forEach(Callback&& callback) const // TODO; fix this function!
 	{
@@ -158,7 +161,7 @@ namespace cursed_engine
 		{
 			if ((m_signatures->getSignature(entity.id) & m_excluded).any())
 			{
-				return;
+				continue; // was return before!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			}
 
 			auto components = getComponents(entity.id);
@@ -197,7 +200,7 @@ namespace cursed_engine
 		}
 	}
 
-	template <ComponentType ...Ts>
+	template <ComponentType... Ts>
 	template <typename Callback>
 	void ComponentView<Ts...>::forEach(Callback&& callback)
 	{
@@ -210,13 +213,11 @@ namespace cursed_engine
 		std::for_each(std::execution::seq, m_entities.begin(), m_entities.end(),
 			[&](const Entity& entity) {
 
+				// If entity has invalid signature (i.e. contains a component that is excluded)
 				if ((m_signatures->getSignature(entity.id) & m_excluded).any())
 				{
 					return;
 				}
-
-				// if entity has component skip...
-				//get entity signature, 
 
 				auto components = getComponents(entity.id);
 
@@ -253,7 +254,7 @@ namespace cursed_engine
 			});
 	}
 
-	template <ComponentType ...Ts>
+	template <ComponentType... Ts>
 	template <ComponentType T>
 	void ComponentView<Ts...>::exclude()
 	{
@@ -261,7 +262,7 @@ namespace cursed_engine
 		m_excluded.set(componentId);
 	}
 
-	template <ComponentType ...Ts>
+	template <ComponentType... Ts>
 	template <ComponentType T>
 	[[nodiscard]] const T* ComponentView<Ts...>::getComponent(Entity entity) const
 	{
@@ -271,29 +272,29 @@ namespace cursed_engine
 		return nullptr;
 	}
 
-	template <ComponentType ...Ts>
+	template <ComponentType... Ts>
 	template <ComponentType T>
 	[[nodiscard]] T* ComponentView<Ts...>::getComponent(Entity entity)
 	{
 		return const_cast<T*>(std::as_const(*this).template getComponent<T>(entity.id));
 	}
 
-	template <ComponentType ...Ts>
+	template <ComponentType... Ts>
 	[[nodiscard]] bool ComponentView<Ts...>::contains(Entity entity) const noexcept
 	{
 		return std::ranges::find(m_entities, entity) != m_entities.end();
 	}
 
-	template <ComponentType ...Ts>
+	template <ComponentType... Ts>
 	[[nodiscard]] bool ComponentView<Ts...>::isEmpty() const noexcept
 	{
 		return m_entities.empty();
 	}
 
-	template <ComponentType ...Ts>
+	template <ComponentType... Ts>
 	[[nodiscard]] std::size_t ComponentView<Ts...>::size() const noexcept
 	{
-		return m_entities.size();
+		return m_entities.size(); // TODO, handle exxclude!
 	}
 
 	template <ComponentType... Ts>
@@ -311,7 +312,7 @@ namespace cursed_engine
 		return std::nullopt;
 	}
 
-	template <ComponentType ...Ts>
+	template <ComponentType... Ts>
 	template <typename Predicate>
 	std::vector<Entity> ComponentView<Ts...>::findAllIf(Predicate&& predicate) const
 	{
@@ -333,13 +334,13 @@ namespace cursed_engine
 		return {}; // TODO; use span?
 	}
 
-	template <ComponentType ...Ts>
+	template <ComponentType... Ts>
 	std::tuple<const Ts&...> ComponentView<Ts...>::getComponents(EntityId id) const
 	{
 		return std::tie(std::get<ComponentContainer<Ts>*>(m_components)->at(id)...);
 	}
 
-	template <ComponentType ...Ts>
+	template <ComponentType... Ts>
 	std::tuple<Ts&...> ComponentView<Ts...>::getComponents(EntityId id)
 	{
 		return std::tie(std::get<ComponentContainer<Ts>*>(m_components)->at(id)...); // Use at instead?
@@ -349,7 +350,7 @@ namespace cursed_engine
 
 #pragma region Iterator
 
-	template <ComponentType ...Ts>
+	template <ComponentType... Ts>
 	ComponentView<Ts...>::Iterator::Iterator(ComponentView* view, std::size_t index)
 		: m_view{ view }, m_index{ index }
 	{
@@ -390,7 +391,7 @@ namespace cursed_engine
 		return combined;
 
 		//return m_view->GetComponents(m_view->m_entities[m_index]);
-		
+
 	}
 
 #pragma endregion

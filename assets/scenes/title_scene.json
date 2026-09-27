@@ -5,13 +5,13 @@
       "id": "background",
       "components": {
         "transform": {
-          "x": 0,
-          "y": 0,
-          "width": 1280,
-          "height": 720
+          "scale": {
+            "x": 1.0,
+            "y": 1.0
+          }
         },
         "sprite": {
-          "id": "title_background"
+          "texture_id": "title_background"         
         },
         "ui": {}
       }
@@ -20,13 +20,13 @@
       "id": "title",
       "components": {
         "transform": {
-          "x": 640,
-          "y": 10,
-          "width": 500,
-          "height": 100,
-          "pivot": {
-            "x": 0.5,
-            "y": 0.0
+          "position": {
+            "x": 640,
+            "y": 10
+          },
+          "scale": {
+            "x": 1,
+            "y": 1
           }
         },
         "ui": {},
@@ -40,6 +40,10 @@
             "b": 8,
             "a": 255
           },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.0
+          },
           "outline": 0
         }
       }
@@ -48,17 +52,18 @@
       "id": "play_button",
       "components": {
         "transform": {
-          "x": 640,
-          "y": 360,
-          "width": 200,
-          "height": 200,
-          "pivot": {
-            "x": 0.5,
-            "y": 0.5
+          "position": {
+            "x": 640,
+            "y": 360
+          },
+          "scale": {
+            "x": 0.50,
+            "y": 0.50
           }
         },
         "sprite": {
-          "id": "play-button"
+          "texture_id": "ui",
+          "region": "play"
         },
         "ui": {},
         "button": {
@@ -98,13 +103,18 @@
       "id": "settings_button",
       "components": {
         "transform": {
-          "x": 1220,
-          "y": 10,
-          "width": 50,
-          "height": 50
+          "position": {
+            "x": 1200,
+            "y": 40
+          },
+          "scale": {
+            "x": 0.1,
+            "y": 0.1
+          }
         },
         "sprite": {
-          "id": "cog"
+          "texture_id": "ui",
+          "region": "cog"
         },
         "ui": {},
         "button": {
@@ -138,8 +148,8 @@
             "y": 0
           },
           "size": {
-            "width": 50,
-            "height": 50
+            "width": 1,
+            "height": 1
           }
         }
       }

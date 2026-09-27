@@ -1,48 +1,76 @@
 #include "game/systems/map_system.h"
 #include "game/map/map_generator.h"
-#include "game/map/tile_map.h"
+#include "game/map/tilemap.h"
 #include "game/events/events.h"
 #include <engine/ecs/component/core_components.h>
 #include <engine/core/events/event_bus.h>
 #include <engine/core/logger.h>
 #include <format>
 
-MapSystem::MapSystem(MapGenerator& mapGenerator, cursed_engine::EventBus* eventBus)
-	: m_mapGenerator{ mapGenerator }, m_tileMap{ nullptr }, m_eventBus{ eventBus }
+MapSystem::MapSystem(MapGenerator& mapGenerator, ce::EventBus* eventBus)
+	: m_mapGenerator{ mapGenerator }, m_tilemap{ nullptr }, m_eventBus{ eventBus }
 { 
 }
 
-void MapSystem::update(cursed_engine::SystemContext& context)
+void MapSystem::update(ce::SystemUpdateContext& context)
 {
 	// player or camera? 
-	auto view = context.registry.view<cursed_engine::CameraComponent>();
+	auto view = context.registry.view<ce::CameraComponent>();
 	
 	auto activeCamera = view.findFirst([](const cursed_engine::CameraComponent& cameraComponent)
 		{
 			return cameraComponent.isActive;
 		});
 
-	cursed_engine::FVec2 worldPosition{}; // create FVec2::zero();??
+	//cursed_engine::FVec2 worldPosition{}; // create FVec2::zero();??
+	ce::Bounds cameraBounds{};
 
 	if (activeCamera.has_value())
 	{
-		const auto& cameraTransformComponent = context.registry.getComponent<cursed_engine::TransformComponent>(activeCamera.value());
-		worldPosition = cameraTransformComponent.position;
+		const auto& cameraTransformComponent = context.registry.getComponent<ce::TransformComponent>(activeCamera.value());
+		//worldPosition = cameraTransformComponent.position;
+		cameraBounds = context.registry.getComponent<ce::CameraComponent>(activeCamera.value()).bounds;
 	}
 
-	const auto& [xCoord, yCoord] = getMapChunkCoordinatesFromWorldPosition(worldPosition);
-	//cursed_engine::Logger::logInfo(std::format("Coords: {}, {}", xCoord, yCoord));
-	
-	if (!m_tileMap->isValidChunk(xCoord, yCoord))
+	// FIX THIS! NOT SO GOOD TO USE FRECT (CONTAINS WIDTH AND HEIGHT, but used as positions....)
+	// for each corner 
+	std::array<ce::FVec2, 4> corners
 	{
-		// generate new mapchunk
-		auto mapChunk = m_mapGenerator.generateMapChunk(xCoord, yCoord);
-		m_tileMap->insertMapChunk(std::move(mapChunk));
+		ce::FVec2{ cameraBounds.min.x, cameraBounds.min.y }, // top left
+		ce::FVec2{ cameraBounds.max.x, cameraBounds.min.y }, // top right
+		ce::FVec2{ cameraBounds.min.x, cameraBounds.max.y }, // bottom left
+		ce::FVec2{ cameraBounds.max.x, cameraBounds.max.y } // bottom right
+	};
 
-		m_eventBus->publishInstantly<MapChunkCreatedEvent>(xCoord, yCoord);
+	for (const ce::FVec2& corner : corners)
+	{
+		const auto& [xCoord, yCoord] = getMapChunkCoordinatesFromWorldPosition(corner);
+
+		if (!m_tilemap->isValidChunk(xCoord, yCoord))
+		{
+			ce::Logger::logInfo(std::format("Not valid chunk! Coords: {}, {}", xCoord, yCoord));
+
+			// generate new mapchunk
+			auto mapChunk = m_mapGenerator.generateMapChunk(xCoord, yCoord);
+			m_tilemap->insertMapChunk(std::move(mapChunk));
+
+			m_eventBus->publishInstantly<MapChunkCreatedEvent>(xCoord, yCoord);
+		}
 	}
 
-	//auto* chunk = m_tileMap->getChunkAtPosition((int)worldPosition.x, (int)worldPosition.y); // pass floats?
+	//const auto& [xCoord, yCoord] = getMapChunkCoordinatesFromWorldPosition(worldPosition);
+	////cursed_engine::Logger::logInfo(std::format("Coords: {}, {}", xCoord, yCoord));
+	//
+	//if (!m_tilemap->isValidChunk(xCoord, yCoord))
+	//{
+	//	// generate new mapchunk
+	//	auto mapChunk = m_mapGenerator.generateMapChunk(xCoord, yCoord);
+	//	m_tilemap->insertMapChunk(std::move(mapChunk));
+
+	//	m_eventBus->publishInstantly<MapChunkCreatedEvent>(xCoord, yCoord);
+	//}
+
+	//auto* chunk = m_tilemap->getChunkAtPosition((int)worldPosition.x, (int)worldPosition.y); // pass floats?
 	//
 	//if (chunk)
 	//{
@@ -56,7 +84,7 @@ void MapSystem::update(cursed_engine::SystemContext& context)
 	//	
 	//	// 
 	//	// m_mapGenerator.generateMapChunk(x, y);
-	//	// m_tileMap->insertMapChunk(std::move(mapChunk));
+	//	// m_tilemap->insertMapChunk(std::move(mapChunk));
 	//}
 	// check if needing to generate new chunk...
 	// 
@@ -64,7 +92,7 @@ void MapSystem::update(cursed_engine::SystemContext& context)
 
 }
 
-void MapSystem::setMap(TileMap* map)
+void MapSystem::setTilemap(Tilemap* map)
 {
-	m_tileMap = map;
+	m_tilemap = map;
 }

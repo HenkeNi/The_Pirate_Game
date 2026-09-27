@@ -5,7 +5,7 @@
 
 namespace cursed_engine
 {
-	class NetworkSystem : public System
+	class NetworkSystem : public UpdateSystem
 	{
 
 	};

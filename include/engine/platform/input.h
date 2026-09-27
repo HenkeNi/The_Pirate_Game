@@ -11,7 +11,9 @@ namespace cursed_engine
 {
 	class EventBus;
 	struct InputConfig;
-	struct Result;
+	
+	template <typename T>
+	class Result;
 	
 	// TODO; put in input_types or platform_types??
 
@@ -147,8 +149,8 @@ namespace cursed_engine
 	{
 	public:
 		SDLInput(EventBus& eventBus);
-
-		Result init(const InputConfig& config); // virtual?
+		
+		Result<void> init(const InputConfig& config); // virtual?
 		void processInput(const SDL_Event& event); // virtual? or SDLPlatform knows about SDLInput so maybe fine?
 
 		void beginFrame();

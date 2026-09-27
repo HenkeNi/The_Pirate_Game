@@ -10,13 +10,13 @@
 
 namespace cursed_engine
 {
+	enum class Backend
+	{
+		SDL
+	};
+
 	struct PlatformConfig
 	{
-		enum class Backend
-		{
-			SDL
-		};
-
 		Backend backend = Backend::SDL;
 	};
 
@@ -64,13 +64,6 @@ namespace cursed_engine
 
 	struct RenderConfig
 	{
-		enum class Backend
-		{
-			SDL
-		};
-
-		Backend backend = Backend::SDL;
-
 		float brightness = 1.f;
 		float contrast = 1.f;
 	};

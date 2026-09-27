@@ -5,10 +5,10 @@
 
 namespace cursed_engine
 {
-	Texture::Texture()
+	/*Texture::Texture()
 		: m_texture{ nullptr }, m_width{ 0 }, m_height{ 0 }
 	{
-	}
+	}*/
 
 	Texture::Texture(SDL_Texture* texture)
 		: m_texture{ texture }, m_width{ 0 }, m_height{ 0 }

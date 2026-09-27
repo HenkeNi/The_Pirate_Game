@@ -7,12 +7,12 @@ namespace cursed_engine
 	class AudioController;
 	class EventBus;
 
-	class AudioSystem : public System
+	class AudioSystem : public UpdateSystem
 	{
 	public:
 		AudioSystem(AudioManager* audioManager, AudioController* audioController, EventBus* eventBus);
 
-		void update(SystemContext& context) override;
+		void update(SystemUpdateContext& context) override;
 
 	private:
 		AudioManager* m_audioManager;

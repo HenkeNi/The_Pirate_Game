@@ -21,6 +21,11 @@ namespace cursed_engine
 		// consider pixelRect and uvRect (cached uv calculation)
 		IRect rect;
 		//IVec2 pivot; // or in sprite definition?
+		FVec2 pivot{ 0.f, 0.f }; // normalized: (0,0)=top-left, (1,1)=bottom-right, (0.5,0.5)=center
+
+
+		// Good idea?
+		[[nodiscard]] FVec2 getSize() const noexcept { return FVec2{ rect.w, rect.h }; }
 	};
 
 	struct TextureAtlas
@@ -30,7 +35,13 @@ namespace cursed_engine
 
 		std::unordered_map<std::string, std::size_t> idToRegionIndex;
 
-		IVec2 textureSize; // set?
+		[[nodiscard]] inline const AtlasRegion& resolveRegion(const std::string& id) const
+		{
+			std::size_t index = idToRegionIndex.at(id);
+			return regions.at(index);
+		}
+
+		//IVec2 textureSize; // set?
 	};
 
 	//struct Grid ?
@@ -64,10 +75,6 @@ namespace cursed_engine
 		std::string textureId; // either here or in Animation to allow multiple textures
 	};
 
-	// TODO; put in an AssetTypes? together with TextureAtlas, Animations, etc?
-
-	// put in prefab registry?
-
 
 	struct PropertyValue : std::variant<
 		std::nullptr_t,
@@ -95,22 +102,49 @@ namespace cursed_engine
 			return fallback;
 		}
 
-		bool isNumeric() const noexcept
+		[[nodiscard]] bool isNumeric() const noexcept
 		{
 			return std::holds_alternative<int>(*this) || std::holds_alternative<float>(*this); // TODO; double check
 		}
 	};
 
-
-
 	using ComponentProperties = std::unordered_map<std::string, PropertyValue>;
 
+	//class ComponentProperties
+	//{
+	//public:
+		
+	//private:
+	//};
+
+
+	// todo, remake? structure like json document?
 	struct Prefab
 	{
 		std::unordered_map<std::string, ComponentProperties> components;
 		std::string name;
 		// std::vector<std::function<void(Entity)>> componentBuilders;
 	};
+
+
+	//class Prebab
+	//{
+	//public:
+	//	Prebab operator[](size_t index) noexcept;
+
+	//private:
+	//	using ComponentId = std::string; // or use type id??
+	//	using PropertyKey = std::string;
+
+	//	using ComponentProperties = std::unordered_map<PropertyKey, PropertyValue>;
+
+
+	//	std::unordered_map<ComponentId, ComponentProperties> components; // component properties or comp.. data?
+
+	//	//template  <typename T>
+	//	//const ComponentProperties& get
+
+	//};
 
 	//namespace prefab
 	//{

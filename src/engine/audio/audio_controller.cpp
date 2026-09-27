@@ -12,7 +12,7 @@ namespace cursed_engine
 	{
 	}
 
-	Result AudioController::init()
+	Result<void> AudioController::init()
 	{
 		static SDL_AudioDeviceID audio_device = 0;
 
@@ -29,13 +29,13 @@ namespace cursed_engine
 
 		if (!m_audioStream)
 		{
-			return Result::failure(std::format("Failed to open audio stream! Error: {}", SDL_GetError()));
+			return Result<void>::failure(std::format("Failed to open audio stream! Error: {}", SDL_GetError()));
 		}
 
 		m_deviceId = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
 
 		SDL_ResumeAudioStreamDevice(m_audioStream);
-		return Result::success();
+		return Result<void>::success();
 	}
 
 	void AudioController::shutdown()
@@ -53,7 +53,7 @@ namespace cursed_engine
 			// DO in init sound?
 			if (!SDL_BindAudioStream(m_deviceId, stream))
 			{
-				Logger::logError(std::format("Failed to bind stream! Error: {}", SDL_GetError()).c_str());
+				Logger::logError(std::format("Failed to bind stream! Error: {}", SDL_GetError()));
 
 			}
 

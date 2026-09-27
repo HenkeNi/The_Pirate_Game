@@ -15,13 +15,16 @@ namespace cursed_engine
 	// TOOD; use Id not ID?
 	using ComponentId = std::uint8_t; 
 	using SystemId = std::uint8_t;
+
 	using EntityId = uint32_t; // Or move to entity.h?
 	using EntityVersion = uint32_t;
 	using EntitySignature = std::bitset<MAX_COMPONENTS>;
 
 
 	struct ComponentTag final {};
-	struct SystemTag final {};
+	//struct SystemTag final {};
+	struct UpdateSystemTag final {};
+	struct RenderSystemTag final {};
 
 	template <ComponentType T>
 	[[nodiscard]] ComponentId getComponentId() noexcept
@@ -29,10 +32,19 @@ namespace cursed_engine
 		return static_cast<ComponentId>(IdGenerator<ComponentTag>::getId<T>());
 	}
 
-	class System;
-	template <DerivedFrom<System> T>
-	[[nodiscard]] SystemId getSystemId() noexcept
+	class UpdateSystem;
+
+	template <DerivedFrom<UpdateSystem> T>
+	[[nodiscard]] SystemId getUpdateSystemId() noexcept
 	{
-		return static_cast<SystemId>(IdGenerator<SystemTag>::getId<T>());
+		return static_cast<SystemId>(IdGenerator<UpdateSystemTag>::getId<T>());
+	}
+	
+	class RenderSystem;
+	
+	template <DerivedFrom<RenderSystem> T>
+	[[nodiscard]] SystemId getRenderSystemId() noexcept
+	{
+		return static_cast<SystemId>(IdGenerator<RenderSystemTag>::getId<T>());
 	}
 }

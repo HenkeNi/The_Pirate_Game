@@ -1,5 +1,6 @@
 #include "engine/core/localization/localization.h"
 #include "engine/core/logger.h"
+#include "engine/core/result.h"
 #include "engine/utils/json/json_document.h"
 #include "engine/utils/json/json_value.h"
 
@@ -53,11 +54,11 @@ namespace cursed_engine
 		}
 
 		JsonDocument jsonDocument;
-		const Result result = jsonDocument.loadFromFile(path);
+		const Result<void> result = jsonDocument.loadFromFile(path);
 
-		if (!result.succeeded)
+		if (!result.ok())
 		{
-			Logger::logError(std::format("Failed to load language: {}", result.message));
+			Logger::logError(std::format("Failed to load language: {}", result.message()));
 			return false;
 		}
 

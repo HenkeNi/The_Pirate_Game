@@ -1,17 +1,21 @@
 #pragma once
 #include "engine/assets/asset_types.h"
 #include <filesystem>
-#include <optional>
 
 // [Consider] - instead of returning optionals, allow assets to be invalid
 // [Consider] - make loaders struct? don't use inheritance?
 
 namespace cursed_engine
 {
+	template <typename T>
+	class Result;
+
 	class AssetLoaderBase
 	{
 	public:
 		virtual ~AssetLoaderBase() = default;
+
+		[[nodiscard]] virtual const char* format() const = 0;
 	};
 
 	template <typename T>
@@ -20,32 +24,29 @@ namespace cursed_engine
 	public:
 		using AssetType = T;
 
-		[[nodiscard]] virtual std::optional<T> load(const std::filesystem::path& path) const = 0;
+		[[nodiscard]] virtual Result<T> load(const std::filesystem::path& path) const = 0; 
 	};
 
 
 	class TextureAtlasLoader : public AssetLoader<TextureAtlas>
 	{
 	public:
-		[[nodiscard]] std::optional<TextureAtlas> load(const std::filesystem::path& path) const override;
+		[[nodiscard]] Result<TextureAtlas> load(const std::filesystem::path& path) const override;
+		[[nodiscard]] const char* format() const override;
 	};
 
 	// rename animation loader...
 	class AnimationLoader : public AssetLoader<AnimationSet>
 	{
 	public:
-		[[nodiscard]] std::optional<AnimationSet> load(const std::filesystem::path& path) const override;
+		[[nodiscard]] Result<AnimationSet> load(const std::filesystem::path& path) const override;
+		[[nodiscard]] const char* format() const override;
 	};
-
-	/*class SpriteSheetLoader : public AssetLoader<SpriteSheet>
-	{
-	public:
-		[[nodiscard]] std::optional<SpriteSheet> load(const std::filesystem::path& path) const override;
-	};*/
 
 	class PrefabLoader : public AssetLoader<Prefab>
 	{
 	public:
-		[[nodiscard]] std::optional<Prefab> load(const std::filesystem::path& path) const override;
+		[[nodiscard]] Result<Prefab> load(const std::filesystem::path& path) const override;
+		[[nodiscard]] const char* format() const override;
 	};
 }

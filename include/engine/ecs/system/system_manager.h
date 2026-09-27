@@ -12,96 +12,172 @@ namespace cursed_engine
 	class SystemManager
 	{
 	public:
-
-		template <DerivedFrom<System> T, typename... Args>
-		T& emplace(Args&&... args);
-
-		template <DerivedFrom<System> T>
-		void insert(std::unique_ptr<T>&& system);
-
-		template <DerivedFrom<System> T>
-		const T& getSystem() const;
-
-		template <DerivedFrom<System> T>
-		T& getSystem();
-
-		template <DerivedFrom<System> T>
-		const T* tryGetSystem() const;
-
-		template <DerivedFrom<System> T>
-		T* tryGetSystem();
-
-		template <DerivedFrom<System> T>
-		bool contains() const noexcept;
-
-		// TODO; pass systemcontext instead? Registry, deltaTime and eventSystem?
-		void update(SystemContext& context); // make private? friend class Egnein?
+		void update(SystemUpdateContext& context); // make private? friend class Egnein?
+		void render(SystemRenderContext& context);
 
 		void clear();
 
-	private:
-		//using Systems = std::vector<std::unique_ptr<System>>;
-		using Systems = sparse_set<std::unique_ptr<System>, SystemId>;
+		template <DerivedFrom<UpdateSystem> T, typename... Args>
+		T& emplace(Args&&... args);
 
-		Systems m_systems;
+		template <DerivedFrom<RenderSystem> T, typename... Args>
+		T& emplace(Args&&... args);
+
+		template <DerivedFrom<UpdateSystem> T>
+		void insert(std::unique_ptr<T>&& system);
+
+		template <DerivedFrom<RenderSystem> T>
+		void insert(std::unique_ptr<T>&& system);
+
+		template <DerivedFrom<UpdateSystem> T>
+		[[nodiscard]] const T& getSystem() const;
+
+		template <DerivedFrom<RenderSystem> T>
+		[[nodiscard]] const T& getSystem() const;
+
+		template <DerivedFrom<UpdateSystem> T>
+		[[nodiscard]] T& getSystem();
+
+		template <DerivedFrom<RenderSystem> T>
+		[[nodiscard]] T& getSystem();
+
+		template <DerivedFrom<UpdateSystem> T>
+		[[nodiscard]] const T* tryGetSystem() const;
+
+		template <DerivedFrom<RenderSystem> T>
+		[[nodiscard]] const T* tryGetSystem() const;
+
+		template <DerivedFrom<UpdateSystem> T>
+		[[nodiscard]] T* tryGetSystem();
+
+		template <DerivedFrom<RenderSystem> T>
+		[[nodiscard]] T* tryGetSystem();
+
+		template <DerivedFrom<UpdateSystem> T>
+		[[nodiscard]] bool contains() const noexcept;
+
+		template <DerivedFrom<RenderSystem> T>
+		[[nodiscard]] bool contains() const noexcept;
+
+	private:
+		using UpdateSystems = sparse_set<std::unique_ptr<UpdateSystem>, SystemId>;
+		using RenderSystems = sparse_set<std::unique_ptr<RenderSystem>, SystemId>;
+
+		UpdateSystems m_updateSystems;
+		RenderSystems m_renderSystems;
 	};
 
 #pragma region Definitions
 
-	template <DerivedFrom<System> T, typename... Args>
+	template <DerivedFrom<UpdateSystem> T, typename... Args>
 	T& SystemManager::emplace(Args&&... args)
 	{
-		auto system = std::make_unique<T>(std::forward<Args>(args)...);
-		auto* systemPtr = system.get();
+		SystemId systemId = getUpdateSystemId<T>();
 
-		m_systems.insert(getSystemId<T>(), std::move(system));
-		
-		return *systemPtr;
+		assert(!m_updateSystems.contains(systemId) && "System already exist!");
+
+		std::unique_ptr<T> system = std::make_unique<T>(std::forward<Args>(args)...);
+		T* ptr = system.get();
+
+		m_updateSystems.insert(systemId, std::move(system));
+
+		return *ptr;
 	}
 
-	template <DerivedFrom<System> T>
+	template <DerivedFrom<RenderSystem> T, typename... Args>
+	T& SystemManager::emplace(Args&&... args)
+	{
+		SystemId systemId = getRenderSystemId<T>();
+
+		assert(!m_renderSystems.contains(systemId) && "System already exist!");
+
+		std::unique_ptr<T> system = std::make_unique<T>(std::forward<Args>(args)...);
+		T* ptr = system.get();
+
+		m_renderSystems.insert(getRenderSystemId<T>(), std::move(system));
+
+		return *ptr;
+	}
+
+	template <DerivedFrom<UpdateSystem> T>
 	void SystemManager::insert(std::unique_ptr<T>&& system)
 	{
-		m_systems.insert(getSystemId<T>(), std::move(system));
+		SystemId systemId = getUpdateSystemId<T>();
+		assert(!m_updateSystems.contains(systemId) && "System already exist!");
+
+		m_updateSystems.insert(systemId, std::move(system));
 	}
 
-	template <DerivedFrom<System> T>
+	template <DerivedFrom<RenderSystem> T>
+	void SystemManager::insert(std::unique_ptr<T>&& system)
+	{
+		SystemId systemId = getRenderSystemId<T>();
+		assert(!m_renderSystems.contains(systemId) && "System already exist!");
+
+		m_renderSystems.insert(systemId, std::move(system));
+	}
+
+	template <DerivedFrom<UpdateSystem> T>
 	const T& SystemManager::getSystem() const
 	{
-		return m_systems.at(getSystemId<T>());
+		return static_cast<const T&>(*m_updateSystems.at(getUpdateSystemId<T>())); // correct cast? or return static_cast<const T&>???????????????
 	}
 
-	template <DerivedFrom<System> T>
+	template <DerivedFrom<RenderSystem> T>
+	const T& SystemManager::getSystem() const
+	{
+		return static_cast<const T&>(*m_renderSystems.at(getRenderSystemId<T>())); // correct cast?
+	}
+
+	template <DerivedFrom<UpdateSystem> T>
 	T& SystemManager::getSystem()
 	{
-		return static_cast<T&>(*m_systems.at(getSystemId<T>())); // correct cast?
+		return const_cast<T&>(std::as_const(*this).getSystem<T>());
 	}
 
-	template <DerivedFrom<System> T>
+	template <DerivedFrom<RenderSystem> T>
+	T& SystemManager::getSystem()
+	{
+		return const_cast<T&>(std::as_const(*this).getSystem<T>());
+	}
+
+	template <DerivedFrom<UpdateSystem> T>
 	const T* SystemManager::tryGetSystem() const
 	{
-		return m_systems.get(getSystemId<T>());
+		return static_cast<const T*>(m_updateSystems.at(getUpdateSystemId<T>()).get()); // correct cast?
 	}
 
-	template <DerivedFrom<System> T>
+	template <DerivedFrom<RenderSystem> T>
+	const T* SystemManager::tryGetSystem() const
+	{
+		return static_cast<const T*>(m_renderSystems.at(getRenderSystemId<T>()).get()); // correct cast?
+	}
+
+	template <DerivedFrom<UpdateSystem> T>
 	T* SystemManager::tryGetSystem()
 	{
-		return m_systems.get(getSystemId<T>());
+		return const_cast<T*>(std::as_const(*this).tryGetSystem<T>());
 	}
 
-	template <DerivedFrom<System> T>
+	template <DerivedFrom<RenderSystem> T>
+	T* SystemManager::tryGetSystem()
+	{
+		return const_cast<T*>(std::as_const(*this).tryGetSystem<T>());
+	}
+
+	template <DerivedFrom<UpdateSystem> T>
 	bool SystemManager::contains() const noexcept
 	{
-		return m_systems.contains(getSystemId<T>());
+		SystemId id = getUpdateSystemId<T>();
+		return m_updateSystems.contains(id);
+	}
+
+	template <DerivedFrom<RenderSystem> T>
+	bool SystemManager::contains() const noexcept
+	{
+		SystemId id = getRenderSystemId<T>();
+		return m_renderSystems.contains(id);
 	}
 
 #pragma endregion
 }
-
-// Opt 1; scene stack contains a systemManager
-
-// op2; engine loop gets active scene's from scene stack... iterates over them... and push their entities into the system manager
-
-// opt 3; static system manager in each scene...
-
-// opt 4; pass in systemManager to each scene?

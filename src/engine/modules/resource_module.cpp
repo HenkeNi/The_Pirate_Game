@@ -1,5 +1,10 @@
 #include "engine/modules/resource_module.h"
 #include "engine/core/logger.h"
+#include <format>
+
+#include "engine/resources/sdl_resource_loaders.h"
+
+//#include "engine/resources/resource_creator.h"
 
 // test
 #include "engine/resources/texture/texture.h"
@@ -8,13 +13,23 @@
 
 namespace cursed_engine
 {
-	bool ResourceModule::init(ResourceCreator* creator, const cursed_engine::ResourceConfig& config)
+	bool ResourceModule::init(ResourceCreator* creator, const ResourceConfig& config, Backend backend)
 	{
 		Logger::logInfo(std::format("{}[ResourceModule] - Initialization started...", log_format::INDENT));
 
-		m_textureManager.init(&config, std::make_unique<TextureLoader>(creator));
-		m_audioManager.init(&config, std::make_unique<AudioLoader>());
-		m_fontManager.init(&config, std::make_unique<FontLoader>());
+		switch (backend)
+		{
+		case Backend::SDL:
+			break;
+
+		default:
+			Logger::logInfo(std::format("{}[RenderModule] - Unsupported backend {}", log_format::INDENT, (int)backend));
+			return false;
+		}
+
+		m_textureManager.init(&config, std::make_unique<SDLTextureLoader>(creator));
+		m_audioManager.init(&config, std::make_unique<SDLAudioLoader>());
+		m_fontManager.init(&config, std::make_unique<SDLFontLoader>());
 
 		// why both?
 		m_textManager.init(&m_fontManager, creator); // accept font manager in constructor?

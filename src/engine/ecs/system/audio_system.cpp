@@ -19,7 +19,7 @@ namespace cursed_engine
 				auto audioHandle = m_audioManager->getHandleById("623175__aphom000__button-click-selection");
 				if (const auto* audio = m_audioManager->get(audioHandle))
 				{
-					m_audioController->playSound(audio->m_stream, audio->m_buffer, audio->m_length);
+					//m_audioController->playSound(audio->m_stream, audio->m_buffer, audio->m_length);
 				}
 			});
 
@@ -30,7 +30,7 @@ namespace cursed_engine
 			});*/
 	}
 
-	void AudioSystem::update(SystemContext& context)
+	void AudioSystem::update(SystemUpdateContext& context)
 	{
 		// holds map of which sound id to sound?
 
@@ -44,7 +44,7 @@ namespace cursed_engine
 		// How will this work when multiple components referes to the same audio?
 		if (const auto* audio = m_audioManager->get(audioHandle))
 		{
-			m_audioController->playSound(audio->m_stream, audio->m_buffer, audio->m_length);
+			//m_audioController->playSound(audio->m_stream, audio->m_buffer, audio->m_length);
 		}
 
 		////auto audioHandle = resourceManager.getHandle<Audio>("707884__dave4884__pirates-song.wav");

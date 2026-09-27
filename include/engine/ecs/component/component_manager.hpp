@@ -1,7 +1,6 @@
 #pragma once
 #include "engine/ecs/ecs_types.h"
 #include "engine/utils/concepts.h"
-#include "engine/utils/non_copyable.h"
 #include "engine/utils/containers/sparse_set.hpp"
 
 namespace cursed_engine
@@ -11,6 +10,12 @@ namespace cursed_engine
 	public:
 		virtual ~IComponentManager() = default;
 		
+		IComponentManager(const IComponentManager&) = delete;
+		IComponentManager(IComponentManager&&) = delete;
+
+		IComponentManager& operator=(const IComponentManager&) = delete;
+		IComponentManager& operator=(IComponentManager&&) = delete;
+
 		// ==================== Component Management ====================
 		virtual void remove(EntityId id) = 0;
 		virtual void removeAll() = 0;
@@ -18,13 +23,16 @@ namespace cursed_engine
 		// ==================== Queries ====================
 		[[nodiscard]] virtual std::size_t size() const noexcept = 0;
 		[[nodiscard]] virtual bool contains(EntityId id) const = 0;
+
+	protected:
+		IComponentManager() = default;
 	};
 
 	template <ComponentType T>
 	using ComponentContainer = sparse_set<std::decay_t<T>, EntityId>; // Rename component storage?
 
 	template <ComponentType T>
-	class ComponentManager : public IComponentManager, private NonCopyable
+	class ComponentManager : public IComponentManager
 	{
 	public:
 		// ==================== Construction/Destruction ====================

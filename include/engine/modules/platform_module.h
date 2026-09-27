@@ -1,4 +1,5 @@
 #pragma once
+#include "engine/platform/input_api.h"
 #include "engine/utils/frame_timer.h"
 #include <memory>
 
@@ -8,7 +9,7 @@ namespace cursed_engine
 	class Platform;
 	class EventBus; 
 	class Window;
-	class Input;
+	class InputAPI;
 	class Cursor;
 
 	class PlatformModule
@@ -38,8 +39,8 @@ namespace cursed_engine
 
 		[[nodiscard]] Window& getWindow() noexcept;
 		[[nodiscard]] Cursor& getCursor() noexcept;
+		[[nodiscard]] InputAPI getInputAPI() noexcept;
 
-		[[nodiscard]] Input& getInput() noexcept;
 		
 		[[nodiscard]] inline FrameTimer& getFrameTimer() noexcept { return m_timer; }
 

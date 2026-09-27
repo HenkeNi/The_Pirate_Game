@@ -1,21 +1,23 @@
 #include "game/systems/map_render_system.h"
 #include "game/components/components.h"
-#include "game/map/tile_map.h"
 #include "game/map/tile_registry.h"
+#include "game/map/tilemap.h"
 #include <engine/ecs/ecs_registry.h>
 #include <engine/ecs/component/core_components.h>
 #include <format>
 
 using cursed_engine::FVec2;
 
-MapRenderSystem::MapRenderSystem(cursed_engine::RenderAPI renderAPI, cursed_engine::TextureManager* textureManager, TileRegistry& registry)
-	: m_renderAPI{ renderAPI }, m_textureManager{ textureManager }, m_tileRegistry{ registry }, m_tileMap{ nullptr }
+MapRenderSystem::MapRenderSystem(cursed_engine::RenderAPI renderAPI, cursed_engine::TextureManager* textureManager)
+	: m_renderAPI{ renderAPI }, m_textureManager{ textureManager }, m_tilemap{ nullptr }, m_tileset{ nullptr }
 {
 }
 
-void MapRenderSystem::update(cursed_engine::SystemContext& context)
+void MapRenderSystem::render(cursed_engine::SystemRenderContext& context)
 {
-	if (m_tileMap)
+	//assert(m_tilemap && m_tileset && "Not valid map data");
+
+	if (m_tilemap && m_tileset) // do early return instead
 	{
 		/*	auto view = context.registry.view<cursed_engine::CameraComponent>();
 			auto activeCamera = view.findFirst([](const cursed_engine::CameraComponent& cameraComponent)
@@ -29,9 +31,12 @@ void MapRenderSystem::update(cursed_engine::SystemContext& context)
 		auto handle = m_textureManager->getHandle(cursed_engine::TextureDescriptor{ "../assets/textures/map/island_tileset.png" });
 		auto* texture = m_textureManager->get(handle);
 
-		auto test = m_tileMap->getVisibleMapChunks();
+		//m_tileset->textureSize.x = texture->getWidth();
+		//m_tileset->textureSize.y = texture->getHeight();
 
-		for (auto* mapChunk : m_tileMap->getVisibleMapChunks())
+		auto test = m_tilemap->getVisibleMapChunks();
+
+		for (auto* mapChunk : m_tilemap->getVisibleMapChunks())
 		{
 			assert(mapChunk && "Not a valid MapChunk!");
 			if (!mapChunk)
@@ -48,23 +53,16 @@ void MapRenderSystem::update(cursed_engine::SystemContext& context)
 
 				if (layer.isDirty)
 				{
-					if (auto* tileSet = m_tileRegistry.getTileSet(layer.tileSetId)) [[likely]]
-					{
-						buildMapChunkGeometry(getWorldPosition(*mapChunk), layer, *tileSet);
-						layer.isDirty = false;
-					}
-					else
-					{
-						cursed_engine::Logger::logError("[MapRenderSystem::update] - Invalid TileSet!");
-						assert(false && "Invalid TileSet - can't continue rendering");
-						continue;
-					}
+					assert(m_tileset && "Not a valid tileset!");
+
+					buildMapChunkGeometry(getWorldPosition(*mapChunk), layer, *m_tileset, { texture->getWidth() ,  texture->getHeight() }); // dont pass tielset?!!
+					layer.isDirty = false;
 				}
 
 
 				// TODO; do  before loop instead... - not every frame!!!
 				// update chunk position - TODO, mabe only do if havent built geomtry this frame (pass in camera pos to build geometry)
-
+				
 				auto view = context.registry.view<cursed_engine::CameraComponent>();
 				auto activeCamera = view.findFirst([](const cursed_engine::CameraComponent& cameraComponent)
 					{
@@ -76,7 +74,7 @@ void MapRenderSystem::update(cursed_engine::SystemContext& context)
 				if (activeCamera.has_value())
 				{
 					const auto& cameraTransformComponent = context.registry.getComponent<cursed_engine::TransformComponent>(activeCamera.value());
-					worldPosition = cameraTransformComponent.position;
+					worldPosition = cameraTransformComponent.position; //worldPosition = cameraTransformComponent.position + cameraTransformComponent.pivot; //  USE PIVOT?
 
 					//updateMapChunkPosition(layer, worldPosition);
 					m_renderAPI.setRenderState(cursed_engine::RenderState{ cursed_engine::View{worldPosition, 0.0, 0.f}, cursed_engine::Projection{ { 1280, 720 } } }); // view, projection				
@@ -94,92 +92,17 @@ void MapRenderSystem::update(cursed_engine::SystemContext& context)
 	//renderTest();
 }
 
-//void MapRenderSystem::renderTest()
-//{
-//	cursed_engine::Geometry geometry;
-//	auto& vert = geometry.vertices;
-//	vert.resize(4);
-//
-//	const int textureWidth = 2048;
-//	const int textureHeight = 768;
-//
-//	const int columns = 16;
-//	const int rows = 6;
-//
-//	const int tileWidth = textureWidth / columns;
-//	const int tileHeight = textureHeight / rows;
-//
-//	//float uSize = 128.0f / 2048.0f; // 0.0625
-//	//float vSize = 128.0f / 768.0f;  // 0.16666667
-//
-//	int column = 3;
-//	int row = 2;
-//
-//	float u0 = (column * 128.0f) / 2048.0f;
-//	float v0 = (row * 128.0f) / 768.0f;
-//
-//	float u1 = ((column + 1) * 128.0f) / 2048.0f;
-//	float v1 = ((row + 1) * 128.0f) / 768.0f;
-//
-//	vert[0].position.x = 100;
-//	vert[0].position.y = 100;
-//	vert[0].color.r = 1;
-//	vert[0].color.g = 1;
-//	vert[0].color.b = 1;
-//	vert[0].color.a = 1;
-//	vert[0].uv = { u0, v0 };
-//
-//	// left
-//	vert[1].position.x = 200;
-//	vert[1].position.y = 100;
-//	vert[1].color.r = 1;
-//	vert[1].color.g = 1;
-//	vert[1].color.b = 1;
-//	vert[1].color.a = 1;
-//	vert[1].uv = { u1, v0 };
-//
-//	// right
-//	vert[2].position.x = 100;
-//	vert[2].position.y = 200;
-//	vert[2].color.r = 1;
-//	vert[2].color.g = 1;
-//	vert[2].color.b = 1;
-//	vert[2].color.a = 1;
-//	vert[2].uv = { u0, v1 };
-//
-//	vert[3].position.x = 200;
-//	vert[3].position.y = 200;
-//	vert[3].color.r = 1;
-//	vert[3].color.g = 1;
-//	vert[3].color.b = 1;
-//	vert[3].color.a = 1;
-//	vert[3].uv = { u1, v1 };
-//
-//	//vert[4].position.x = 800;
-//	//vert[4].position.y = 950;
-//	//vert[4].color.r = 1;
-//	//vert[4].color.g = 1;
-//	//vert[4].color.b = 1;
-//	//vert[4].color.a = 1;
-//
-//
-//	geometry.indices = {
-//		0, 1, 2,
-//		1, 3, 2
-//	};
-//
-//	auto handle = m_textureManager->getHandle(cursed_engine::TextureDescriptor{ "../assets/textures/map/island_tileset.png" });
-//
-//	auto* texture = m_textureManager->get(handle);
-//	m_renderAPI.drawGeometry(geometry, *texture);
-//}
-
-void MapRenderSystem::setTileMap(TileMap* tileMap)
+void MapRenderSystem::setTilemap(Tilemap* tilemap)
 {
-	m_tileMap = tileMap;
+	m_tilemap = tilemap;
 }
 
-void MapRenderSystem::buildMapChunkGeometry(const cursed_engine::IVec2& position, TileLayer& tileLayer, const TileSet& tileSet)
+void MapRenderSystem::setTileset(const Tileset* tileset)
+{
+	m_tileset = tileset;
+}
+
+void MapRenderSystem::buildMapChunkGeometry(const cursed_engine::IVec2& position, TileLayer& tileLayer, const Tileset& tileset, const cursed_engine::IVec2& size)
 {
 	auto& geometry = tileLayer.geometry; // pass in geometry instead? (can set isDirty)
 
@@ -192,6 +115,8 @@ void MapRenderSystem::buildMapChunkGeometry(const cursed_engine::IVec2& position
 	auto& indices = geometry.indices;
 	indices.clear();
 
+	
+	// maybe this is wrong?
 	for (int y = 0; y < TileLayer::height; y++)
 	{
 		for (int x = 0; x < TileLayer::width; x++)
@@ -205,18 +130,19 @@ void MapRenderSystem::buildMapChunkGeometry(const cursed_engine::IVec2& position
 			float tileSize = (float)map_constants::TILE_SIZE; // do above loops? read from tileset?
 
 			// TODO; create function? apply texture?
-			if (auto it = tileSet.tileTypes.find(tileId); it != tileSet.tileTypes.end())
+			if (auto it = tileset.tileTypes.find(tileId); it != tileset.tileTypes.end())
 			{
 				cursed_engine::IVec2 coords = it->second.atlasCoord;
 
-				uvRect.u0 = (coords.x * tileSize) / tileSet.textureSize.x;
-				uvRect.v0 = (coords.y * tileSize) / tileSet.textureSize.y;
+				uvRect.u0 = (coords.x * tileSize) / size.x; //tileset.textureSize.x;
+				uvRect.v0 = (coords.y * tileSize) / size.y; //tileset.textureSize.y;
 
-				uvRect.u1 = ((coords.x + 1) * tileSize) / tileSet.textureSize.x;
-				uvRect.v1 = ((coords.y + 1) * tileSize) / tileSet.textureSize.y;
+				uvRect.u1 = ((coords.x + 1) * tileSize) / size.x;// tileset.textureSize.x;
+				uvRect.v1 = ((coords.y + 1) * tileSize) / size.y;// tileset.textureSize.y;
 			}
 			else
 			{
+				assert(false && "Tile Id not found!");
 				// TODO; use some error texture?
 			}
 

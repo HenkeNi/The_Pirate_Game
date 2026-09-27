@@ -7,9 +7,10 @@ PlayerControllerSystem::PlayerControllerSystem()
 {
 }
 
-void PlayerControllerSystem::update(cursed_engine::SystemContext& context)
+void PlayerControllerSystem::update(cursed_engine::SystemUpdateContext& context)
 {
 	auto componentView = context.registry.view<InputComponent, cursed_engine::VelocityComponent>();
+
 	componentView.forEach([&](InputComponent& inputComponent, cursed_engine::VelocityComponent& velocityComponent)
 		{
 			float verticalVelocity = 0.f;
@@ -28,6 +29,14 @@ void PlayerControllerSystem::update(cursed_engine::SystemContext& context)
 
 			velocityComponent.velocity.x = horizontalVelocity;
 			velocityComponent.velocity.y = verticalVelocity;
+
+
+			if (inputComponent.interact)
+			{
+
+			}
+
+
 
 			// clmap veloicty? up + left...
 		});

@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "game/scenes/scene_types.h"
 
 // here or in engine?
 struct NewGameEvent
@@ -14,8 +15,14 @@ struct MapChunkCreatedEvent
 };
 
 
+struct SceneTransitionRequestEvent
+{
+	std::string scene;
+	SceneTransitionType transitionTyp;
+};
+
 struct SceneTransitionEvent
 {
 	std::string scene;
-	std::string transition; // replace with enum? replace, pop and push...
+	//std::string transition; // replace with enum? replace, pop and push...
 };

@@ -13,29 +13,31 @@ namespace cursed_engine
 //- Frustum / viewport culling
 //- renderer.DrawGeometry(...)
 
-class TileMap;
 class TileRegistry;
+class Tilemap;
+struct Tileset;
 struct TileLayer;
-struct TileSet;
 
 // cull chunks? 
-class MapRenderSystem : public cursed_engine::System
+class MapRenderSystem : public cursed_engine::RenderSystem
 {
 public:
-	MapRenderSystem(cursed_engine::RenderAPI renderAPI, cursed_engine::TextureManager* textureManager, TileRegistry& registry);
+	MapRenderSystem(cursed_engine::RenderAPI renderAPI, cursed_engine::TextureManager* textureManager);
 
-	void update(cursed_engine::SystemContext& context) override;
+	void render(cursed_engine::SystemRenderContext& context) override;
 
-	void setTileMap(TileMap* tileMap);
+	void setTilemap(Tilemap* tilemap);
+	void setTileset(const Tileset* tileset);
 
 private:
 	//void renderTest();
-	void buildMapChunkGeometry(const cursed_engine::IVec2& position, TileLayer& tileLayer, const TileSet& tileSet); // rename? or rework? not mesh but geometry...
+	void buildMapChunkGeometry(const cursed_engine::IVec2& position, TileLayer& tileLayer, const Tileset& tileset, const cursed_engine::IVec2& size); // rename? or rework? not mesh but geometry...
 	//void updateMapChunkPosition(TileLayer& tileLayer, const cursed_engine::FVec2& cameraPos); // or do in render backend?
 
 	cursed_engine::RenderAPI m_renderAPI;
 	cursed_engine::TextureManager* m_textureManager;
 
-	TileRegistry& m_tileRegistry;
-	TileMap* m_tileMap;
+	const Tileset* m_tileset;
+	//TileRegistry& m_tileRegistry;
+	Tilemap* m_tilemap; // references tileset?
 };

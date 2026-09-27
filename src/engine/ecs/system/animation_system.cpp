@@ -11,7 +11,7 @@ namespace cursed_engine
 	{
 	}
 
-	void AnimationSystem::update(SystemContext& context)
+	void AnimationSystem::update(SystemUpdateContext& context)
 	{
 		auto view = context.registry.view<AnimationComponent, SpriteComponent>();
 

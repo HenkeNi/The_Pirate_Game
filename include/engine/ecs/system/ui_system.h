@@ -1,5 +1,6 @@
 #pragma once
 #include "engine/ecs/system/system.h"
+#include "engine/platform/input_api.h"
 
 namespace cursed_engine
 {
@@ -8,14 +9,13 @@ namespace cursed_engine
 	// update visual state...
 
 	class ActionRegistry;
-	class Input;
 	
-	class UISystem : public System
+	class UISystem : public UpdateSystem
 	{
 	public:
-		UISystem(Input* input, ActionRegistry* actionRegistry);
+		UISystem(InputAPI input, ActionRegistry* actionRegistry);
 
-		void update(SystemContext& context) override;
+		void update(SystemUpdateContext& context) override;
 
 	private:
 		void handleButtonInteractions(ECSRegistry& registry); // renaeme func?
@@ -29,7 +29,7 @@ namespace cursed_engine
 
 		[[nodiscard]] bool isMouseInsideBoundingBox(struct TransformComponent& transformComponent, struct BoundingBoxComponent& boundingBoxComponent, float mousePosX, float mousePosY) const noexcept;
 
-		Input* m_input;
+		InputAPI m_input;
 		ActionRegistry* m_actionRegistry;
 		//EventBus& m_eventBus;
 	};

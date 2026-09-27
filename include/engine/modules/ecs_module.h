@@ -10,6 +10,9 @@ namespace cursed_engine
 	class ECSModule
 	{
 	public:
+		ECSModule();
+		~ECSModule() = default;
+
 		bool init(const EngineContext& context);
 		void shutdown();
 

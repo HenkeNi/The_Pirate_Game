@@ -3,9 +3,9 @@
 
 namespace cursed_engine
 {
-	class TransformSystem : public System
+	class TransformSystem : public UpdateSystem
 	{
 	public:
-		void update(SystemContext& context) override;
+		void update(SystemUpdateContext& context) override;
 	};
 }

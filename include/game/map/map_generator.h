@@ -2,7 +2,7 @@
 #include <engine/math/noise.h>
 #include <filesystem>
 
-class TileMap;
+class Tilemap;
 struct MapChunk;
 
 // TODO; use these!!!!
@@ -26,8 +26,8 @@ public:
 	MapGenerator();
 
 	bool load(const std::filesystem::path& path);
-	void generateStartArea(TileMap& map, int seed);
-	//[[nodiscard]] TileMap generateMap(int seed) const; // or unique_ptr instead?
+	void generateStartArea(Tilemap& map, int seed);
+	//[[nodiscard]] Tilemap generateMap(int seed) const; // or unique_ptr instead?
 	[[nodiscard]] MapChunk generateMapChunk(int x, int y) const;
 
 private:
@@ -40,4 +40,5 @@ private:
 	[[nodiscard]] TerrainType getTerrainType(float value) const; // rename? getTileId?
 	
 	MapGeneratorSettings m_settings;
+	// store mapchunk cache? pool..
 };

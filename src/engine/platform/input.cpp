@@ -16,26 +16,27 @@ namespace cursed_engine
 	{
 	}
 
-	Result SDLInput::init(const InputConfig& config)
+	Result<void> SDLInput::init(const InputConfig& config)
 	{
 		std::for_each(config.keyBindings.begin(), config.keyBindings.end(),
 			[&](const auto& pair) { m_keyInfo[(std::size_t)pair.first] = InputInfo{ InputState::None, false, false }; });
 	
 		
-		return Result::success();
+		return Result<void>::success();
 	}
 
 	void SDLInput::beginFrame()
 	{
-		for (auto& keyInfo : m_keyInfo)
-		{
-			keyInfo.inputState = getKeyState(keyInfo);
-			keyInfo.wasDown = keyInfo.isDown; // maybe dont`?
-		}
+		//for (auto& keyInfo : m_keyInfo)
+		//{
+		//	keyInfo.inputState = getKeyState(keyInfo);
+		//	keyInfo.wasDown = keyInfo.isDown; // maybe dont`?
+		//}
 
 		for (auto& button : m_mouseState.buttons)
 		{
-			button.wasDown = button.isDown;
+			button.isDown = false; // correct??
+			//button.wasDown = button.isDown;
 		}
 		
 		m_mouseState.scroll = 0.f;
@@ -72,6 +73,12 @@ namespace cursed_engine
 		{
 			keyInfo.inputState = getKeyState(keyInfo);
 			keyInfo.wasDown = keyInfo.isDown; // maybe dont`?
+		}
+
+		// here?
+		for (auto& button : m_mouseState.buttons)
+		{
+			button.wasDown = button.isDown;
 		}
 	}
 
@@ -168,57 +175,8 @@ namespace cursed_engine
 		uint8_t button = event.button.button;
 		auto& mouseButton = m_mouseState.buttons[button];
 
-		mouseButton.wasDown = mouseButton.wasDown;
+		//mouseButton.wasDown = mouseButton.wasDown;
 		mouseButton.isDown = (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN);
-
-		//auto previousState = mouseButton.currentState;
-
-		//bool isDown = event.type == SDL_EVENT_MOUSE_BUTTON_DOWN;
-
-		//if (previousState == InputState::Held && isDown)
-		//{
-		//	// held
-		//}
-		//else if (previousState == InputState::None && isDown)
-		//{
-		//	// pressed
-		//}
-
-
-
-		//mouseButton.previousState = mouseButton.currentState;
-
-
-
-		//bool isDown = event.type == SDL_EVENT_MOUSE_BUTTON_DOWN;
-
-		//if (isDown)
-		//{
-		//	//mouseButton.inputState = InputState::Pressed;
-		//	//mouseButton.inputState =
-		//}
-
-
-		//mouseButton.wasDown = mouseButton.isDown;
-		//mouseButton.isDown = (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN);
-
-		//if (!mouseButton.wasDown && mouseButton.isDown)
-		//	m_eventBus.publishInstantly<MouseBtnPressedEvent>((MouseButton)button);
-		//else if (mouseButton.wasDown && !mouseButton.isDown)
-		//	m_eventBus.publishInstantly<MouseBtnReleasedEvent>((MouseButton)button);
-
-		/*switch (event.button.button)
-		{
-		case SDL_BUTTON_LEFT:
-			m_mouseState.buttons[(std::size_t)MouseButton::Left].isDown = isPressed;
-			break;
-		case SDL_BUTTON_RIGHT:
-			m_mouseState.buttons[(std::size_t)MouseButton::Right].isDown = isPressed;
-			break;
-		case SDL_BUTTON_MIDDLE:
-			m_mouseState.buttons[(std::size_t)MouseButton::Middle].isDown = isPressed;
-			break;
-		}*/
 	}
 
 	void SDLInput::handleMouseMotionEvent(const SDL_Event& event)

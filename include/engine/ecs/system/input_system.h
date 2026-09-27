@@ -3,16 +3,16 @@
 
 namespace cursed_engine
 {
-	class InputHandler;
+	/*class InputAPI;
 
 	class InputSystem : public System
 	{
 	public:
-		InputSystem(InputHandler& inputHandler);
+		InputSystem(InputAPI& input);
 
 		void update(SystemContext& context) override;
 		
 	private:
-		InputHandler& m_inputHandler;
-	};
+		InputAPI& m_input;
+	};*/
 }

@@ -1,0 +1,18 @@
+{
+  "name": "raft",
+  "components": {
+    "transform": {
+      "scale": {
+        "x": 2.0,
+        "y": 2.0
+      }
+    },
+    "sprite": {
+      "id": "raft",
+      "region": "raft"
+    },
+    "interaction": {
+      "action": "board"
+    }
+  }
+}

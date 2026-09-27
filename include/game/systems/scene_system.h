@@ -11,15 +11,16 @@ namespace cursed_engine
 	//struct ComponentInitContext;
 }
 
-class SceneStack;
-class SceneFactory;
-struct SceneTransitionEvent;
+//class SceneStack;
+//class SceneFactory;
+class SceneManager;
+struct SceneTransitionRequestEvent;
 
 // or scene_transition_system?
-class SceneSystem : public cursed_engine::System
+class SceneSystem : public cursed_engine::UpdateSystem
 {
 public:
-	SceneSystem(const cursed_engine::ComponentInitContext& ctx, cursed_engine::EventBus* eventBus, SceneStack& sceneStack, SceneFactory& sceneFactory);
+	SceneSystem(const cursed_engine::ComponentInitContext& ctx, cursed_engine::EventBus* eventBus, SceneManager& sceneManager);
 
 
 	/*void SceneStack::init(cursed_engine::EventBus* eventBus)
@@ -32,11 +33,12 @@ public:
 	}*/
 
 private:
-	void transitionToScene(const SceneTransitionEvent& e);
+	void transitionToScene(const SceneTransitionRequestEvent& e);
 
 
-	cursed_engine::ComponentInitContext m_componentContext;
+	cursed_engine::ComponentInitContext m_componentContext; // maybe not?!
 	cursed_engine::EventBus* m_eventBus;
-	SceneStack& m_sceneStack;
-	SceneFactory& m_sceneFactory;
+	SceneManager& m_sceneManager;
+	//SceneStack& m_sceneStack;
+	//SceneFactory& m_sceneFactory;
 };

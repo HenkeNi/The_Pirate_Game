@@ -1,24 +1,20 @@
 #include "game/systems/scene_system.h"
-#include "game/scenes/scene_factory.h"
-#include "game/scenes/scene_loader.h"
+#include "game/scenes/scene_manager.h"
 #include "game/events/events.h"
-
 #include <engine/core/events/event_bus.h>
+#include <engine/core/logger.h>
 
-#include "game/scenes/scene_stack.h"
-#include "game/scenes/scene.h"
-
-SceneSystem::SceneSystem(const cursed_engine::ComponentInitContext& ctx, cursed_engine::EventBus* eventBus, SceneStack& sceneStack, SceneFactory& sceneFactory)
-	: m_componentContext{ ctx }, m_eventBus{ eventBus }, m_sceneStack{ sceneStack }, m_sceneFactory{ sceneFactory }
+SceneSystem::SceneSystem(const cursed_engine::ComponentInitContext& ctx, cursed_engine::EventBus* eventBus, SceneManager& sceneManager)
+	: m_componentContext{ ctx }, m_eventBus{ eventBus }, m_sceneManager{ sceneManager }
 {
-	m_eventBus->subscribe<SceneTransitionEvent>(
-		[this](const SceneTransitionEvent& e)
+	m_eventBus->subscribe<SceneTransitionRequestEvent>(
+		[this](const SceneTransitionRequestEvent& e)
 		{
 			transitionToScene(e);
 		});
 }
 
-void SceneSystem::transitionToScene(const SceneTransitionEvent& e)
+void SceneSystem::transitionToScene(const SceneTransitionRequestEvent& e)
 {
 	// TODO; load and store somewhere...
 	//static std::unordered_map<std::string, std::string> idToPaths
@@ -33,35 +29,46 @@ void SceneSystem::transitionToScene(const SceneTransitionEvent& e)
 		m_sceneStack.pop();
 		return;
 	}*/
+	//static const std::unordered_map<std::string, SceneTransitionType> transitions
+	//{
+	//	{ "push", SceneTransitionType::Push },
+	//	{ "pop", SceneTransitionType::Pop },
+	//	{ "replace", SceneTransitionType::Swap } // swpa or replace?
+	//};
+	// 
+	//m_sceneManager.requestTransition(e.scene, transitions.at(e.transition));
+	m_sceneManager.requestTransition(e.scene, e.transitionTyp);
 
-	std::unique_ptr<Scene> scene{ nullptr };
+	//std::unique_ptr<Scene> scene{ nullptr };
 
-	if (!e.scene.empty())
-	{
-		//std::string path = idToPaths.at(e.scene);
+	//if (!e.scene.empty())
+	//{
+	//	//std::string path = idToPaths.at(e.scene);
 
-		scene = m_sceneFactory.createScene(e.scene);
-		if (!scene)
-		{
-			// log...
-			return;
-		}
+	//	scene = m_sceneFactory.createScene(e.scene);
+	//	if (!scene)
+	//	{
+	//		// log...
+	//		return;
+	//	}
 
-		SceneLoader loader; // loads scene data?
-		loader.loadAssets(*scene, m_sceneFactory.getFilePath(e.scene), m_componentContext);
-	}
+	//	SceneLoader loader; // loads scene data?
+	//	loader.loadAssets(*scene, m_sceneFactory.getFilePath(e.scene), m_componentContext);
+	//}
 
 
 
 	//constexpr std::unordered_map<std::string, SceneTransitionType> transitions
-	static const std::unordered_map<std::string, SceneTransitionType> transitions
-	{
-		{ "push", SceneTransitionType::Push },
-		{ "pop", SceneTransitionType::Pop },
-		{ "replace", SceneTransitionType::Swap } // swpa or replace?
-	};
+	//static const std::unordered_map<std::string, SceneTransitionType> transitions
+	//{
+	//	{ "push", SceneTransitionType::Push },
+	//	{ "pop", SceneTransitionType::Pop },
+	//	{ "replace", SceneTransitionType::Swap } // swpa or replace?
+	//};
 
-	m_sceneStack.setPending({ std::move(scene), transitions.at(e.transition) });
+	cursed_engine::Logger::logInfo("Entering scene: " + e.scene); // wont log when first entering title screen...
+
+	//m_sceneStack.setPending(std::move(scene), transitions.at(e.transition));
 
 
 

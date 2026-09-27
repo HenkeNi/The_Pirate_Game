@@ -1,14 +1,18 @@
 #pragma once
-#include "engine/utils/non_copyable.h"
-#include "engine/core/result.h"
 #include <filesystem>
 #include <memory>
+#include <string_view>
 
 namespace cursed_engine
 {
 	namespace fs = std::filesystem;
 
 	class JsonValue;
+
+	template <typename T>
+	class Result;
+
+	// TODO; delete copy constructor?
 
 	class JsonDocument
 	{
@@ -17,7 +21,7 @@ namespace cursed_engine
 		JsonDocument(const fs::path& path); // make sure works!! or dont? no way of knowing if succesful or not,..
 		~JsonDocument();
 
-		Result loadFromFile(const fs::path& path);
+		Result<void> loadFromFile(const fs::path& path);
 
 		[[nodiscard]] JsonValue root() const;
 
@@ -27,7 +31,7 @@ namespace cursed_engine
 
 		[[nodiscard]] bool isLoaded() const noexcept;
 
-		[[nodiscard]] JsonValue operator[](const char* key) const; // overload with non const?
+		[[nodiscard]] JsonValue operator[](std::string_view key) const; // overload with non const?
 
 	private:
 		struct Impl;

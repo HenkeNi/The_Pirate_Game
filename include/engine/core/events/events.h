@@ -1,6 +1,7 @@
 #pragma once
 #include "engine/platform/input.h"
-#include "engine/ecs/entity/entity.h"
+//#include "engine/ecs/entity/entity.h"
+#include "engine/ecs/entity/entity_handle.h"
 #include <string>
 // TODO; create dedicated UIEvents, InputEvents, etc if file grows to large
 
@@ -45,5 +46,16 @@ namespace cursed_engine
 	struct SettingsChangedEvent
 	{
 
+	};
+
+	struct EntityCreatedEvent
+	{
+		Entity entity;
+	};
+
+	// GOOD or bad idea?
+	struct EntitiesCreatedEvent
+	{
+		std::vector<Entity> entities;
 	};
 }

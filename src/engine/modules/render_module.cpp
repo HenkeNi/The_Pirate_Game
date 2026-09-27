@@ -2,6 +2,7 @@
 #include "engine/resources/texture/surface.h"
 #include "engine/resources/texture/texture.h"
 #include "engine/rendering/render_backend.h"
+#include "engine/core/settings/engine_config.h"
 #include "engine/core/logger.h"
 #include <cassert>
 #include <format>
@@ -17,27 +18,27 @@ namespace cursed_engine
 	{
 	}
 
-	bool RenderModule::init(Window& window, const RenderConfig& config)
+	bool RenderModule::init(Window& window, const RenderConfig& config, Backend backend)
 	{
 		Logger::logInfo(std::format("{}[RenderModule] - Initialization started...", log_format::INDENT));
 
-		switch (config.backend)
+		switch (backend)
 		{
-		case RenderConfig::Backend::SDL:
+		case Backend::SDL:
 			m_backend = std::make_unique<SDLRenderBackend>();
 			Logger::logInfo(std::format("{}[RenderModule] - Selected backend: SDL", log_format::INDENT));
 			break;
 
 		default:
-			Logger::logInfo(std::format("{}[RenderModule] - Unsupported backend {}", log_format::INDENT, (int)config.backend));
+			Logger::logInfo(std::format("{}[RenderModule] - Unsupported backend {}", log_format::INDENT, (int)backend));
 			return false;
 		}
 
-		const Result result = m_backend->init(window);
+		const Result<void> result = m_backend->init(window);
 
-		if (!result.succeeded)
+		if (!result.ok())
 		{
-			Logger::logError(std::format("{}[RenderModule] - Initialization failed! Reason: {}", log_format::INDENT, result.message));
+			Logger::logError(std::format("{}[RenderModule] - Initialization failed! Reason: {}", log_format::INDENT, result.message()));
 			return false;
 		}
 

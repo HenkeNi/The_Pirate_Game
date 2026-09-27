@@ -17,10 +17,6 @@ namespace cursed_engine::utils
 
 	}*/
 
-	// elsewhere?? re´name? get`XX from path
-	[[nodiscard]] std::string extractAssetId(const std::filesystem::path& path);
-	//[[nodiscard]] std::string extractResourceID(const std::filesystem::path& path); remove?
-
 	namespace hash
 	{
 		// https://stackoverflow.com/questions/19195183/how-to-properly-hash-the-custom-struct

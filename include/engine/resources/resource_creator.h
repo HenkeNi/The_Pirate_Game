@@ -6,12 +6,15 @@ struct SDL_Renderer;
 
 namespace cursed_engine
 {
-	class Texture;
-	class Text;
 	class Font;
 	struct Surface;
+	class Texture;
+	class Text;
 
-	// TODO; return Result?
+	template <typename T>
+	class Result;
+
+	// Rename, ResourceGenerator?
 
 #pragma region Resource_Creator
 
@@ -20,8 +23,8 @@ namespace cursed_engine
 	public:
 		virtual ~ResourceCreator() = default;
 
-		[[nodiscard]] virtual Texture createTextureFromSurface(Surface surface) const noexcept = 0;
-		[[nodiscard]] virtual Text createText(const std::string& text, Font& font) const noexcept = 0;
+		[[nodiscard]] virtual Result<Texture> createTextureFromSurface(Surface surface) const = 0;
+		[[nodiscard]] virtual Result<Text> createText(const std::string& text, Font& font) const = 0;
 	};
 
 #pragma endregion
@@ -33,8 +36,8 @@ namespace cursed_engine
 	public:
 		void init(TTF_TextEngine* textEngine, SDL_Renderer* renderer);
 
-		[[nodiscard]] Texture createTextureFromSurface(Surface surface) const noexcept override;
-		[[nodiscard]] Text createText(const std::string& text, Font& font) const noexcept override;
+		[[nodiscard]] Result<Texture> createTextureFromSurface(Surface surface) const override;
+		[[nodiscard]] Result<Text> createText(const std::string& text, Font& font) const override;
 
 
 	private:

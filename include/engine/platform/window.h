@@ -1,6 +1,5 @@
 #pragma once
 #include "engine/resources/texture/surface.h"
-#include "engine/utils/non_copyable.h"
 #include "engine/math/vec2.hpp"
 #include <string>
 #include <variant>
@@ -16,13 +15,15 @@ namespace cursed_engine
 	// Store minimized? etc? WindowState?
 
 	struct WindowConfig;
-	struct Result;
+
+	template <typename T>
+	class Result;
 
 	using Icon = std::variant<Surface>;
 
 #pragma region Window
 
-	class Window : public NonCopyable
+	class Window
 	{
 	public:
 		struct Preferences
@@ -43,10 +44,17 @@ namespace cursed_engine
 			bool visible = true;
 		};
 
+		Window() = default;
 		virtual ~Window() = default;
 
+		Window(const Window&) = delete;
+		Window(Window&&) = delete;
+
+		Window& operator=(const Window&) = delete;
+		Window& operator=(Window&&) = delete;
+
 		// ==================== Lifecycle ====================
-		Result create(const WindowConfig& config);
+		Result<void> create(const WindowConfig& config);
 		void destroy();
 
 		// ==================== Getters ====================
@@ -70,7 +78,7 @@ namespace cursed_engine
 
 	protected:
 		// ==================== Backend Hooks ====================
-		virtual Result onCreate(const WindowConfig& config) = 0;
+		virtual Result<void> onCreate(const WindowConfig& config) = 0;
 		virtual void onDestroy() = 0;
 
 		virtual bool onSetTitle(const char* title) = 0;
@@ -106,7 +114,7 @@ namespace cursed_engine
 		[[nodiscard]] void* getNativeHandle() const noexcept override;
 
 	protected:
-		Result onCreate(const WindowConfig& config) override;
+		Result<void> onCreate(const WindowConfig& config) override;
 		void onDestroy() override;
 
 		bool onSetTitle(const char* title) override;
