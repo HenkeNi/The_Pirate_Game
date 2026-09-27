@@ -52,6 +52,11 @@ namespace cursed_engine
 		m_backend->drawGeometry(geometry, &texture);
 	}
 
+	void RenderAPI::drawGeometry(const Geometry& geometry)
+	{
+		m_backend->drawGeometry(geometry);
+	}
+
 	void RenderAPI::drawOutlineRect(FRect rect, Color color)
 	{
 		m_backend->drawOutlineRect(rect, color);

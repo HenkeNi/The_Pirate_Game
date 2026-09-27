@@ -10,18 +10,13 @@
 namespace
 {
 	constexpr int CIRCLE_SEGMENTS = 32;
-}
 
-namespace cursed_engine
-{
-#pragma region Helpers
-	
 	SDL_FRect toSDLRect(float x, float y, float w, float h)
 	{
 		return SDL_FRect{ x, y, w, h };
 	}
 
-	SDL_FRect toSDLRect(const FRect& rect)
+	SDL_FRect toSDLRect(const cursed_engine::FRect& rect)
 	{
 		return toSDLRect(rect.x, rect.y, rect.w, rect.h);
 	}
@@ -38,22 +33,22 @@ namespace cursed_engine
 		};
 	}
 
-	SDL_FColor toSDLColor(const Color& color)
+	SDL_FColor toSDLColor(const cursed_engine::Color& color)
 	{
 		return toSDLColor(color.r, color.g, color.b, color.a);
 	}
 
-	SDL_FPoint toSDLPoint(const FVec2& v)
-	{ 
+	SDL_FPoint toSDLPoint(const cursed_engine::FVec2& v)
+	{
 		return SDL_FPoint(v.x, v.y);
 	}
 
 	SDL_FPoint toSDLPoint(float x, float y)
-	{ 
+	{
 		return SDL_FPoint(x, y);
 	}
 
-	SDL_Vertex toSDLVertex(const FVec2& position, const FVec2& uv, const Color& color)
+	SDL_Vertex toSDLVertex(const cursed_engine::FVec2& position, const cursed_engine::FVec2& uv, const cursed_engine::Color& color)
 	{
 		return SDL_Vertex{
 			SDL_FPoint{ position.x, position.y },
@@ -61,28 +56,29 @@ namespace cursed_engine
 			SDL_FPoint{ uv.x, uv.y }
 		};
 	}
-	
-	SDL_Vertex toSDLVertex(const Vertex& vertex)
+
+	SDL_Vertex toSDLVertex(const cursed_engine::Vertex& vertex)
 	{
 		return toSDLVertex(vertex.position, vertex.uv, vertex.color);
 	}
 
-	FVec2 worldToScreen(const FVec2& position, const Projection& proj, const View& view)
+	cursed_engine::FVec2 worldToScreen(const cursed_engine::FVec2& position, const cursed_engine::Projection& proj, const cursed_engine::View& view)
 	{
 		// TODO; just position or width and height as well?
 
 		// screen = world - camera...
-		return FVec2{
+		return cursed_engine::FVec2{
 			position.x - view.position.x,
 			position.y - view.position.y
 		};
-		
+
 		//rect.x = (dst.x - view.position.x); // * view.zoom + (projection.size.x * 0.5f);
 		//rect.y = (dst.y - view.position.y); // * view.zoom + (projection.size.y * 0.5f);
 	}
+}
 
-#pragma endregion
-
+namespace cursed_engine
+{
 	SDLRenderBackend::SDLRenderBackend()
 		: m_renderer{ nullptr }, m_textEngine{ nullptr }, m_statistics{}
 	{
