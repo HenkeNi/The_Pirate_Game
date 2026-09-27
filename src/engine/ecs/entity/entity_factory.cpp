@@ -2,6 +2,11 @@
 #include "engine/ecs/component/component_registry.h"
 #include "engine/assets/asset_manager.h"
 
+
+
+
+#include "engine/ecs/component/core_components.h"
+
 namespace cursed_engine
 {
 	/*EntityFactory::EntityFactory(ECSRegistry& ecsRegistry, PrefabRegistry& prefabRegistry)
@@ -34,7 +39,7 @@ namespace cursed_engine
 		m_ecsRegistry = ecsRegistry;
 	}
 
-	std::optional<EntityHandle> EntityFactory::createFromPrefab(const std::string& prefabId)
+	std::optional<EntityHandle> EntityFactory::createFromPrefab(const std::string& prefabId, FVec2 pos)
 	{
 		assert(m_ecsRegistry && "ECSRegistry is not set!");
 
@@ -54,8 +59,20 @@ namespace cursed_engine
 		for (const auto& [name, properties] : prefab.components)
 		{
 			const ComponentInfo& info = m_componentRegistry.get(name.c_str());
-			info.instantation(entityHandle, properties, m_initContext);
+			info.derserializeFromPrefab(entityHandle, properties, m_initContext);
+		
+			if (info.postInit)
+			{
+				info.postInit(entityHandle, m_postInitContext);
+			}
 		}
+
+		// Handle with hooks instead?
+		//if (TransformComponent* transformComponent = entityHandle.tryGetComponent<TransformComponent>())
+		//{
+		//	transformComponent->position = pos;
+		//	int x = 20;
+		//}
 
 		//const auto& prefab = m_prefabRegistry->get(prefabId);
 
