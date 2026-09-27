@@ -1,0 +1,19 @@
+{
+  "name": "palm_tree",
+  "components": {
+    "transform": {
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "scale": {
+        "x": 2.0,
+        "y": 3.0
+      }
+    },
+    "sprite": {
+      "id": "palm",
+      "region": "palm"
+    }
+  }
+}

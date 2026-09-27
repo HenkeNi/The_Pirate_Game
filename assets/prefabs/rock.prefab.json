@@ -1,0 +1,16 @@
+{
+  "name": "rock",
+  "components": {
+    "transform": {
+      "scale": {
+        "x": 1.0,
+        "y": 1.0
+      }
+    },
+    "sprite": {
+      "id": "rock",
+      "region": "rock"
+    }
+  }
+
+}

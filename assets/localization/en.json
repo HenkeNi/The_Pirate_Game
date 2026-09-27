@@ -3,7 +3,8 @@
   "texts": [
     {
       "title_text": "The Cursed Pirate",
-      "settings_header": "Settings"
+      "settings_header": "Settings",
+      "fps": "FPS"
     }
   ],
   "numbers": [0, 1, 2, 3, 4, 5, 6 ]

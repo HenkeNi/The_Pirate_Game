@@ -3,32 +3,29 @@
   "entities": [
     {
       "id": "main_camera",
-      "parent": "player",
       "components": {
         "transform": {
-          "x": 0,
-          "y": 0,
-          "width": 1200,
-          "height": 760
+          "scale": {
+            "x": 1200.0,
+            "y": 760.0
+          }
         },
-        "camera": {
-        },
-        "parent": {
-          "parent_id": "player"
-        }
+        "camera": {},
+        "follow": {}
       }
     },
     {
       "id": "player",
       "components": {
         "transform": {
-          "x": 0,
-          "y": 0,
-          "width": 100,
-          "height": 100
+          "scale": {
+            "x": 1.0,
+            "y": 1.0
+          }
         },
         "sprite": {
-          "id": "pirate_sheet"
+          "texture_id": "pirate_sheet",
+          "region": "idle_0"
         },
         "animation": {
           "animation_set_id": "player",
@@ -36,8 +33,14 @@
         },
         "velocity": {},
         "input": {},
-        "parent": {
-          "parent_id": "test"
+        "player": {},
+        "health": {},
+        "physics": {
+          "collider_type": "dynamic",
+          "shape": {
+            "type": "square",
+            "half_extent": 20.0
+          }
         }
       }
     },
@@ -46,14 +49,50 @@
       "parent": "player",
       "components": {
         "transform": {
-          "x": 0,
-          "y": 0,
-          "width": 40,
-          "height": 40
+          "scale": {
+            "x": 0.05,
+            "y": 0.05
+          }
         },
         "sprite": {
-          "id": "crossed-bones"
+          "texture_id": "heart"
         }
+      }
+    },
+    {
+      "id": "heart_container",
+      "components": {
+        "layout": {},
+        "ui": {}
+      }
+    },
+    {
+      "id": "fps_counter",
+      "components": {
+        "transform": {
+          "position": {
+            "x": 700.0,
+            "y": 0.0
+          },
+          "scale": {
+            "x": 40.0,
+            "y": 40.0
+          }
+        },
+        "ui": {},
+        "text": {
+          "text_id": "fps",
+          "font": "treasure.regular",
+          "size": 40,
+          "color": {
+            "r": 8,
+            "g": 8,
+            "b": 8,
+            "a": 255
+          },
+          "outline": 0
+        },
+        "debug": {}
       }
     }
   ]

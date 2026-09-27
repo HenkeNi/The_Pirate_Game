@@ -14,7 +14,6 @@
     "mouse_sensitivity": 1.0
   },
   "renderer": {
-    "backend": "SDL",
     "brightness": 1.0,
     "contrast": 1.0
   },
