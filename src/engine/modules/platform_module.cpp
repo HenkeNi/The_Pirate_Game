@@ -75,6 +75,8 @@ namespace cursed_engine
 
 	void PlatformModule::endFrame()
 	{
+		// TODO; do in FrameTimer?
+
 		// do in beginning of frame? do in class?
 		uint64_t end = SDL_GetPerformanceCounter(); // hide in class?
 		float elapsed = (end - m_frameBeginCounter) / (float)SDL_GetPerformanceFrequency();
@@ -92,7 +94,7 @@ namespace cursed_engine
 	{
 		assert(m_platform && "Platform uninitialized");
 		return m_platform->exitRequested();
-	}
+	}  
 
 	double PlatformModule::getDeltaTime() const noexcept
 	{

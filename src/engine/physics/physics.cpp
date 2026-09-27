@@ -19,7 +19,7 @@ namespace cursed_engine
 		}
 
 		assert(false && "Unhandled ColliderType in toBox2DBodyType");
-		std::abort();  // fatal error
+		std::abort();
 	}
 
 	b2Vec2 tob2Vec(const FVec2& vec2)
@@ -27,18 +27,21 @@ namespace cursed_engine
 		return b2Vec2{ vec2.x, vec2.y };
 	}
 
-	b2Polygon tob2Polygon(Shape shape, const BodyDefinition::ShapeData& data)
+	b2Polygon tob2Polygon(const Shape& shape)
 	{
-		switch (shape)
+		switch (shape.type)
 		{
-		case cursed_engine::Shape::Square:
-			return b2MakeSquare(data.Square.halfExtent);
-		case cursed_engine::Shape::Rectangle:
-			return b2MakeBox(data.Rectangle.width * 0.5f, data.Rectangle.height * 0.5f);
+		case Shape::ShapeType::Square:
+			return b2MakeSquare(shape.data.Square.halfExtent);
+		case Shape::ShapeType::Rectangle:
+			return b2MakeBox(shape.data.Rectangle.width * 0.5f, shape.data.Rectangle.height * 0.5f);
 			//case cursed_engine::Shape::Circle:
 				//return b2MakeRoundedBox()		
 				//return b2MakeAABB();
 		}
+
+		assert(false && "Unhandled ShapeType in tob2Polygon");
+		std::abort();
 	}
 
 	b2WorldId tob2WorldId(const WorldId& id)
@@ -46,7 +49,32 @@ namespace cursed_engine
 		return b2WorldId{ id.index, id.generation };
 	}
 
+	b2BodyId tob2BodyId(const PhysicsBody::BodyId& id)
+	{
+		return b2BodyId{ id.index, id.world, id.generation };
+	}
+
+	FVec2 toFVec2(const b2Vec2& vec)
+	{
+		return FVec2{ vec.x, vec.y };
+	}
+
 #pragma endregion
+
+	void PhysicsBody::setLinearVelocity(const FVec2& velocity)
+	{
+		b2Body_SetLinearVelocity(tob2BodyId(bodyId), tob2Vec(velocity));
+	}
+
+	FVec2 PhysicsBody::getPosition() const noexcept
+	{
+		return toFVec2(b2Body_GetPosition(tob2BodyId(bodyId)));
+	}
+
+	PhysicsWorld::PhysicsWorld(float gravityX, float gravityY)
+		: PhysicsWorld(FVec2{ gravityX, gravityY })
+	{
+	}
 
 	PhysicsWorld::PhysicsWorld(FVec2 gravity)
 	{
@@ -116,7 +144,7 @@ namespace cursed_engine
 
 		b2BodyId bodyId = b2CreateBody(tob2WorldId(m_worldId), &bodyDef);
 
-		b2Polygon polygon = tob2Polygon(definition.shape, definition.shapeData);
+		b2Polygon polygon = tob2Polygon(definition.shape);
 
 		b2ShapeDef shapeDef = b2DefaultShapeDef();
 		shapeDef.density = 1.0f;
@@ -128,9 +156,6 @@ namespace cursed_engine
 
 		return PhysicsBody{ bodyId.index1, bodyId.world0, bodyId.generation };
 	}
-
-
-
 
 	PhysicsBody PhysicsWorld::createGroundBody(const FVec2& position)
 	{
@@ -182,7 +207,7 @@ namespace cursed_engine
 
 	void PhysicsWorld::destroyBody(PhysicsBody body)
 	{
-		b2DestroyBody({ body.index, body.world, body.generation });
+		b2DestroyBody({ body.bodyId.index, body.bodyId.world, body.bodyId.generation });
 	}
 
 

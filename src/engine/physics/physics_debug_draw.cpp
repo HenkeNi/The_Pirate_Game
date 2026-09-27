@@ -2,15 +2,14 @@
 #include <box2d/box2d.h>
 
 #include "engine/core/logger.h"
+#include <format>
 
 namespace cursed_engine
 {
 	b2DebugDraw g_debugDraw = b2DefaultDebugDraw(); // FIX THIS? - or make static / internal
 
-	//void drawPolygonFcn(RenderAPI& renderAPI, const b2Vec2* vertices, int vertexCount, b2HexColor color, void* context)
-	void drawPolygonFcn(const b2Vec2* vertices, int vertexCount, b2HexColor color, void* context)
+	void drawPolygon(const b2Vec2* vertices, int vertexCount, b2HexColor color, void* context)
 	{
-
 		RenderAPI* renderAPI = static_cast<RenderAPI*>(context);
 
 		Geometry geometry;
@@ -18,16 +17,26 @@ namespace cursed_engine
 
 		for (int i = 0; i < vertexCount; ++i)
 		{
-			//Vertex(FVec2 position, FVec2 uv, Color color = Color::white)
-			geometry.vertices.emplace_back(FVec2{ vertices[i].x, vertices[i].y }, FVec2{ 0.f, 1.f });
+			geometry.vertices.emplace_back(FVec2{ vertices[i].x, vertices[i].y }, FVec2{ 0.f, 0.f }, Color::orange);
 		}
 
-		renderAPI->drawFillRect(FRect{ vertices[0].x, vertices[0].y, vertices[0].x + 200.f, vertices[0].y + 200.f }, Color::pink);
-		//renderAPI->drawOutlineRect(FRect{ vertices[0].x, vertices[0].y, vertices[0].x + 200.f, vertices[0].y + 200.f }, Color::pink);
-		//renderAPI->drawGeometry(geometry, ); // allow drawing without texture?
+		geometry.indices.reserve(vertexCount);
 
-		//renderAPI->drawFillRect(); // no drawRect or drawPolygon?
+		for (int i = 1; i < vertexCount - 1; ++i) 
+		{
+			geometry.indices.push_back(0);
+			geometry.indices.push_back(i);
+			geometry.indices.push_back(i + 1);
+		}
 
+		renderAPI->drawGeometry(geometry);		
+	}
+
+	void drawCircle(b2Vec2 center, float radius, b2HexColor color, void* context)
+	{
+		RenderAPI* renderAPI = static_cast<RenderAPI*>(context);
+
+		renderAPI->drawFillCircle(center.x, center.y, radius, Color::orange);
 	}
 
 	void PhysicsDebugDraw::init(RenderAPI renderAPI)
@@ -36,19 +45,16 @@ namespace cursed_engine
 		m_worldId = WorldId::invalid();
 
 		g_debugDraw.context = &m_renderAPI;
-		g_debugDraw.DrawPolygonFcn = drawPolygonFcn;
+		
+		g_debugDraw.DrawPolygonFcn = drawPolygon;
+		g_debugDraw.DrawCircleFcn = drawCircle;
 
 		g_debugDraw.drawShapes = true;
 		g_debugDraw.drawBounds = true;
 	}
 
 	void PhysicsDebugDraw::draw()
-	{
-		//g_debugDraw.DrawPolygonFcn = [](const b2Vec2* vertices, int vertexCount, b2HexColor color, void* context)
-		//	{
-		//		// m_renderAPI.drawLine();
-		//	};
-	
+	{			
 		if (m_debugDrawEnabled && m_worldId.isValid())
 		{
 			b2World_Draw(b2WorldId{ m_worldId.index, m_worldId.generation }, &g_debugDraw);

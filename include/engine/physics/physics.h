@@ -14,28 +14,21 @@ namespace cursed_engine
 		Static = 0,
 		Kinematic,
 		Dynamic,
-		Count
+		Count,
 	};
 
-	enum class Shape // Polygon Shape? collider shape?
+	struct Shape
 	{
-		Square,
-		Rectangle,
-		Circle
-	};
+		enum class ShapeType // Polygon Shape? collider shape?
+		{
+			Square,
+			Rectangle,
+			Circle
+		} type;
 
-	struct BodyDefinition
-	{
-		ColliderType type;
-		Shape shape;
-		FVec2 position{};
-		float rotation = 0.0f;
-		float linearDamping = 0.0f;
-		float angularDamping = 0.0f;
-		
 		union ShapeData
 		{
-			struct 
+			struct
 			{
 				float halfExtent;
 			} Square;
@@ -51,24 +44,57 @@ namespace cursed_engine
 				float radius;
 			} Circle;
 
-		} shapeData;
+		} data;
+	};
+
+	
+
+	struct BodyDefinition
+	{
+		ColliderType type;
+		Shape shape;
+
+		FVec2 position{};
+		float rotation = 0.0f;
+		float linearDamping = 0.0f;
+		float angularDamping = 0.0f;
 	};
 
 
-	
+
 
 	struct PhysicsBody
 	{
-	
-		int32_t index;
-		uint16_t world;
-		uint16_t generation;
+		PhysicsBody() = default;
+		PhysicsBody(int32_t index, uint16_t world, uint16_t generation)
+		{
+			bodyId.index = index;
+			bodyId.world = world;
+			bodyId.generation = generation;
+		}
+
+		struct BodyId
+		{
+			int32_t index;
+			uint16_t world;
+			uint16_t generation;
+		} bodyId;
+
+		[[nodiscard]] static inline PhysicsBody invalid() // constexpr?
+		{
+			return PhysicsBody{ 0, 0, 0 }; // return Invalid indexes?
+		}
+
+		void setLinearVelocity(const FVec2& velocity);
+
+		FVec2 getPosition() const noexcept;
 	};
 
 	// Game / scene should own a physics world...
 	class PhysicsWorld
 	{
 	public:
+		PhysicsWorld(float gravityX, float gravityY);
 		explicit PhysicsWorld(FVec2 gravity);
 		~PhysicsWorld();
 
@@ -77,15 +103,15 @@ namespace cursed_engine
 
 		PhysicsWorld& operator=(const PhysicsWorld& other) = delete;
 		PhysicsWorld& operator=(PhysicsWorld&& other) noexcept;
-		
+
 		void step(); // or step
 
 		[[nodiscard]] PhysicsBody createBody(const BodyDefinition& definition);
 
 		PhysicsBody createGroundBody(const FVec2& position);
-		PhysicsBody createDynamicBody(FVec2 position, ColliderType type, Shape shape);
+		/*PhysicsBody createDynamicBody(FVec2 position, ColliderType type, Shape shape);
 		PhysicsBody createStaticBody();
-		PhysicsBody createKinematicBody();
+		PhysicsBody createKinematicBody();*/
 
 		void destroyBody(PhysicsBody body);
 
