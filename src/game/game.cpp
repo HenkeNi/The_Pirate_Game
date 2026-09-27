@@ -66,7 +66,6 @@ void Game::onUpdate(float deltaTime)
 	//	m_eventBus->publishInstantly<SceneTransitionEvent>("title_scene", "push");
 
 	m_sceneManager.update(deltaTime);
-	m_sceneManager.applyPendingTransition();
 
 	// handle scene transition...
 	// get current scene?
@@ -74,6 +73,7 @@ void Game::onUpdate(float deltaTime)
 
 void Game::onRender(const cursed_engine::RenderContext& ctx)
 {
+	m_sceneManager.render();
 }
 
 void Game::onCreated(const cursed_engine::EngineContext& context)
@@ -137,12 +137,10 @@ void Game::setupSystems(const ce::EngineContext& ctx)
 {
 	SystemManager* systemManager = ctx.ecs.systemManager;
 
-	systemManager->emplace<MapRenderSystem>(ctx.rendering.rendererAPI, ctx.resources.textureManager);
-	systemManager->emplace<WorldRenderSystem>(ctx.resources.textureManager, ctx.assets.assetManager, ctx.rendering.rendererAPI, ctx.physics.physicsDebugDraw);
-	systemManager->emplace<ScreenSpaceRenderSystem>(ctx.resources.textureManager, ctx.assets.assetManager, ctx.rendering.rendererAPI);
+	
 	//systemManager->emplace<cursed_engine::RenderSystem>(context.resources.textureManager, context.assets.assetManager, context.rendering.rendererAPI);
-
 	//m_systemManager.emplace<InputSystem>(inputHandler);
+
 	systemManager->emplace<InteractionSystem>();
 	systemManager->emplace<TransformSystem>(); // this or hierarchy system?
 	systemManager->emplace<CameraSystem>(*ctx.settings); // run after TransformSystem -> sets final position (bounds, follow, etc)
@@ -154,7 +152,9 @@ void Game::setupSystems(const ce::EngineContext& ctx)
 	systemManager->emplace<HierarchySystem>();
 	systemManager->emplace<InputSystem>(ctx.platform.input);
 	systemManager->emplace<HUDSystem>(*ctx.eventBus, *ctx.ecs.entityFactory);
-	// just use engine ctx instead?
+
+
+
 
 	ce::ComponentInitContext componentInitContext = ce::createComponentInitContext(ctx); // or pass it since already created in onCreated!
 	//cursed_engine::ComponentInitContext componentInitContext{
@@ -172,11 +172,16 @@ void Game::setupSystems(const ce::EngineContext& ctx)
 		componentInitContext,
 		ctx.eventBus,
 		m_sceneManager);
-	systemManager->emplace<cursed_engine::AnimationSystem>(*ctx.assets.assetManager);
+	systemManager->emplace<cursed_engine::AnimationSystem>(*ctx.assets.assetManager); // update or render?
 	//systemManager->emplace<MapSystem>(m_mapGenerator); - currentyl done in overworld scene!
 	systemManager->emplace<MapDecorationSystem>(*ctx.ecs.entityFactory, *ctx.eventBus);
 	systemManager->emplace<DebugSystem>(*ctx.platform.timer); // only add in debug...
 	systemManager->emplace<ce::PhysicsSystem>();
+
+
+	systemManager->emplace<MapRenderSystem>(ctx.rendering.rendererAPI, ctx.resources.textureManager);
+	systemManager->emplace<WorldRenderSystem>(ctx.resources.textureManager, ctx.assets.assetManager, ctx.rendering.rendererAPI, ctx.physics.physicsDebugDraw);
+	systemManager->emplace<ScreenSpaceRenderSystem>(ctx.resources.textureManager, ctx.assets.assetManager, ctx.rendering.rendererAPI);
 }
 
 void Game::registerComponents(const ce::EngineContext& ctx)

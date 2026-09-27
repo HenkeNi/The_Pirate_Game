@@ -15,6 +15,14 @@ void Scene::update(float deltaTime)
 
 	onUpdate(deltaTime);
 
-	cursed_engine::SystemContext systemContext{ m_registry, *m_context.eventBus, deltaTime };
-	m_context.systemManager->update(systemContext);
+	cursed_engine::SystemUpdateContext context{ m_registry, *m_context.eventBus, deltaTime };
+	m_context.systemManager->update(context);
+}
+
+void Scene::render()
+{
+	onRender();
+
+	cursed_engine::SystemRenderContext context{ m_registry, m_context.renderAPI };
+	m_context.systemManager->render(context); // or copy it?
 }

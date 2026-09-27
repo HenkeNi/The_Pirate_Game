@@ -9,10 +9,15 @@
 #include <engine/core/application.h>
 #include <engine/ecs/component/core_components.h>
 
-void SceneLoader::init(SceneContext sceneCtx, ce::ComponentInitContext componentCtx)
+#include <engine/core/events/event_bus.h>
+#include <engine/core/events/events.h>
+
+void SceneLoader::init(SceneContext sceneCtx, ce::ComponentInitContext initCtx, ce::EventBus* eventBus)
 {
 	m_sceneContext = std::move(sceneCtx); 
-	m_componentInitContext = std::move(componentCtx);
+	m_componentInitContext = std::move(initCtx);
+	//m_componentPostInitContext = std::move(postInitCtx);
+	m_eventBus = eventBus;
 }
 
 std::unique_ptr<Scene> SceneLoader::load(const SceneMeta& meta)
@@ -29,6 +34,8 @@ std::unique_ptr<Scene> SceneLoader::load(const SceneMeta& meta)
 	}
 
 	std::unique_ptr<Scene> scene = meta.creator(m_sceneContext);
+
+	// TODO; attach physcis world? (specify in json, gravity. ect?)
 
 	auto* componentRegistry = m_sceneContext.componentRegistry;
 	//auto* componentRegistry = scene.m_context.componentRegistry;
@@ -62,13 +69,38 @@ std::unique_ptr<Scene> SceneLoader::load(const SceneMeta& meta)
 			pendingParents.emplace_back(entityHandle, entity["parent"].asString());
 		}
 
+		// ##################### Maybe find better way of calling post init function?? ###################3
+
+		std::vector<const char*> components;
+
+		// ###############################################################################3
+
 		entity["components"].forEachProperty([&](const char* name, cursed_engine::JsonValue value)
 			{
 				assert(componentRegistry->contains(name) && "[SceneLoader::loadAssets] - Component Type not registered!"); // TODO; make sure program doesnt crahs if not registered
 
+				components.push_back(name);
+
 				const auto& componentData = componentRegistry->get(name);
-				componentData.deserialize(entityHandle, value, m_componentInitContext);
+				componentData.deserializeFromJson(entityHandle, value, m_componentInitContext);
 			});
+
+
+		ce::PhysicsWorld* physicsWorld = scene->getPhysicsWorld();
+
+		if (!physicsWorld)
+			continue; // return instead?
+
+
+		for (const auto& c : components)
+		{
+			const auto& componentData = componentRegistry->get(c);
+
+			if (!componentData.postInit)
+				continue;
+
+			componentData.postInit(entityHandle, { physicsWorld });
+		}
 	}
 
 	// -------------------------------- setup relationships ------------------------------------
@@ -136,6 +168,10 @@ std::unique_ptr<Scene> SceneLoader::load(const SceneMeta& meta)
 
 		childHierarchyComponent->parent = parentIt->second;
 	}
+
+
+
+
 
 	return scene;
 }

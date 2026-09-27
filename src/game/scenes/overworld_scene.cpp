@@ -15,7 +15,7 @@
 #include <engine/assets/asset_manager.h>
 
 #include <engine/physics/physics.h>
-
+#include <engine/ecs/system/physics_system.h>
 #include "game/components/components.h" // remove later? 
 #include <engine/ecs/component/core_components.h>
 
@@ -30,7 +30,7 @@ void OverworldScene::onUpdate(float deltaTime)
 {
 
 	int x = 20;
-	m_physicsWorld.step();
+	//m_physicsWorld.step(); // here or physics system?
 }
 
 void OverworldScene::onEnter()
@@ -40,41 +40,41 @@ void OverworldScene::onEnter()
 	m_physicsAPI.setWorldId(m_physicsWorld.getWorldId()); // MAYBE PASS WORLD INSTEAD? AND PHYSICS API extracts it??
 
 	m_context.entityFactory->setEcsRegistry(&m_registry);
+	m_context.entityFactory->setPostInitContext({ &m_physicsWorld });
 	m_context.systemManager->getSystem<HUDSystem>().setECSRegistry(&m_registry);
 
-
+	m_context.systemManager->getSystem<PhysicsSystem>().setPhysicsWorld(&m_physicsWorld);
 	{
-		ce::BodyDefinition bodyDefinition;
-		bodyDefinition.type = ce::ColliderType::Dynamic;
-		bodyDefinition.shape = ce::Shape::Square;
-		bodyDefinition.position = {};
-		bodyDefinition.rotation = 0.f;
-		bodyDefinition.linearDamping = 0.f;
-		bodyDefinition.angularDamping = 0.f;
-		bodyDefinition.shapeData.Square.halfExtent = 20.5f;
+		//ce::BodyDefinition bodyDefinition;
+		//bodyDefinition.type = ce::ColliderType::Dynamic;
+		//bodyDefinition.shape = ce::Shape::ShapeType::Square;
+		//bodyDefinition.position = {};
+		//bodyDefinition.rotation = 0.f;
+		//bodyDefinition.linearDamping = 0.f;
+		//bodyDefinition.angularDamping = 0.f;
+		//bodyDefinition.shapeData.Square.halfExtent = 20.5f;
 
-		// collider test
-		auto body = m_physicsWorld.createBody(std::move(bodyDefinition));
-
+		//// collider test
+		//auto body = m_physicsWorld.createBody(std::move(bodyDefinition));
 	}
 
 	{
-		ce::BodyDefinition bodyDefinition;
-		bodyDefinition.type = ce::ColliderType::Static;
-		bodyDefinition.shape = ce::Shape::Rectangle;
-		bodyDefinition.position = { 20.f, 20.f };
-		/*def.position = {
-		pixelsToMeters(playerX), // phyics in meters, rendering in pixels	
-		pixelsToMeters(playerY)
-		};*/
-		bodyDefinition.rotation = 0.f;
-		bodyDefinition.linearDamping = 0.f;
-		bodyDefinition.angularDamping = 0.f;
-		bodyDefinition.shapeData.Rectangle.height = 20.5f;
-		bodyDefinition.shapeData.Rectangle.width = 60.5f;
+		//ce::BodyDefinition bodyDefinition;
+		//bodyDefinition.type = ce::ColliderType::Static;
+		//bodyDefinition.shape = ce::Shape::Rectangle;
+		//bodyDefinition.position = { 20.f, 20.f };
+		///*def.position = {
+		//pixelsToMeters(playerX), // phyics in meters, rendering in pixels	
+		//pixelsToMeters(playerY)
+		//};*/
+		//bodyDefinition.rotation = 0.f;
+		//bodyDefinition.linearDamping = 0.f;
+		//bodyDefinition.angularDamping = 0.f;
+		//bodyDefinition.shapeData.Rectangle.height = 20.5f;
+		//bodyDefinition.shapeData.Rectangle.width = 60.5f;
 
-		// collider test
-		auto body = m_physicsWorld.createBody(std::move(bodyDefinition));
+		//// collider test
+		//auto body = m_physicsWorld.createBody(std::move(bodyDefinition));
 
 	}
 
@@ -107,7 +107,7 @@ void OverworldScene::onEnter()
 
 
 
-	m_context.entityFactory->createFromPrefab("raft");
+	m_context.entityFactory->createFromPrefab("raft", ce::FVec2{ 0.f, 0.f });
 
 	
 

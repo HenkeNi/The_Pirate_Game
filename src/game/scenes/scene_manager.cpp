@@ -21,6 +21,7 @@ void SceneManager::init(const ce::EngineContext& context, SceneRegistry registry
 	};
 
 	ce::ComponentInitContext componentInitContext = ce::createComponentInitContext(context);
+
 	/*{
 		context.assets.assetManager,
 		context.assets.localization,
@@ -31,28 +32,12 @@ void SceneManager::init(const ce::EngineContext& context, SceneRegistry registry
 		context.resources.textManager
 	};
 	*/
-	m_loader.init(sceneContext, componentInitContext);
+	m_loader.init(sceneContext, componentInitContext, m_eventBus);
 }
 
 void SceneManager::shutdown()
 {
 	m_stack.clear();
-}
-
-void SceneManager::update(float deltaTime)
-{
-	if (!m_stack.empty()) [[unlikely]]
-	{
-		std::unique_ptr<Scene>& top = m_stack.back();
-		top->update(deltaTime);
-	}
-
-	applyPendingTransition();
-}
-
-void SceneManager::requestTransition(SceneName name, SceneTransitionType type)
-{
-	m_pendingTransition = { std::move(name), type};
 }
 
 void SceneManager::applyPendingTransition()
@@ -78,10 +63,35 @@ void SceneManager::applyPendingTransition()
 	m_pendingTransition = std::nullopt;
 }
 
+void SceneManager::update(float deltaTime)
+{
+	if (!m_stack.empty()) [[unlikely]]
+	{
+		std::unique_ptr<Scene>& top = m_stack.back();
+		top->update(deltaTime);
+	}
+
+	applyPendingTransition();
+}
+
+void SceneManager::render()
+{
+	if (!m_stack.empty()) [[unlikely]]
+	{
+		std::unique_ptr<Scene>& top = m_stack.back();
+		top->render();
+	}
+}
+
+void SceneManager::requestTransition(SceneName name, SceneTransitionType type)
+{
+	m_pendingTransition = { std::move(name), type };
+}
+
 void SceneManager::push(SceneName name)
-{ 
+{
 	const SceneMeta& meta = m_registry.get(name);
-	
+
 	if (std::unique_ptr<Scene> scene = m_loader.load(meta))
 	{
 		if (!m_stack.empty())
@@ -117,7 +127,7 @@ void SceneManager::pop()
 		top->onDestroyed();
 
 		m_stack.pop_back();
-	
+
 		if (!m_stack.empty()) [[likely]]
 		{
 			std::unique_ptr<Scene>& top = m_stack.back();
