@@ -27,6 +27,7 @@ namespace cursed_engine
 		void drawTexture(Texture& texture, FVec2 srcPos, FVec2 srcSize, FVec2 dstPos, FVec2 dstSize, Color color = Color::white);
 
 		void drawGeometry(const Geometry& geometry, Texture& texture);
+		void drawGeometry(const Geometry& geometry);
 
 		void drawOutlineRect(FRect rect, Color color = Color::black);
 		void drawOutlineRect(float x, float y, float w, float h, Color color = Color::black);
