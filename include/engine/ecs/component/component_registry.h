@@ -3,16 +3,11 @@
 #include "engine/ecs/entity/entity_handle.h"
 #include "engine/assets/asset_types.h"
 
-//#include "engine/rendering/render_api.h"
-//#include "engine/rendering/render_types.h" // Needed??
-
-#include "engine/resources/resource_types.h"
-
 #include "engine/utils/containers/registry.hpp"
+#include "engine/resources/resource_types.h"
 #include <functional>
 #include <string>
 
-#include "engine/rendering/render_api.h"
 
 // TODO; rename ecs_types.h?
 
@@ -24,8 +19,7 @@ namespace cursed_engine
 	{
 		class AssetManager* assetManager{};
 		class Localization* localization{};
-		//RenderAPI renderer{}; // WHY???????????????????
-
+		
 		AudioManager* audioManager{};
 		FontManager* fontManager{};
 		TextureManager* textureManager{};
@@ -33,19 +27,34 @@ namespace cursed_engine
 		//class TextFactory* textFactory{};
 	};
 
+	struct ComponentPostInitContext
+	{
+		class PhysicsWorld* physicsWorld{};
+		//ECSRegistry* ecsRegistry{};
+	};
+
+	// Only templated to avoid including engine_context.h? 
 	template <typename Context>
 	ComponentInitContext createComponentInitContext(const Context& context)
 	{
 		return ComponentInitContext{
 			context.assets.assetManager,
 			context.assets.localization,
-			//context.rendering.rendererAPI,
 			context.resources.audioManager,
 			context.resources.fontManager,
 			context.resources.textureManager,
 			context.resources.textManager,
 		};
 	}
+
+	//template <typename Context>
+	//ComponentPostInitContext createComponentPostInitContext()
+	//{
+	//	return ComponentPostInitContext
+	//	{
+	//		
+	//	};
+	//}
 
 	struct ComponentInfo
 	{
@@ -54,12 +63,16 @@ namespace cursed_engine
 		std::size_t alignment;
 		std::size_t size;
 
-		// TODO; find a better name
-		using Deserialization = std::function<void(EntityHandle& handle, const JsonValue& value, const ComponentInitContext& context)>;
-		using PrefabInstantiation = std::function<void(EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)>; // prefabInstance
+		using DeserializeFromJson = std::function<void(EntityHandle& handle, const JsonValue& value, const ComponentInitContext& context)>;
+		using DeserializeFromPrefab = std::function<void(EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)>;
+		
+		using PostInit = std::function<void(EntityHandle& handle, const ComponentPostInitContext& context)>;
 
-		PrefabInstantiation instantation;
-		Deserialization deserialize; // Rename?
+		DeserializeFromPrefab derserializeFromPrefab;
+		DeserializeFromJson deserializeFromJson;
+		
+		PostInit postInit = nullptr;
+		//Initialization initialization; // runtime dependency graph instead? or have systems listen to events? pass initialize position in deserialization/prefba instantion instead?
 	};
 
 	using ComponentName = std::string;
