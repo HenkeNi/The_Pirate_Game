@@ -1,6 +1,6 @@
 #include "engine/platform/platform.h"
 #include "engine/core/settings/engine_config.h"
-#include "engine/resources/sdl_resource_loaders.h" // -- maybe make a generic surface loader?
+#include "engine/resources/resource_loaders.h" // -- maybe make a generic surface loader?
 #include "engine/resources/texture/surface.h"
 #include "engine/platform/window.h"
 #include "engine/core/result.h"

@@ -4,7 +4,7 @@
 #include "engine/core/settings/engine_config.h"
 #include "engine/core/logger.h"
 #include "engine/core/result.h"
-#include "engine/resources/texture/surface_loader.h"
+#include "engine/resources/resource_loaders.h"
 #include "engine/resources/texture/surface.h"
 #include "engine/core/events/event_bus.h"
 

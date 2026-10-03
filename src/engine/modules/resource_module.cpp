@@ -1,38 +1,33 @@
 #include "engine/modules/resource_module.h"
+#include "engine/resources/resource_loaders.h"
 #include "engine/core/logger.h"
-#include <format>
-
-#include "engine/resources/sdl_resource_loaders.h"
 
 //#include "engine/resources/resource_creator.h"
-
-// test
-#include "engine/resources/texture/texture.h"
-#include "engine/resources/audio/audio.h"
-#include "engine/resources/text/font.h"
+//#include "engine/resources/texture/texture.h"
+//#include "engine/resources/audio/audio.h"
+//#include "engine/resources/text/font.h"
+//#include <format>
 
 namespace cursed_engine
 {
-	bool ResourceModule::init(ResourceCreator* creator, const ResourceConfig& config, Backend backend)
+	bool ResourceModule::init(const TextureCreator* textureCreator, const TextCreator* textCreator, const AudioCreator* audioCreator, const ResourceConfig& config, Backend backend)
 	{
 		Logger::logInfo(std::format("{}[ResourceModule] - Initialization started...", log_format::INDENT));
 
 		switch (backend)
 		{
 		case Backend::SDL:
+			m_textureManager.init(&config, std::make_unique<SDLTextureLoader>(textureCreator));
+			m_audioManager.init(&config, std::make_unique<SDLAudioLoader>(audioCreator));
+			m_fontManager.init(&config, std::make_unique<SDLFontLoader>());
 			break;
 
 		default:
 			Logger::logInfo(std::format("{}[RenderModule] - Unsupported backend {}", log_format::INDENT, (int)backend));
 			return false;
 		}
-
-		m_textureManager.init(&config, std::make_unique<SDLTextureLoader>(creator));
-		m_audioManager.init(&config, std::make_unique<SDLAudioLoader>());
-		m_fontManager.init(&config, std::make_unique<SDLFontLoader>());
-
-		// why both?
-		m_textManager.init(&m_fontManager, creator); // accept font manager in constructor?
+	
+		m_textManager.init(&m_fontManager, textCreator); // accept font manager in constructor?
 		//m_textFactory.init(&m_fontManager, renderer);
 
 		Logger::logInfo(std::format("{}[ResourceModule] - Initialization successful!", log_format::INDENT));
@@ -50,15 +45,4 @@ namespace cursed_engine
 		m_fontManager.update(currentFrame, deltaTime);
 		m_textureManager.update(currentFrame, deltaTime);
 	}
-
-	//ResourceServices ResourceModule::getServices() noexcept
-	//{
-	//	return {
-	//		&m_audioManager,
-	//		&m_fontManager,
-	//		&m_textureManager,
-	//		&m_textManager,
-	//		&m_textFactory
-	//	};
-	//}
 }
