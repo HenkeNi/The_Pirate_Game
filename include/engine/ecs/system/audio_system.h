@@ -1,6 +1,6 @@
 #pragma once
 #include "system.h"
-#include "engine/resources/resource_types.h"
+#include "engine/resources/audio/audio_manager.h"
 
 namespace cursed_engine
 {

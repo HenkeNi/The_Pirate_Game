@@ -2,15 +2,9 @@
 #include "engine/resources/resource_loaders.h"
 #include "engine/core/logger.h"
 
-//#include "engine/resources/resource_creator.h"
-//#include "engine/resources/texture/texture.h"
-//#include "engine/resources/audio/audio.h"
-//#include "engine/resources/text/font.h"
-//#include <format>
-
 namespace cursed_engine
 {
-	bool ResourceModule::init(const TextureCreator* textureCreator, const TextCreator* textCreator, const AudioCreator* audioCreator, const ResourceConfig& config, Backend backend)
+	bool ResourceModule::init(const TextureCreator* textureCreator, const AudioCreator* audioCreator, const ResourceConfig& config, Backend backend)
 	{
 		Logger::logInfo(std::format("{}[ResourceModule] - Initialization started...", log_format::INDENT));
 
@@ -27,9 +21,6 @@ namespace cursed_engine
 			return false;
 		}
 	
-		m_textManager.init(&m_fontManager, textCreator); // accept font manager in constructor?
-		//m_textFactory.init(&m_fontManager, renderer);
-
 		Logger::logInfo(std::format("{}[ResourceModule] - Initialization successful!", log_format::INDENT));
 		return true;
 	}

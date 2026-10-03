@@ -1,6 +1,6 @@
 #include "engine/rendering/render_backend.h"
+#include "engine/rendering/text/text.h"
 #include "engine/resources/texture/texture.h"
-#include "engine/resources/text/text.h"
 #include "engine/resources/resource_creators.h"
 #include "engine/platform/window.h"
 #include "engine/core/result.h"
@@ -250,9 +250,10 @@ namespace cursed_engine
 	{
 		assert(text.isValid() && "SDLRenderBackend::drawText - Invalid text found!");
 
+		const SDLText& sdlText = static_cast<const SDLText&>(text);
 		const FVec2 screenPosition = worldToScreen(pos, m_renderState.projection, m_renderState.view);
-
-		TTF_DrawRendererText(text.getInternal(), screenPosition.x, screenPosition.y);
+		
+		TTF_DrawRendererText(sdlText.getInternal(), screenPosition.x, screenPosition.y);
 	}
 
 	const RenderStatistics* SDLRenderBackend::getStatistics() const noexcept

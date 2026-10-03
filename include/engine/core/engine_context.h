@@ -1,7 +1,7 @@
 #pragma once
 #include "engine/ecs/component/component_registry.h"
 #include "engine/resources/audio/audio_manager.h"
-#include "engine/resources/text/font_manager.h"
+#include "engine/resources/font/font_manager.h"
 #include "engine/resources/texture/texture_manager.h"
 #include "engine/rendering/render_api.h"
 #include "engine/platform/input_api.h"
@@ -22,6 +22,7 @@ namespace cursed_engine
 		{
 			RenderAPI rendererAPI;
 			class RenderPipeline& renderPipeline;
+			const class TextCreator* textCreator{};
 		} rendering;
 
 		struct AssetServices
@@ -35,8 +36,6 @@ namespace cursed_engine
 			AudioManager* audioManager{};
 			FontManager* fontManager{};
 			TextureManager* textureManager{};
-			class TextManager* textManager{};
-			//class TextFactory* textFactory{};
 		} resources;
 
 		struct ECSServices

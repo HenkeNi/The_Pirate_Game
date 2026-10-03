@@ -1,36 +1,26 @@
 #pragma once
+#include "engine/resources/resource_types.h"
 #include <memory>
 #include <string>
 
 struct MIX_Mixer;
 struct SDL_Renderer;
-struct TTF_TextEngine;
+
+// [Consider] - Text isn't really a 'resource' so maybe put in another file (text_creator.h)?
 
 namespace cursed_engine
 {
-	class Audio;
-	class Font;
-	class Text;
-	class Texture;
-	struct Surface;
-
 	template <typename T>
 	class Result;
+
+	struct Surface;
 
 	class AudioCreator
 	{
 	public:
 		virtual ~AudioCreator() = default;
 
-		[[nodiscard]] virtual Result< std::unique_ptr<Audio>> createAudio(const char* path) const = 0;
-	};
-
-	class TextCreator
-	{
-	public:
-		virtual ~TextCreator() = default;
-
-		[[nodiscard]] virtual Result<Text> createText(const std::string& text, Font& font) const = 0;
+		[[nodiscard]] virtual Result<AudioPtr> createAudio(const char* path) const = 0;
 	};
 
 	class TextureCreator
@@ -38,7 +28,7 @@ namespace cursed_engine
 	public:
 		virtual ~TextureCreator() = default;
 
-		[[nodiscard]] virtual Result<std::unique_ptr<Texture>> createTextureFromSurface(Surface surface) const = 0;
+		[[nodiscard]] virtual Result<TexturePtr> createTextureFromSurface(Surface surface) const = 0;
 	};
 
 #pragma region SDL_Resource_Creators
@@ -47,27 +37,17 @@ namespace cursed_engine
 	{
 	public:
 		void init(MIX_Mixer* mixer);
-		[[nodiscard]] Result<std::unique_ptr<Audio>> createAudio(const char* path) const override;
+		[[nodiscard]] Result<AudioPtr> createAudio(const char* path) const override;
 	
 	private:
 		MIX_Mixer* m_mixer = nullptr;
-	};
-
-	class SDLTextCreator final : public TextCreator
-	{
-	public:
-		void init(TTF_TextEngine* textEngine);
-		[[nodiscard]] Result<Text> createText(const std::string& text, Font& font) const override;
-
-	private:
-		TTF_TextEngine* m_textEngine = nullptr;
 	};
 
 	class SDLTextureCreator final : public TextureCreator
 	{
 	public:
 		void init(SDL_Renderer* renderer);
-		[[nodiscard]] Result<std::unique_ptr<Texture>> createTextureFromSurface(Surface surface) const override;
+		[[nodiscard]] Result<TexturePtr> createTextureFromSurface(Surface surface) const override;
 
 	private:
 		SDL_Renderer* m_renderer = nullptr;

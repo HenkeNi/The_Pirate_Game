@@ -1,7 +1,7 @@
 #include "engine/resources/resource_loaders.h"
 #include "engine/resources/audio/audio.h"
 #include "engine/resources/resource_creators.h"
-#include "engine/resources/text/font.h"
+#include "engine/resources/font/font.h"
 #include "engine/resources/texture/texture.h"
 #include "engine/resources/texture/surface.h"
 #include <SDL3_mixer/SDL_mixer.h>
@@ -17,11 +17,11 @@ namespace cursed_engine
 	{
 	}
 
-	Result<std::unique_ptr<Audio>> SDLAudioLoader::operator()(const AudioDescriptor& key) const
+	Result<AudioPtr> SDLAudioLoader::operator()(const AudioDescriptor& key) const
 	{
 		if (!std::filesystem::exists(key.path))
 		{
-			return Result<std::unique_ptr<Audio>>::failure(std::format("Failed to load Audio! Invalid path: {}", key.path));
+			return Result<AudioPtr>::failure(std::format("Failed to load Audio! Invalid path: {}", key.path));
 		}
 
 		return m_creator->createAudio(key.path.c_str());
@@ -41,25 +41,21 @@ namespace cursed_engine
 		return Result<Audio>::success(SDLAudio{ stream, audioBuffer, audioLength });*/
 	}
 
-	Result<std::unique_ptr<Font>> SDLFontLoader::operator()(const FontDescriptor& descriptor) const
+	Result<FontPtr> SDLFontLoader::operator()(const FontDescriptor& descriptor) const
 	{
 		if (!std::filesystem::exists(descriptor.path))
 		{
-			return Result<std::unique_ptr<Font>>::failure(std::format("Failed to load font! Invalid path: {}", descriptor.path));
+			return Result<FontPtr>::failure(std::format("Failed to load font! Invalid path: {}", descriptor.path));
 		}
 
 		TTF_Font* font = TTF_OpenFont(descriptor.path.c_str(), (float)descriptor.size);
 
 		if (!font)
 		{
-			return Result<std::unique_ptr<Font>>::failure(std::format("Failed to load font. Reason {}", SDL_GetError()));
+			return Result<FontPtr>::failure(std::format("Failed to load font. Reason {}", SDL_GetError()));
 		}
 
-		TTF_SetFontStyle(font, static_cast<TTF_FontStyleFlags>(descriptor.style)); // 
-		TTF_SetFontOutline(font, descriptor.outline);
-		TTF_SetFontKerning(font, descriptor.kerning);
-
-		return Result<std::unique_ptr<Font>>::success(std::make_unique<Font>(font, descriptor));
+		return Result<FontPtr>::success(std::make_unique<SDLFont>(font, descriptor));
 	}
 
 	Result<Surface> SurfaceLoader::operator()(const std::filesystem::path& path) const
@@ -78,13 +74,13 @@ namespace cursed_engine
 	{
 	}
 
-	Result<std::unique_ptr<Texture>> SDLTextureLoader::operator()(const TextureDescriptor& key) const
+	Result<TexturePtr> SDLTextureLoader::operator()(const TextureDescriptor& key) const
 	{
 		assert(m_creator && "Not a valid resource creator!");
 
 		if (!std::filesystem::exists(key.path))
 		{
-			return Result<std::unique_ptr<Texture>>::failure(std::format("Failed to load texture, invalid path: {}", key.path));
+			return Result<TexturePtr>::failure(std::format("Failed to load texture, invalid path: {}", key.path));
 		}
 
 		// use this if not modifying the texture:
@@ -93,7 +89,7 @@ namespace cursed_engine
 
 		if (!surface)
 		{
-			return Result<std::unique_ptr<Texture>>::failure(std::format("Unable to load image! Path: {}. Error: ", key.path, SDL_GetError()));
+			return Result<TexturePtr>::failure(std::format("Unable to load image! Path: {}. Error: ", key.path, SDL_GetError()));
 		}
 
 		return m_creator->createTextureFromSurface(Surface{ surface });

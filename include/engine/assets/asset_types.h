@@ -11,7 +11,7 @@
 #include <variant>
 #include <cassert>
 
-#include "engine/rendering/animation_types.h" // TEMP!
+#include "engine/rendering/animation/animation_types.h" // TEMP!
 
 namespace cursed_engine
 {

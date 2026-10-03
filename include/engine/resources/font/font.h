@@ -12,6 +12,14 @@ struct TTF_Font;
 Roboto16Outline2
 Roboto16Bold
 Roboto24Title
+
+	// TODO, consider adding:
+	// TTF_SetFontLineSkip();
+	// TTF_SetFontWrapAlignment
+	// TTF_SetFontSDF
+	// TTF_SetFontHinting();
+
+
 */
 
 namespace cursed_engine
@@ -57,22 +65,19 @@ namespace cursed_engine
 		}
 	};
 
-	struct FontParams
+	/*struct FontParams
 	{
 		FontStyle style;
 		int size;
 		int outline;
 		bool kerning;
-	};
+	};*/
 
-	// TODO; SDLFont
+
 	class Font
 	{
 	public:
-		//Font() = default;
-		Font();
-		Font(TTF_Font* font, FontDescriptor descriptor); // where is descriptor used?
-
+		Font() = default;
 		virtual ~Font() = default;
 
 		Font(const Font&) = delete;
@@ -81,30 +86,40 @@ namespace cursed_engine
 		Font& operator=(const Font&) = delete;
 		Font& operator=(Font&&) = default;
 
-		[[nodiscard]] inline TTF_Font* getInternal() const noexcept { return m_font; }
+		//[[nodiscard]] virtual FontStyle getStyle() const noexcept = 0; change to bitset? (allow multiple styles)
+		[[nodiscard]] virtual bool getKerning() const noexcept = 0;
 
-		// maybe find a better name than size?
-		[[nodiscard]] inline const std::string& getPath() const { return m_descriptor.path; }
-		[[nodiscard]] inline FontStyle getStyle() const { return m_descriptor.style; }
+		[[nodiscard]] virtual int getOutline() const noexcept = 0;
+		[[nodiscard]] virtual int getWidth() const noexcept = 0;
+		[[nodiscard]] virtual int getHeight() const noexcept = 0;
 
-		[[nodiscard]] inline int getSize() const { return m_descriptor.size; }
-		[[nodiscard]] inline int getOutline() const { return m_descriptor.outline; }
-		[[nodiscard]] inline bool getKerning() const { return m_descriptor.kerning; }
+		[[nodiscard]] virtual bool isFixedWidth() const noexcept = 0;
+		[[nodiscard]] virtual bool isScalable() const noexcept = 0;
 
-		[[nodiscard]] bool isFixedWidth() const;
-		[[nodiscard]] bool isScalable() const;
-
-	private:
-		TTF_Font* m_font;
-		FontDescriptor m_descriptor;
+		//[[nodiscard]] inline const std::string& getPath() const { return m_descriptor.path; } // USED?
 	};
 
 	class SDLFont final : public Font
 	{
 	public:
-		//SDLFont(TTF_Font* font);
+		SDLFont();
+		SDLFont(TTF_Font* font, FontDescriptor params);
+		~SDLFont();
 
+		SDLFont(SDLFont&& other);
+		SDLFont& operator=(SDLFont&& other);
 
+		[[nodiscard]] inline TTF_Font* getInternal() const noexcept { return m_font; }
+
+		//[[nodiscard]] FontStyle getStyle() const noexcept override;
+		[[nodiscard]] bool getKerning() const noexcept override;
+
+		[[nodiscard]] int getOutline() const noexcept override;
+		[[nodiscard]] int getWidth() const noexcept override;
+		[[nodiscard]] int getHeight() const noexcept override;
+
+		[[nodiscard]] bool isFixedWidth() const noexcept override;
+		[[nodiscard]] bool isScalable() const  noexcept override;
 
 	private:
 		TTF_Font* m_font;

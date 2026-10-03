@@ -8,10 +8,7 @@ namespace cursed_engine
 	template <typename T>
 	class Result;
 
-	class Audio;
 	class AudioCreator;
-	class Font;
-	class Texture;
 	class TextureCreator;
 
 	struct AudioDescriptor;

@@ -120,7 +120,7 @@ namespace cursed_engine
 		}
 
 		auto& resource = m_impl->resource;
-		if (!resource.init(rendering.getTextureCreator(), rendering.getTextCreator(), audio.getAudioCreator(), configs.resource, configs.platform.backend))
+		if (!resource.init(rendering.getTextureCreator(), audio.getAudioCreator(), configs.resource, configs.platform.backend))
 		{
 			Logger::logError(std::format(initFailedMessage, "ResourceModule"));
 			return false;
@@ -237,7 +237,8 @@ namespace cursed_engine
 			},
 			EngineContext::RenderingServices {
 				impl.rendering.getRenderAPI(),
-				impl.rendering.getRenderPipeline()
+				impl.rendering.getRenderPipeline(),
+				impl.rendering.getTextCreator()
 			},
 			EngineContext::AssetServices{
 				&impl.asset.getAssetManager(),
@@ -247,7 +248,6 @@ namespace cursed_engine
 				&impl.resource.getAudioManager(),
 				&impl.resource.getFontManager(),
 				&impl.resource.getTextureManager(),
-				&impl.resource.getTextManager()
 			},
 			EngineContext::ECSServices{
 				&impl.ecs.getEntityFactory(),

@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/resources/resource_types.h"
+#include "engine/resources/texture/texture_manager.h"
 #include "engine/rendering/render_api.h"
 #include "engine/ecs/system/system.h"
 

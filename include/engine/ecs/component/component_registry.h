@@ -3,7 +3,7 @@
 #include "engine/ecs/entity/entity_handle.h"
 #include "engine/assets/asset_types.h"
 #include "engine/resources/audio/audio_manager.h"
-#include "engine/resources/text/font_manager.h"
+#include "engine/resources/font/font_manager.h"
 #include "engine/resources/texture/texture_manager.h"
 #include "engine/utils/containers/registry.hpp"
 #include <functional>
@@ -24,7 +24,7 @@ namespace cursed_engine
 		AudioManager* audioManager{};
 		FontManager* fontManager{};
 		TextureManager* textureManager{};
-		class TextManager* textManager{};
+		const class TextCreator* textCreator{};
 		//class TextFactory* textFactory{};
 	};
 
@@ -44,7 +44,7 @@ namespace cursed_engine
 			context.resources.audioManager,
 			context.resources.fontManager,
 			context.resources.textureManager,
-			context.resources.textManager,
+			context.rendering.textCreator
 		};
 	}
 

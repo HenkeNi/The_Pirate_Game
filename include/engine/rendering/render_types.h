@@ -7,6 +7,9 @@
 
 namespace cursed_engine
 {
+	class Text;
+	using TextPtr = std::unique_ptr<Text>;
+
 	struct Color
 	{
 		constexpr Color()
