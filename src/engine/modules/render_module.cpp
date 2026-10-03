@@ -62,9 +62,15 @@ namespace cursed_engine
 		m_backend->endFrame();
 	}
 
-	ResourceCreator* RenderModule::getResourceCreator() noexcept
+	const TextureCreator* RenderModule::getTextureCreator() const noexcept
 	{
 		assert(m_backend && "Backend not initialized!");
-		return m_backend->getResourceCreator();
+		return m_backend->getTextureCreator();
+	}
+	
+	const TextCreator* RenderModule::getTextCreator() const noexcept
+	{
+		assert(m_backend && "Backend not initialized!");
+		return m_backend->getTextCreator();
 	}
 }

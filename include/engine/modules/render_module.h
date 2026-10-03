@@ -12,7 +12,8 @@ namespace cursed_engine
 	};*/
 
 	struct RenderConfig;
-	class ResourceCreator;
+	class TextureCreator;
+	class TextCreator;
 	class RenderBackend;
 	class Window;
 
@@ -40,7 +41,8 @@ namespace cursed_engine
 		[[nodiscard]] inline RenderAPI getRenderAPI() noexcept { return RenderAPI{ m_backend.get() }; }
 		[[nodiscard]] inline RenderPipeline& getRenderPipeline() noexcept { return m_renderPipeline; }
 
-		[[nodiscard]] ResourceCreator* getResourceCreator() noexcept;
+		[[nodiscard]] const TextureCreator* getTextureCreator() const noexcept;
+		[[nodiscard]] const TextCreator* getTextCreator() const noexcept;
 
 		// Optional: Low-level access (use sparingly)
 		//[[nodiscard]] inline RenderBackend& getBackend() noexcept { return *m_renderer; }
