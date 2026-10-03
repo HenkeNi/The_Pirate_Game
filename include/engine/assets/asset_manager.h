@@ -245,13 +245,15 @@ namespace cursed_engine
 	template <typename Asset>
 	bool AssetManager::isValidHandle(AssetHandle handle) const noexcept
 	{
-		auto type = utils::getTypeIndex<Asset>();
+		return handle.isValid(); /// TODO, fix!
 
-		if (!m_assetTypes.contains(type))
-			return false;
+		//std::type_index type = utils::getTypeIndex<Asset>();
 
-		auto& assetType = m_assetTypes.at(type);
-		return assetType.idToAssetHandle.contains(handle);
+		//if (!m_assetTypes.contains(type))
+		//	return false;
+
+		//auto& assetType = m_assetTypes.at(type);
+		//return assetType.idToAssetHandle.contains(handle);		
 		//return m_idToAssetHandle.find(handle); // make sure work
 	}
 
