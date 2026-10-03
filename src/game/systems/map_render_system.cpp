@@ -29,7 +29,8 @@ void MapRenderSystem::render(cursed_engine::SystemRenderContext& context)
 
 				// TEMP -> figure out best way to get texture...  get texture from tileset? or tilemap?
 		auto handle = m_textureManager->getHandle(cursed_engine::TextureDescriptor{ "../assets/textures/map/island_tileset.png" });
-		auto* texture = m_textureManager->get(handle);
+		//const auto& texture = m_textureManager->get(handle); /////////////////////// HAVIN RENDER BACKEND FRIEND CLASS WOULD MAKE THIS BE ABLE TO BE CONST!
+		auto& texture = m_textureManager->get(handle); // TODO; make const!
 
 		//m_tileset->textureSize.x = texture->getWidth();
 		//m_tileset->textureSize.y = texture->getHeight();
@@ -55,7 +56,7 @@ void MapRenderSystem::render(cursed_engine::SystemRenderContext& context)
 				{
 					assert(m_tileset && "Not a valid tileset!");
 
-					buildMapChunkGeometry(getWorldPosition(*mapChunk), layer, *m_tileset, { texture->getWidth() ,  texture->getHeight() }); // dont pass tielset?!!
+					buildMapChunkGeometry(getWorldPosition(*mapChunk), layer, *m_tileset, { texture.getWidth() ,  texture.getHeight() }); // dont pass tielset?!!
 					layer.isDirty = false;
 				}
 
@@ -84,7 +85,7 @@ void MapRenderSystem::render(cursed_engine::SystemRenderContext& context)
 
 				// TODO; need to know what texture the layer is using...
 
-				m_renderAPI.drawGeometry(layer.geometry, *texture);
+				m_renderAPI.drawGeometry(layer.geometry, texture);
 			}
 		}
 	}

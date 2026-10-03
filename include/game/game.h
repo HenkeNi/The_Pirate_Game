@@ -11,7 +11,7 @@ namespace cursed_engine
 
 namespace ce = cursed_engine;
 
-class Game : public ce::Application
+class Game final : public ce::Application
 {
 public:
 	Game();

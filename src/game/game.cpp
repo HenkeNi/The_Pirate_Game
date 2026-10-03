@@ -6,7 +6,7 @@
 #include <engine/ecs/system/system_manager.h>
 #include <engine/core/events/event_bus.h>
 #include <engine/core/events/events.h>
-#include <iostream>
+//#include <iostream>
 
 #include "game/components/components.h"
 
@@ -28,6 +28,9 @@
 
 #include "game/map/tileset_loader.h"
 
+#include <engine/core/settings/settings.h>
+#include <engine/ecs/component/component_registry.h>
+
 #include <engine/ecs/system/render_system.h>
 #include <engine/ecs/system/interaction_system.h> //? ?
 #include <engine/ecs/system/ui_system.h>
@@ -37,20 +40,18 @@
 #include <engine/ecs/system/audio_system.h>
 #include <engine/ecs/system/animation_system.h>
 #include <engine/ecs/system/physics_system.h>
-
-#include <engine/core/settings/settings.h>
-#include <engine/ecs/component/component_registry.h>
-
+#include <engine/ecs/system/behavior_tree_system.h>
 #include <engine/ecs/system/screen_space_render_system.h>
 #include <engine/ecs/system/world_render_system.h>
 
-#include <engine/rendering/render_pipeline.h>
-
-#include "game/rendering/render_passes.h"
 
 #include <engine/ecs/entity/entity_factory.h> // For setting context in factory... remove later!
 
 #include <engine/assets/asset_manager.h>
+
+
+#include <engine/rendering/render_pipeline.h>
+#include "game/rendering/render_passes.h"
 
 using namespace cursed_engine;
 
@@ -145,7 +146,7 @@ void Game::setupSystems(const ce::EngineContext& ctx)
 	systemManager->emplace<TransformSystem>(); // this or hierarchy system?
 	systemManager->emplace<CameraSystem>(*ctx.settings); // run after TransformSystem -> sets final position (bounds, follow, etc)
 	systemManager->emplace<UISystem>(ctx.platform.input, ctx.actionRegistry); // OR Accept action registry (and event bus) by pointer?
-	systemManager->emplace<TextSystem>(ctx.resources.textManager/*, context.resources.textFactory*/, ctx.assets.localization);
+	systemManager->emplace<TextSystem>(ctx.rendering.textCreator/*, context.resources.textFactory*/, ctx.assets.localization);
 	systemManager->emplace<AudioSystem>(ctx.resources.audioManager, ctx.audio.audioController, ctx.eventBus); // FIX eventbus ptr
 	systemManager->emplace<PlayerControllerSystem>();
 	systemManager->emplace<MovementSystem>();
@@ -153,7 +154,8 @@ void Game::setupSystems(const ce::EngineContext& ctx)
 	systemManager->emplace<InputSystem>(ctx.platform.input);
 	systemManager->emplace<HUDSystem>(*ctx.eventBus, *ctx.ecs.entityFactory);
 
-
+	// AI system first?
+	systemManager->emplace<BehaviorTreeSystem>();
 
 
 	ce::ComponentInitContext componentInitContext = ce::createComponentInitContext(ctx); // or pass it since already created in onCreated!

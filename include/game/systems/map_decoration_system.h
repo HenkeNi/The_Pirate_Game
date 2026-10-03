@@ -9,6 +9,7 @@ namespace cursed_engine
 
 class Tilemap;
 struct Tileset;
+struct MapChunkCreatedEvent;
 
 //class TileRegistry;
 //class AssetManager;
@@ -22,6 +23,8 @@ public:
 	void setTileset(const Tileset* tileset);
 
 private:
+	void onMapChunkCreated(const MapChunkCreatedEvent& e);
+
 	//TileRegistry& m_tileRegistry;
 	Tilemap* m_tilemap;
 	const Tileset* m_tileset;

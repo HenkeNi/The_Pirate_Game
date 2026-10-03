@@ -15,9 +15,15 @@ void DebugSystem::update(cursed_engine::SystemUpdateContext& context)
 
 	view.forEach([&](cursed_engine::TextComponent& textComponent, const DebugComponent& debugComponent)
 		{
+			if (!textComponent.text)
+			{
+				// log?
+				return;
+			}
+
 			const int fps = (int)m_timer.getFPS();
-			textComponent.textObj.setText(std::format("FPS: {}", fps));
-			//textComponent.textObj.setText("FPS: " + std::to_string(m_timer.getFPS()));
+			textComponent.text->setText(std::format("FPS: {}", fps));
+			//textComponent.text.setText("FPS: " + std::to_string(m_timer.getFPS()));
 			int x = 20;
 		});
 

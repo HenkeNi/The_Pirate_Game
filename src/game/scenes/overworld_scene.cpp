@@ -44,39 +44,6 @@ void OverworldScene::onEnter()
 	m_context.systemManager->getSystem<HUDSystem>().setECSRegistry(&m_registry);
 
 	m_context.systemManager->getSystem<PhysicsSystem>().setPhysicsWorld(&m_physicsWorld);
-	{
-		//ce::BodyDefinition bodyDefinition;
-		//bodyDefinition.type = ce::ColliderType::Dynamic;
-		//bodyDefinition.shape = ce::Shape::ShapeType::Square;
-		//bodyDefinition.position = {};
-		//bodyDefinition.rotation = 0.f;
-		//bodyDefinition.linearDamping = 0.f;
-		//bodyDefinition.angularDamping = 0.f;
-		//bodyDefinition.shapeData.Square.halfExtent = 20.5f;
-
-		//// collider test
-		//auto body = m_physicsWorld.createBody(std::move(bodyDefinition));
-	}
-
-	{
-		//ce::BodyDefinition bodyDefinition;
-		//bodyDefinition.type = ce::ColliderType::Static;
-		//bodyDefinition.shape = ce::Shape::Rectangle;
-		//bodyDefinition.position = { 20.f, 20.f };
-		///*def.position = {
-		//pixelsToMeters(playerX), // phyics in meters, rendering in pixels	
-		//pixelsToMeters(playerY)
-		//};*/
-		//bodyDefinition.rotation = 0.f;
-		//bodyDefinition.linearDamping = 0.f;
-		//bodyDefinition.angularDamping = 0.f;
-		//bodyDefinition.shapeData.Rectangle.height = 20.5f;
-		//bodyDefinition.shapeData.Rectangle.width = 60.5f;
-
-		//// collider test
-		//auto body = m_physicsWorld.createBody(std::move(bodyDefinition));
-
-	}
 
 	m_mapGenerator.generateStartArea(m_tilemap, 1); // Don't do here? handle in new game event instead
 
@@ -107,7 +74,7 @@ void OverworldScene::onEnter()
 
 
 
-	m_context.entityFactory->createFromPrefab("raft", ce::FVec2{ 0.f, 0.f });
+	// m_context.entityFactory->createFromPrefab("raft", ce::FVec2{ 10.f, 20.f });
 
 	
 
@@ -149,7 +116,7 @@ void OverworldScene::onEnter()
 
 	cameraHandle.getComponent<ce::FollowComponent>().target = playerHandle;
 
-
+	m_context.entityFactory->createFromPrefab("spider", FVec2{ 0.f, 0.f });
 }
 
 void OverworldScene::onExit()
