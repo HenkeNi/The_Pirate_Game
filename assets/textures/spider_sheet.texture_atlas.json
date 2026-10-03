@@ -1,0 +1,44 @@
+{
+  "texture_id": "spider_sheet",
+  "regions": [
+    {
+      "identifier": "walk_0",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "identifier": "walk_1",
+      "rect": {
+        "x": 32,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    {
+      "identifier": "walk_2",
+      "rect": {
+        "x": 64,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    }
+  ]
+}
