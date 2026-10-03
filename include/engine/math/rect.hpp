@@ -25,7 +25,7 @@ namespace cursed_engine
 	using FRect = Rect<float>;
 	using IRect = Rect<int>;
 
-#pragma region Methods
+#pragma region Definitions
 
 	template <Numeric T>
 	constexpr Rect<T>::Rect(T x, T y, T w, T h)
