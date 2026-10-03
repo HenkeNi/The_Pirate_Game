@@ -145,7 +145,7 @@ namespace cursed_engine
 
 #pragma region SDL_Input
 
-	class SDLInput : public Input
+	class SDLInput final : public Input
 	{
 	public:
 		SDLInput(EventBus& eventBus);

@@ -100,7 +100,7 @@ namespace cursed_engine
 
 #pragma region SDL_Window
 
-	class SDLWindow : public Window
+	class SDLWindow final : public Window
 	{
 	public:
 		SDLWindow();
