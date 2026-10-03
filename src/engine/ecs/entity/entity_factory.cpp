@@ -2,7 +2,7 @@
 #include "engine/ecs/component/component_registry.h"
 #include "engine/assets/asset_manager.h"
 
-
+#include <cassert>
 
 
 #include "engine/ecs/component/core_components.h"
@@ -44,6 +44,8 @@ namespace cursed_engine
 		assert(m_ecsRegistry && "ECSRegistry is not set!");
 
 		const AssetHandle assetHandle = m_assetManager->getAssetHandle<Prefab>(prefabId);
+
+		assert(m_assetManager->isValidHandle<Prefab>(assetHandle) && "Not a valid prefab!");
 
 		const Prefab& prefab = m_assetManager->getAsset<Prefab>(assetHandle);
 
