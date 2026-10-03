@@ -1,6 +1,7 @@
 #pragma once
 
-struct SDL_AudioStream;
+//struct SDL_AudioStream;
+struct MIX_Audio;
 
 namespace cursed_engine
 {
@@ -17,21 +18,33 @@ namespace cursed_engine
 	class Audio
 	{
 	public:
+		Audio() = default;
 		virtual ~Audio() = default;
+
+		Audio(const Audio&) = delete;
+		Audio& operator=(const Audio&) = delete;
 	};
 
-	class SDLAudio : public Audio
+	class SDLAudio final : public Audio
 	{
 	public:
-		//Audio(const SDL_AudioSpec& spec, uint8_t* buffer, uint32_t length);
-		SDLAudio();
-		SDLAudio(SDL_AudioStream* stream, uint8_t* buffer, uint32_t length);
+		SDLAudio(MIX_Audio* audio = nullptr);
+		~SDLAudio();
 
-		SDL_AudioStream* m_stream;
-		//SDL_AudioSpec m_spec; // use the one in audio controller...
-		uint8_t* m_buffer; // or data
-		uint32_t m_length;
-	};	
+		SDLAudio(SDLAudio&& other) noexcept;
+		SDLAudio& operator=(SDLAudio&& other) noexcept;
+
+		[[nodiscard]] inline MIX_Audio* getInternal() const noexcept { return m_audio; }
+
+	private:
+		MIX_Audio* m_audio;
+	};
+
+	//	SDL_AudioStream* m_stream;
+	//	//SDL_AudioSpec m_spec; // use the one in audio controller...
+	//	uint8_t* m_buffer; // or data
+	//	uint32_t m_length;
+	//};	
 }
 
 template<>

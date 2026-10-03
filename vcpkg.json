@@ -8,6 +8,7 @@
       "name": "sdl3-image",
       "features": [ "png", "jpeg" ]
     },
+    "sdl3-mixer",
     "box2d",
     "rapidjson"
   ]

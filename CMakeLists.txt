@@ -34,6 +34,7 @@ endif()
 find_package(SDL3 CONFIG REQUIRED)
 find_package(SDL3_ttf CONFIG REQUIRED)
 find_package(SDL3_image CONFIG REQUIRED)
+find_package(SDL3_mixer CONFIG REQUIRED)
 find_package(box2d CONFIG REQUIRED)
 
 
@@ -61,6 +62,7 @@ target_link_libraries(Engine PRIVATE
 	SDL3::SDL3
 	SDL3_ttf::SDL3_ttf
 	SDL3_image::SDL3_image
+	SDL3_mixer::SDL3_mixer
 	box2d::box2d
 	FastNoiseLite
 )
