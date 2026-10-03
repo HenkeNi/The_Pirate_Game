@@ -9,6 +9,7 @@
 #include <vector>
 #include <unordered_map>
 #include <variant>
+#include <cassert>
 
 #include "engine/rendering/animation_types.h" // TEMP!
 
@@ -90,12 +91,15 @@ namespace cursed_engine
 		template <typename T>
 		const T* as() const noexcept
 		{
+			assert(isType<T>() && "Variant doesn't hold requested type!");
 			return std::get_if<T>(this);
 		}
 
 		template <typename T>
 		T getOr(const T& fallback) const noexcept
 		{
+			assert(isType<T>() && "Variant doesn't hold requested type!");
+
 			if (auto p = std::get_if<T>(this))
 				return *p;
 
@@ -105,6 +109,12 @@ namespace cursed_engine
 		[[nodiscard]] bool isNumeric() const noexcept
 		{
 			return std::holds_alternative<int>(*this) || std::holds_alternative<float>(*this); // TODO; double check
+		}
+
+		template <typename T>
+		[[nodiscard]] bool isType() const noexcept
+		{
+			return std::holds_alternative<T>(*this); // constexpr??
 		}
 	};
 
