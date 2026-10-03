@@ -2,9 +2,9 @@
 #include "engine/physics/physics_debug_draw.h"
 #include <box2d/box2d.h>
 
-namespace cursed_engine
+namespace
 {
-#pragma region Helpers
+	using namespace cursed_engine;
 
 	b2BodyType tob2BodyType(ColliderType type)
 	{
@@ -58,9 +58,10 @@ namespace cursed_engine
 	{
 		return FVec2{ vec.x, vec.y };
 	}
+}
 
-#pragma endregion
-
+namespace cursed_engine
+{
 	void PhysicsBody::setLinearVelocity(const FVec2& velocity)
 	{
 		b2Body_SetLinearVelocity(tob2BodyId(bodyId), tob2Vec(velocity));
