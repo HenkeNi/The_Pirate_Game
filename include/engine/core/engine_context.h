@@ -1,6 +1,8 @@
 #pragma once
 #include "engine/ecs/component/component_registry.h"
-#include "engine/resources/resource_types.h"
+#include "engine/resources/audio/audio_manager.h"
+#include "engine/resources/text/font_manager.h"
+#include "engine/resources/texture/texture_manager.h"
 #include "engine/rendering/render_api.h"
 #include "engine/platform/input_api.h"
 

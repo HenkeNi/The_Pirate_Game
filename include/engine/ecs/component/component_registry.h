@@ -2,9 +2,10 @@
 #include "engine/utils/concepts.h"
 #include "engine/ecs/entity/entity_handle.h"
 #include "engine/assets/asset_types.h"
-
+#include "engine/resources/audio/audio_manager.h"
+#include "engine/resources/text/font_manager.h"
+#include "engine/resources/texture/texture_manager.h"
 #include "engine/utils/containers/registry.hpp"
-#include "engine/resources/resource_types.h"
 #include <functional>
 #include <string>
 

@@ -1,13 +1,14 @@
 #pragma once
-#include "engine/resources/resource_manager.hpp"
-#include "engine/resources/audio/audio.h"
-#include "engine/resources/resource_loaders.h"
-#include "engine/resources/text/font.h"
-#include "engine/resources/texture/texture.h"
+#include <memory>
 
 namespace cursed_engine
 {
-	using AudioManager = ResourceManager<Audio, AudioDescriptor, AudioLoader>;
-	using FontManager = ResourceManager<Font, FontDescriptor, FontLoader>;
-	using TextureManager = ResourceManager<Texture, TextureDescriptor, TextureLoader>;
+	class Audio;
+	using AudioPtr = std::unique_ptr<Audio>;
+
+	class Font;
+	using FontPtr = std::unique_ptr<Font>;
+
+	class Texture;
+	using TexturePtr = std::unique_ptr<Texture>;
 }
