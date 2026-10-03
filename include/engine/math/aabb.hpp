@@ -23,7 +23,7 @@ namespace cursed_engine
 
 	using Bounds = AABB<float>;
 
-#pragma region Methods
+#pragma region Definitions
 
 	template <Numeric T>
 	bool AABB<T>::intersects(const AABB<T>& other) const noexcept
