@@ -2,12 +2,12 @@
 #include "engine/ecs/ecs_registry.h"
 #include "engine/ecs/component/core_components.h"
 #include "engine/core/localization/localization.h"
-#include "engine/resources/text/text_manager.h"
+#include "engine/rendering/text/text_creator.h"
 
 namespace cursed_engine
 {
-	TextSystem::TextSystem(TextManager* textManager, /*TextFactory* textFactory,*/ Localization* localization)
-		: m_textManager{ textManager }/*, m_textFactory{ textFactory }*/, m_localization{ localization }
+	TextSystem::TextSystem(const TextCreator* textCreator, Localization* localization)
+		: m_textCreator{ textCreator }, m_localization{ localization }
 	{
 	}
 
@@ -48,7 +48,7 @@ namespace cursed_engine
 		auto textView = registry.view<TextComponent>();
 		textView.forEach([&](TextComponent& textComponent)
 			{
-				if (!textComponent.textObj.isValid())
+				if (!textComponent.text)
 				{
 					/*auto fontHandle = textComponent.fontHandle;
 

@@ -2,6 +2,7 @@
 #include "engine/math/vec2.hpp"
 #include "engine/math/rect.hpp"
 #include "engine/resources/resource_creators.h"
+#include "engine/rendering/text/text_creator.h"
 #include "engine/rendering/render_types.h"
 #include <SDL3/SDL.h>
 #include <vector>

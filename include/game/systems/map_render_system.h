@@ -2,7 +2,7 @@
 #include <engine/ecs/system/system.h>
 #include <engine/rendering/render_api.h>
 #include <engine/rendering/render_types.h>
-#include <engine/resources/resource_types.h>
+#include <engine/resources/texture/texture_manager.h>
 
 namespace cursed_engine
 {
