@@ -1,42 +1,37 @@
 #include "engine/resources/texture/texture.h"
-#include "engine/core/logger.h"
 #include <SDL3/SDL.h>
-#include <format>
+#include <cassert>
 
 namespace cursed_engine
 {
-	/*Texture::Texture()
-		: m_texture{ nullptr }, m_width{ 0 }, m_height{ 0 }
+	SDLTexture::SDLTexture(SDL_Texture* texture)
+		: m_texture{ texture }
 	{
-	}*/
+		assert(m_texture && "Invalid texture!");
+		SDL_GetTextureSize(m_texture, &m_size.x, &m_size.y);
+	}
 
-	Texture::Texture(SDL_Texture* texture)
-		: m_texture{ texture }, m_width{ 0 }, m_height{ 0 }
+	SDLTexture::~SDLTexture()
 	{
-		if (m_texture && !SDL_GetTextureSize(m_texture, &m_width, &m_height))
+		if (m_texture)
 		{
-			Logger::logError(std::format("Texture initialized with invalid texture{}", SDL_GetError()));
+			SDL_DestroyTexture(m_texture);
+			m_texture = nullptr;
 		}
 	}
 
-	Texture::~Texture()
-	{
-		release();
-	}
-
-	Texture::Texture(Texture&& other) noexcept
-		: m_texture{ other.m_texture }, m_width{ other.m_width }, m_height{ other.m_height }
+	SDLTexture::SDLTexture(SDLTexture&& other) noexcept
+		: m_texture{ other.m_texture }, m_size{ other.m_size }
 	{
 		other.m_texture = nullptr;
 	}
 
-	Texture& Texture::operator=(Texture&& other) noexcept
+	SDLTexture& SDLTexture::operator=(SDLTexture&& other) noexcept
 	{
 		if (this != &other)
 		{
 			m_texture = other.m_texture;
-			m_width = other.m_width;
-			m_height = other.m_height;
+			m_size = other.m_size;
 
 			other.m_texture = nullptr;
 		}
@@ -44,15 +39,8 @@ namespace cursed_engine
 		return *this;
 	}
 
-	bool Texture::isLoaded() const
+	bool SDLTexture::isValid() const noexcept
 	{
 		return m_texture != nullptr;
-	}
-
-	void Texture::release()
-	{
-		SDL_DestroyTexture(m_texture);
-		m_texture = nullptr;
-		m_width = m_height = 0;
 	}
 }

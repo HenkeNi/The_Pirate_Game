@@ -52,8 +52,7 @@ namespace cursed_engine
 		[[nodiscard]] IVec2 getSize() const noexcept;
 		[[nodiscard]] inline bool isValid() const noexcept { return m_text != nullptr; }
 
-		[[nodiscard]] inline const TTF_Text* get() const noexcept { return m_text; }
-		[[nodiscard]] inline TTF_Text* get() noexcept { return m_text; } // get or getRaw? getInternal getHandle?
+		[[nodiscard]] inline TTF_Text* getInternal() const noexcept { return m_text; }
 
 		bool insertText(const std::string& text, int offset);
 		bool appendText(const std::string& text);

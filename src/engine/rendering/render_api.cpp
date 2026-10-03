@@ -19,14 +19,14 @@ namespace cursed_engine
 		m_backend->setRenderState(std::move(state));
 	}
 
-	void RenderAPI::drawTexture(Texture& texture, FRect dst, Color color)
+	void RenderAPI::drawTexture(const Texture& texture, FRect dst, Color color)
 	{
 		FRect src{ 0, 0, texture.getWidth(), texture.getHeight() };
 
 		m_backend->drawTexture(texture, std::move(src), dst, color);
 	}
 
-	void RenderAPI::drawTexture(Texture& texture, FVec2 pos, FVec2 size, Color color)
+	void RenderAPI::drawTexture(const Texture& texture, FVec2 pos, FVec2 size, Color color)
 	{
 		FRect src{ 0, 0, texture.getWidth(), texture.getHeight() };
 		FRect dst{ pos.x, pos.y, size.x, size.y };
@@ -34,12 +34,12 @@ namespace cursed_engine
 		m_backend->drawTexture(texture, std::move(src), std::move(dst), color);
 	}
 
-	void RenderAPI::drawTexture(Texture& texture, FRect src, FRect dst, Color color)
+	void RenderAPI::drawTexture(const Texture& texture, FRect src, FRect dst, Color color)
 	{
 		m_backend->drawTexture(texture, src, dst, color);
 	}
 
-	void RenderAPI::drawTexture(Texture& texture, FVec2 srcPos, FVec2 srcSize, FVec2 dstPos, FVec2 dstSize, Color color)
+	void RenderAPI::drawTexture(const Texture& texture, FVec2 srcPos, FVec2 srcSize, FVec2 dstPos, FVec2 dstSize, Color color)
 	{
 		FRect src{ srcPos.x, srcPos.y, srcSize.x, srcSize.y };
 		FRect dst{ dstPos.x, dstPos.y, dstSize.x, dstSize.y };
@@ -47,7 +47,7 @@ namespace cursed_engine
 		m_backend->drawTexture(texture, std::move(src), std::move(dst), color);
 	}
 
-	void RenderAPI::drawGeometry(const Geometry& geometry, Texture& texture)
+	void RenderAPI::drawGeometry(const Geometry& geometry, const Texture& texture)
 	{
 		m_backend->drawGeometry(geometry, &texture);
 	}
@@ -107,7 +107,7 @@ namespace cursed_engine
 		m_backend->drawLine(FVec2{ startX, startY }, FVec2{ endX, endY }, color);
 	}
 
-	void RenderAPI::drawText(Text& text, float x, float y)
+	void RenderAPI::drawText(const Text& text, float x, float y)
 	{
 		m_backend->drawText(text, FVec2{ x, y });
 	}

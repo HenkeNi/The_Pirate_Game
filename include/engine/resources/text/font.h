@@ -57,21 +57,36 @@ namespace cursed_engine
 		}
 	};
 
+	struct FontParams
+	{
+		FontStyle style;
+		int size;
+		int outline;
+		bool kerning;
+	};
+
 	// TODO; SDLFont
 	class Font
 	{
 	public:
-		struct Tag {};
-
+		//Font() = default;
 		Font();
-		Font(TTF_Font* font, FontDescriptor descriptor);
+		Font(TTF_Font* font, FontDescriptor descriptor); // where is descriptor used?
 
-		[[nodiscard]] inline TTF_Font* getInternal() { return m_font; } // inject instead?
-		[[nodiscard]] inline const TTF_Font* getInternal() const { return m_font; }
+		virtual ~Font() = default;
+
+		Font(const Font&) = delete;
+		Font(Font&&) = default;
+
+		Font& operator=(const Font&) = delete;
+		Font& operator=(Font&&) = default;
+
+		[[nodiscard]] inline TTF_Font* getInternal() const noexcept { return m_font; }
 
 		// maybe find a better name than size?
 		[[nodiscard]] inline const std::string& getPath() const { return m_descriptor.path; }
 		[[nodiscard]] inline FontStyle getStyle() const { return m_descriptor.style; }
+
 		[[nodiscard]] inline int getSize() const { return m_descriptor.size; }
 		[[nodiscard]] inline int getOutline() const { return m_descriptor.outline; }
 		[[nodiscard]] inline bool getKerning() const { return m_descriptor.kerning; }
@@ -82,6 +97,17 @@ namespace cursed_engine
 	private:
 		TTF_Font* m_font;
 		FontDescriptor m_descriptor;
+	};
+
+	class SDLFont final : public Font
+	{
+	public:
+		//SDLFont(TTF_Font* font);
+
+
+
+	private:
+		TTF_Font* m_font;
 	};
 }
 

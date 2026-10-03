@@ -1,12 +1,12 @@
 #pragma once
-#include "engine/resources/texture/texture.h"
 #include "engine/resources/text/font.h"
+#include "engine/resources/text/font_manager.h"
 #include "engine/resources/text/text.h"
-#include "engine/resources/resource_types.h"
+#include "engine/resources/texture/texture.h"
 
 namespace cursed_engine
 {
-	class ResourceCreator;
+	class TextCreator;
 	class Texture;
 	struct Color;
 	// TODO; currently text's are stored by id (not path), maybe should be separate storage?
@@ -20,7 +20,7 @@ namespace cursed_engine
 		//TextManager(FontManager* fontManager, Renderer* renderer);
 		//TextManager(TextureManager& textureManager, FontManager& fontManager, Renderer& renderer);
 
-		void init(FontManager* fontManager, ResourceCreator* creator);
+		void init(FontManager* fontManager, const TextCreator* creator);
 
 		// Dont return the actual text instance? -> return ptr?
 		// TEST - insert text as well? or do lazy loading?
@@ -55,6 +55,6 @@ namespace cursed_engine
 		FontManager* m_fontManager;
 		
 		//Renderer* m_renderer;
-		ResourceCreator* m_creator;
+		const TextCreator* m_creator;
 	};
 }

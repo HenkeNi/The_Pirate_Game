@@ -1,39 +1,46 @@
 #pragma once
-#include <functional>
+#include "engine/math/vec2.hpp"
 
 struct SDL_Texture;
 
 namespace cursed_engine
-{	
+{
 	class Texture
 	{
 	public:
-		//struct Tag{}; // Remove?
-
-		//Texture();
-		Texture(SDL_Texture* texture = nullptr);  // TODO; pass in width / height as well?
-		~Texture();
+		Texture() = default;
+		virtual ~Texture() = default;
 
 		Texture(const Texture&) = delete;
-		Texture(Texture&& other) noexcept;
+		Texture(Texture&& other) noexcept = default;
 
 		Texture& operator=(const Texture& other) = delete;
-		Texture& operator=(Texture&& other) noexcept;
+		Texture& operator=(Texture&& other) noexcept = default;
 
-		[[nodiscard]] inline const SDL_Texture* getTexture() const noexcept { return m_texture; }
-		[[nodiscard]] inline SDL_Texture* getTexture() noexcept { return m_texture; }
+		[[nodiscard]] virtual float getWidth() const noexcept = 0;
+		[[nodiscard]] virtual float getHeight() const noexcept = 0;
 
-		[[nodiscard]] inline float getWidth() const noexcept { return m_width; }
-		[[nodiscard]] inline float getHeight() const noexcept { return m_height; }
+		[[nodiscard]] virtual bool isValid() const noexcept = 0;
+	};
 
-		bool isLoaded() const;
+	class SDLTexture final : public Texture
+	{
+	public:
+		SDLTexture(SDL_Texture* texture = nullptr);
+		~SDLTexture();
+
+		SDLTexture(SDLTexture&& other) noexcept;
+		SDLTexture& operator=(SDLTexture&& other) noexcept;
+
+		[[nodiscard]] inline float getWidth() const noexcept { return m_size.x; }
+		[[nodiscard]] inline float getHeight() const noexcept { return m_size.y; }
+
+		[[nodiscard]] inline SDL_Texture* getInternal() const noexcept { return m_texture; }
+		[[nodiscard]] bool isValid() const noexcept override;
 
 	private:
-		void release();
-		
 		SDL_Texture* m_texture;
-		float m_width;
-		float m_height;
+		FVec2 m_size;
 	};
 
 	struct TextureDescriptor // Nest inside texture?? Texture::Key?
@@ -44,7 +51,7 @@ namespace cursed_engine
 		{
 			return path == other.path;
 		}
-	};	
+	};
 }
 
 template<>

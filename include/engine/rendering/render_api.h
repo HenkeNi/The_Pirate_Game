@@ -20,13 +20,13 @@ namespace cursed_engine
 
 		void setRenderState(RenderState state);
 
-		void drawTexture(Texture& texture, FRect dst, Color color = Color::white);
-		void drawTexture(Texture& texture, FVec2 pos, FVec2 size, Color color = Color::white);
+		void drawTexture(const Texture& texture, FRect dst, Color color = Color::white);
+		void drawTexture(const Texture& texture, FVec2 pos, FVec2 size, Color color = Color::white);
 
-		void drawTexture(Texture& texture, FRect src, FRect dst, Color color = Color::white);
-		void drawTexture(Texture& texture, FVec2 srcPos, FVec2 srcSize, FVec2 dstPos, FVec2 dstSize, Color color = Color::white);
+		void drawTexture(const Texture& texture, FRect src, FRect dst, Color color = Color::white);
+		void drawTexture(const Texture& texture, FVec2 srcPos, FVec2 srcSize, FVec2 dstPos, FVec2 dstSize, Color color = Color::white);
 
-		void drawGeometry(const Geometry& geometry, Texture& texture);
+		void drawGeometry(const Geometry& geometry, const Texture& texture);
 		void drawGeometry(const Geometry& geometry);
 
 		void drawOutlineRect(FRect rect, Color color = Color::black);
@@ -44,7 +44,7 @@ namespace cursed_engine
 		void drawLine(FVec2 start, FVec2 end, Color color = Color::black);
 		void drawLine(float startX, float startY, float endX, float endY, Color color = Color::black); // replace with Line struct?
 
-		void drawText(Text& text, float x, float y);
+		void drawText(const Text& text, float x, float y);
 
 	private:
 		RenderBackend* m_backend;

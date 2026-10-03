@@ -1,17 +1,15 @@
 #pragma once
 #include "engine/math/vec2.hpp"
 #include "engine/math/rect.hpp"
-#include "engine/resources/resource_creator.h"
+#include "engine/resources/resource_creators.h"
 #include "engine/rendering/render_types.h"
 #include <SDL3/SDL.h>
 #include <vector>
 
 // [Consider] - replacing std::vector<SDL_Vertex> with SDL_Vertex* (raw array) (no need for SDL3 include)
-// [Consider] - making RenderBackend inherit from TextureFactory?
-// [Consider] - init function to instead accept a void* (nativeWindowHandle)?
 
 struct TTF_TextEngine;
-//struct SDL_Renderer; - not needed since including sdl.h?!
+//struct SDL_Renderer; - not needed since including sdl.h?! (for vertex buffer)
 
 namespace cursed_engine
 {
@@ -45,10 +43,12 @@ namespace cursed_engine
 		virtual void setRenderState(RenderState state) = 0;
 
 		[[nodiscard]] virtual const RenderStatistics* getStatistics() const noexcept = 0;
-		[[nodiscard]] virtual ResourceCreator* getResourceCreator() noexcept = 0;
 
-		virtual void drawTexture(Texture& texture, FRect src, FRect dst, Color mod) = 0;
-		virtual void drawGeometry(const Geometry& geometry, Texture* texture = nullptr) = 0; // or pass Texture&
+		[[nodiscard]] virtual const TextureCreator* getTextureCreator() const noexcept = 0;
+		[[nodiscard]] virtual const TextCreator* getTextCreator() const noexcept = 0;
+
+		virtual void drawTexture(const Texture& texture, FRect src, FRect dst, Color mod) = 0;
+		virtual void drawGeometry(const Geometry& geometry, const Texture* texture = nullptr) = 0;
 
 		virtual void drawOutlineRect(FRect dst, Color color) = 0;
 		virtual	void drawFillRect(FRect dst, Color color) = 0;
@@ -57,14 +57,14 @@ namespace cursed_engine
 		virtual void drawFillCircle(FVec2 pos, float radius, Color color) = 0;
 
 		virtual	void drawLine(FVec2 start, FVec2 end, Color color) = 0;
-		virtual void drawText(Text& text, FVec2 pos) = 0;
+		virtual void drawText(const Text& text, FVec2 pos) = 0;
 	};
 
 #pragma endregion
 
 #pragma region SDL_Render_Device
 
-	class SDLRenderBackend : public RenderBackend
+	class SDLRenderBackend final : public RenderBackend
 	{
 	public:
 		SDLRenderBackend();
@@ -79,10 +79,12 @@ namespace cursed_engine
 		void setRenderState(RenderState state) override;
 
 		[[nodiscard]] const RenderStatistics* getStatistics() const noexcept override;
-		[[nodiscard]] ResourceCreator* getResourceCreator() noexcept override;
 
-		void drawTexture(Texture& texture, FRect src, FRect dst, Color mod) override;
-		void drawGeometry(const Geometry& geometry, Texture* texture = nullptr) override;
+		[[nodiscard]] const SDLTextureCreator* getTextureCreator() const noexcept override;
+		[[nodiscard]] const SDLTextCreator* getTextCreator() const noexcept override;
+
+		void drawTexture(const Texture& texture, FRect src, FRect dst, Color mod) override;
+		void drawGeometry(const Geometry& geometry, const Texture* texture = nullptr) override;
 
 		void drawOutlineRect(FRect dst, Color color) override;
 		void drawFillRect(FRect dst, Color color) override;
@@ -91,13 +93,19 @@ namespace cursed_engine
 		void drawFillCircle(FVec2 pos, float radius, Color color);
 
 		void drawLine(FVec2 start, FVec2 end, Color color) override;
-		void drawText(Text& text, FVec2 pos) override;
+		void drawText(const Text& text, FVec2 pos) override;
 
 	private:
 		void populateVertexBuffer(const Geometry& geometry);
 
+		struct ResourceCreators
+		{
+			SDLTextureCreator textureCreator;
+			SDLTextCreator textCreator;
+		};
+
 		std::vector<SDL_Vertex> m_vertexBuffer;
-		SDLResourceCreator m_resourceCreator;
+		ResourceCreators m_resourceCreators;
 
 		RenderStatistics m_statistics;
 		RenderState m_renderState;

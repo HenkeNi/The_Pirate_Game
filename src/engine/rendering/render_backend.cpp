@@ -1,6 +1,7 @@
 #include "engine/rendering/render_backend.h"
 #include "engine/resources/texture/texture.h"
 #include "engine/resources/text/text.h"
+#include "engine/resources/resource_creators.h"
 #include "engine/platform/window.h"
 #include "engine/core/result.h"
 #include <SDL3_ttf/SDL_ttf.h>
@@ -11,12 +12,14 @@ namespace
 {
 	constexpr int CIRCLE_SEGMENTS = 32;
 
+	using namespace cursed_engine;
+
 	SDL_FRect toSDLRect(float x, float y, float w, float h)
 	{
 		return SDL_FRect{ x, y, w, h };
 	}
 
-	SDL_FRect toSDLRect(const cursed_engine::FRect& rect)
+	SDL_FRect toSDLRect(const FRect& rect)
 	{
 		return toSDLRect(rect.x, rect.y, rect.w, rect.h);
 	}
@@ -33,12 +36,12 @@ namespace
 		};
 	}
 
-	SDL_FColor toSDLColor(const cursed_engine::Color& color)
+	SDL_FColor toSDLColor(const Color& color)
 	{
 		return toSDLColor(color.r, color.g, color.b, color.a);
 	}
 
-	SDL_FPoint toSDLPoint(const cursed_engine::FVec2& v)
+	SDL_FPoint toSDLPoint(const FVec2& v)
 	{
 		return SDL_FPoint(v.x, v.y);
 	}
@@ -48,7 +51,7 @@ namespace
 		return SDL_FPoint(x, y);
 	}
 
-	SDL_Vertex toSDLVertex(const cursed_engine::FVec2& position, const cursed_engine::FVec2& uv, const cursed_engine::Color& color)
+	SDL_Vertex toSDLVertex(const FVec2& position, const FVec2& uv, const Color& color)
 	{
 		return SDL_Vertex{
 			SDL_FPoint{ position.x, position.y },
@@ -57,17 +60,17 @@ namespace
 		};
 	}
 
-	SDL_Vertex toSDLVertex(const cursed_engine::Vertex& vertex)
+	SDL_Vertex toSDLVertex(const Vertex& vertex)
 	{
 		return toSDLVertex(vertex.position, vertex.uv, vertex.color);
 	}
 
-	cursed_engine::FVec2 worldToScreen(const cursed_engine::FVec2& position, const cursed_engine::Projection& proj, const cursed_engine::View& view)
+	FVec2 worldToScreen(const FVec2& position, const Projection& proj, const View& view)
 	{
 		// TODO; just position or width and height as well?
 
 		// screen = world - camera...
-		return cursed_engine::FVec2{
+		return FVec2{
 			position.x - view.position.x,
 			position.y - view.position.y
 		};
@@ -108,7 +111,8 @@ namespace cursed_engine
 			return Result<void>::failure(std::format("TTF_CreateRendererTextEngine failed: {}", SDL_GetError()));
 		}
 
-		m_resourceCreator.init(m_textEngine, m_renderer);
+		m_resourceCreators.textureCreator.init(m_renderer);
+		m_resourceCreators.textCreator.init(m_textEngine);
 
 		return Result<void>::success();
 	}
@@ -137,22 +141,26 @@ namespace cursed_engine
 		m_renderState = std::move(state);
 	}
 
-	void SDLRenderBackend::drawTexture(Texture& texture, FRect src, FRect dst, Color mod)
+	void SDLRenderBackend::drawTexture(const Texture& texture, FRect src, FRect dst, Color mod)
 	{
 		const FVec2 screenPosition = worldToScreen(FVec2{ dst.x, dst.y }, m_renderState.projection, m_renderState.view);
 
- 		const SDL_FRect dstRect = toSDLRect(screenPosition.x, screenPosition.y, dst.w, dst.h);
+		const SDL_FRect dstRect = toSDLRect(screenPosition.x, screenPosition.y, dst.w, dst.h);
 		const SDL_FRect srcRect = toSDLRect(src.x, src.y, src.w, src.h);
 
-		SDL_SetTextureColorMod(texture.getTexture(), mod.r, mod.g, mod.b);
-		SDL_SetTextureAlphaMod(texture.getTexture(), mod.a);
-		SDL_RenderTexture(m_renderer, texture.getTexture(), &srcRect, &dstRect);
+		SDL_Texture* internal = static_cast<const SDLTexture&>(texture).getInternal();
+
+		SDL_SetTextureColorMod(internal, mod.r, mod.g, mod.b);
+		SDL_SetTextureAlphaMod(internal, mod.a);
+		SDL_RenderTexture(m_renderer, internal, &srcRect, &dstRect);
 	}
 
-	void SDLRenderBackend::drawGeometry(const Geometry& geometry, Texture* texture)
+	void SDLRenderBackend::drawGeometry(const Geometry& geometry, const Texture* texture)
 	{
+		const SDLTexture* sdlTexture = static_cast<const SDLTexture*>(texture);
+	
 		populateVertexBuffer(geometry);
-		SDL_RenderGeometry(m_renderer, texture ? texture->getTexture() : nullptr, m_vertexBuffer.data(), m_vertexBuffer.size(), geometry.indices.data(), geometry.indices.size());
+		SDL_RenderGeometry(m_renderer, sdlTexture ? sdlTexture->getInternal() : nullptr, m_vertexBuffer.data(), m_vertexBuffer.size(), geometry.indices.data(), geometry.indices.size());
 	}
 
 	void SDLRenderBackend::drawOutlineRect(FRect dst, Color color)
@@ -181,11 +189,11 @@ namespace cursed_engine
 
 		for (int i = 0; i < CIRCLE_SEGMENTS; ++i)
 		{
-			const float theta = (2.0f * std::numbers::pi_v<float> * i) / CIRCLE_SEGMENTS;
+			const float theta = (2.0f * std::numbers::pi_v<float> *i) / CIRCLE_SEGMENTS;
 			points[i].x = worldPosition.x + std::cos(theta) * radius;
 			points[i].y = worldPosition.y + std::sin(theta) * radius;
 		}
-		
+
 		points[CIRCLE_SEGMENTS] = points[0];
 
 		SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
@@ -207,7 +215,7 @@ namespace cursed_engine
 
 		for (int i = 0; i <= CIRCLE_SEGMENTS; ++i)
 		{
-			const float theta = (2.0f * std::numbers::pi_v<float> * i) / CIRCLE_SEGMENTS;
+			const float theta = (2.0f * std::numbers::pi_v<float> *i) / CIRCLE_SEGMENTS;
 
 			SDL_Vertex& v = vertices[i + 1];
 			v.position.x = worldPosition.x + std::cos(theta) * radius;
@@ -238,13 +246,13 @@ namespace cursed_engine
 		SDL_RenderLine(m_renderer, screenStart.x, screenStart.y, screenEnd.x, screenEnd.y);
 	}
 
-	void SDLRenderBackend::drawText(Text& text, FVec2 pos)
+	void SDLRenderBackend::drawText(const Text& text, FVec2 pos)
 	{
 		assert(text.isValid() && "SDLRenderBackend::drawText - Invalid text found!");
 
 		const FVec2 screenPosition = worldToScreen(pos, m_renderState.projection, m_renderState.view);
 
-		TTF_DrawRendererText(text.get(), screenPosition.x, screenPosition.y);
+		TTF_DrawRendererText(text.getInternal(), screenPosition.x, screenPosition.y);
 	}
 
 	const RenderStatistics* SDLRenderBackend::getStatistics() const noexcept
@@ -252,9 +260,14 @@ namespace cursed_engine
 		return &m_statistics;
 	}
 
-	ResourceCreator* SDLRenderBackend::getResourceCreator() noexcept
+	const SDLTextureCreator* SDLRenderBackend::getTextureCreator() const noexcept
 	{
-		return &m_resourceCreator;
+		return &m_resourceCreators.textureCreator;
+	}
+
+	const SDLTextCreator* SDLRenderBackend::getTextCreator() const noexcept
+	{
+		return &m_resourceCreators.textCreator;
 	}
 
 	void SDLRenderBackend::populateVertexBuffer(const Geometry& geometry)
