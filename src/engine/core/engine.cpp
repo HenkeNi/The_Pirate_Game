@@ -99,7 +99,7 @@ namespace cursed_engine
 		}
 
 		auto& audio = m_impl->audio;
-		if (!audio.init())
+		if (!audio.init(configs.platform.backend))
 		{
 			Logger::logError(std::format(initFailedMessage, "AudioModule"));
 			return false;
@@ -120,7 +120,7 @@ namespace cursed_engine
 		}
 
 		auto& resource = m_impl->resource;
-		if (!resource.init(rendering.getResourceCreator(), configs.resource, configs.platform.backend))
+		if (!resource.init(rendering.getTextureCreator(), rendering.getTextCreator(), audio.getAudioCreator(), configs.resource, configs.platform.backend))
 		{
 			Logger::logError(std::format(initFailedMessage, "ResourceModule"));
 			return false;
@@ -219,7 +219,7 @@ namespace cursed_engine
 			// Update ecs systems here?
 			//m_impl->systemManager.update(deltaTime); // After application update?
 
-			Logger::logInfo("[Engine] - End frame..");
+			//Logger::logInfo("[Engine] - End frame..");
 
 			impl.rendering.endFrame();
 			impl.platform.endFrame();
