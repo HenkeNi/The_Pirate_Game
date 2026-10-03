@@ -12,7 +12,7 @@
       }
     },
     "sprite": {
-      "id": "palm",
+      "texture_id": "palm",
       "region": "palm"
     }
   }

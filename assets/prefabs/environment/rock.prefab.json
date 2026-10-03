@@ -8,7 +8,7 @@
       }
     },
     "sprite": {
-      "id": "rock",
+      "texture_id": "rock",
       "region": "rock"
     }
   }

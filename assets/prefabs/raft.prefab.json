@@ -8,7 +8,7 @@
       }
     },
     "sprite": {
-      "id": "raft",
+      "texture_id": "raft",
       "region": "raft"
     },
     "interaction": {

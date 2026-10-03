@@ -8,7 +8,7 @@
       }
     },
     "sprite": {
-      "id": "heart",
+      "texture_id": "heart",
       "region": "heart"
     },
     "ui": {}

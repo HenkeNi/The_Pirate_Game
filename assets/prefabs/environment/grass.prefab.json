@@ -8,7 +8,7 @@
       }
     },
     "sprite": {
-      "id": "grass",
+      "texture_id": "grass",
       "region": "grass"
     }
   }
