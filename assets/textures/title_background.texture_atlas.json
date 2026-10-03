@@ -1,3 +1,9 @@
 {
-  "texture_id": "title_background"
+  "texture_id": "title_background",
+  "rect": {
+    "x": 0,
+    "y": 0,
+    "w": 1024,
+    "h": 1024
+  }
 }

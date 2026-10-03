@@ -1,0 +1,7 @@
+{
+  "texture_id": "island_tileset",
+  "frame_width": 2048,
+  "frame_height": 768,
+  "rows": 6,
+  "columns": 16
+}

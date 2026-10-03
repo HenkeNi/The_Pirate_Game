@@ -1,0 +1,267 @@
+{
+  "texture_id": "ui",
+  "regions": [
+    {
+      "identifier": "skull_and_bones",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 479,
+        "h": 394
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "identifier": "ship_wheel",
+      "rect": {
+        "x": 479,
+        "y": 0,
+        "w": 479,
+        "h": 394
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "identifier": "cog",
+      "rect": {
+        "x": 1000,
+        "y": 0,
+        "w": 500,
+        "h": 490
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "identifier": "off_button",
+      "rect": {
+        "x": 1437,
+        "y": 0,
+        "w": 479,
+        "h": 394
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "identifier": "crossed_bones",
+      "rect": {
+        "x": 1916,
+        "y": 0,
+        "w": 479,
+        "h": 394
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "identifier": "compass",
+      "rect": {
+        "x": 2395,
+        "y": 0,
+        "w": 479,
+        "h": 394
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "identifier": "square",
+      "rect": {
+        "x": 2874,
+        "y": 0,
+        "w": 479,
+        "h": 394
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "identifier": "island",
+      "rect": {
+        "x": 3353,
+        "y": 0,
+        "w": 477,
+        "h": 394
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+
+    {
+      "identifier": "music_louder",
+      "rect": {
+        "x": 0,
+        "y": 394,
+        "w": 479,
+        "h": 394
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "identifier": "folder",
+      "rect": {
+        "x": 479,
+        "y": 394,
+        "w": 479,
+        "h": 394
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "identifier": "pirate_hat",
+      "rect": {
+        "x": 958,
+        "y": 394,
+        "w": 479,
+        "h": 394
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "identifier": "aim",
+      "rect": {
+        "x": 1437,
+        "y": 394,
+        "w": 479,
+        "h": 394
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "identifier": "treasure_map",
+      "rect": {
+        "x": 1916,
+        "y": 394,
+        "w": 479,
+        "h": 394
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "identifier": "ship",
+      "rect": {
+        "x": 2395,
+        "y": 394,
+        "w": 479,
+        "h": 394
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "identifier": "jolly_roger",
+      "rect": {
+        "x": 2874,
+        "y": 394,
+        "w": 479,
+        "h": 394
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "identifier": "pirate",
+      "rect": {
+        "x": 3353,
+        "y": 394,
+        "w": 477,
+        "h": 394
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+
+    {
+      "identifier": "play",
+      "rect": {
+        "x": 0,
+        "y": 855,
+        "w": 370,
+        "h": 315
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "identifier": "music_off",
+      "rect": {
+        "x": 479,
+        "y": 788,
+        "w": 479,
+        "h": 393
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "identifier": "return",
+      "rect": {
+        "x": 958,
+        "y": 788,
+        "w": 479,
+        "h": 393
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "identifier": "return_2",
+      "rect": {
+        "x": 1437,
+        "y": 788,
+        "w": 479,
+        "h": 393
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  ]
+}

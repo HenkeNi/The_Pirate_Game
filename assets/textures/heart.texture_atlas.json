@@ -1,0 +1,14 @@
+{
+  "texture_id": "heart",
+  "regions": [
+    {
+      "identifier": "heart",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 16,
+        "h": 16
+      }
+    }
+  ]
+}

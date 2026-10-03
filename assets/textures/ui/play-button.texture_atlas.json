@@ -1,3 +1,13 @@
 {
-  "texture_id": "play-button"
+  "texture_id": "play-button",
+  "rect": {
+    "x": "0",
+    "y": "0",
+    "w": "512",
+    "h": "512"
+  },
+  "pivot": {
+    "x": 0.5,
+    "y": 0.5
+  }
 }

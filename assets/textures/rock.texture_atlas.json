@@ -1,0 +1,18 @@
+{
+  "texture_id": "rock",
+  "regions": [
+    {
+      "identifier": "rock",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 125,
+        "h": 140
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1.0
+      }
+    }
+  ]
+}

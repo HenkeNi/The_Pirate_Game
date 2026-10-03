@@ -1,0 +1,18 @@
+{
+  "texture_id": "grass",
+  "regions": [
+    {
+      "identifier": "grass",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ]
+}

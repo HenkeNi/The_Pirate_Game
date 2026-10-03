@@ -1,0 +1,18 @@
+{
+  "texture_id": "palm",
+  "regions": [
+    {
+      "identifier": "palm",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 96,
+        "h": 144
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 1
+      }
+    }
+  ]
+}
