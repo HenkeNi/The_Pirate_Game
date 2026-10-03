@@ -46,7 +46,7 @@ namespace cursed_engine
 
 #pragma region SDL_Platform
 
-	class SDLPlatform : public Platform
+	class SDLPlatform final : public Platform
 	{
 	public:
 		SDLPlatform(EventBus& eventBus);

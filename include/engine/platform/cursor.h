@@ -26,7 +26,7 @@ namespace cursed_engine
 
 #pragma region SDL_Cursor
 
-	class SDLCursor : public Cursor
+	class SDLCursor final : public Cursor
 	{
 	public:
 		void SetVisible(bool visible) override;
