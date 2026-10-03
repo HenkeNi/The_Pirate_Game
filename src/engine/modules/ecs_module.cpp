@@ -5,9 +5,8 @@
 #include "engine/core/result.h"
 
 #include "engine/utils/json/json_value.h"
-#include "engine/resources/resource_types.h" // res managers
-#include "engine/resources/text/font.h"
-#include "engine/resources/text/text_manager.h"
+#include "engine/resources/font/font.h"
+#include "engine/rendering/text/text_creator.h"
 #include "engine/rendering/render_types.h"
 
 #include "engine/physics/physics.h"
@@ -204,7 +203,7 @@ namespace cursed_engine
 		registerComponent<SpriteComponent>(m_componentRegistry, "sprite",
 			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
 			{
-				std::string id = std::get<std::string>(properties.at("id"));
+				std::string id = std::get<std::string>(properties.at("texture_id"));
 
 				const AssetHandle atlasHandle = ctx.assetManager->getAssetHandle<TextureAtlas>(id); // pass in id?
 
@@ -243,9 +242,7 @@ namespace cursed_engine
 						color.a = value["color"]["a"].asInt();*/
 				}
 
-				float zOrder = 1.f;
-
-				handle.attachComponent<SpriteComponent>(atlasHandle, region, color, zOrder);
+				handle.attachComponent<SpriteComponent>(atlasHandle, region, color);
 			},
 			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
 			{
@@ -304,16 +301,18 @@ namespace cursed_engine
 						color.a = value["color"]["a"].asInt();
 				}
 
-				float zOrder = 1.f;
-
-				handle.attachComponent<SpriteComponent>(atlasHandle, region, color, zOrder);
+				handle.attachComponent<SpriteComponent>(atlasHandle, region, color);
 			});
 
 		registerComponent<AnimationComponent>(m_componentRegistry, "animation",
 			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
 			{
-				assert(false && "No properties are set!");
-				//handle.attachComponent<AnimationComponent>();
+				std::string animationSetId = std::get<std::string>(properties.at("animation_set_id"));
+				AssetHandle assetHandle = ctx.assetManager->getAssetHandle<AnimationSet>(std::move(animationSetId));
+
+				std::string currentAnimationId = std::get<std::string>(properties.at("active_animation_id"));
+
+				handle.attachComponent<AnimationComponent>(std::move(assetHandle), std::move(currentAnimationId));
 			},
 			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
 			{
@@ -501,15 +500,24 @@ namespace cursed_engine
 
 				// handle in system?
 				auto fontHandle = ctx.fontManager->getHandleById(fontType, fontStyle, fontSize, outline, kerning);
-				auto textObj = ctx.textManager->createText(ctx.localization->getText(textId), fontHandle); // ctx.textFactory->createText(ctx.localization->getText(textId), fontHandle);
 
+				if (!fontHandle.isValid())
 				{
+					return;
+				}
+
+				const auto& font = ctx.fontManager->get(fontHandle);
+
+				auto result = ctx.textCreator->createText(ctx.localization->getText(textId), font); // ctx.textFactory->createText(ctx.localization->getText(textId), fontHandle);
+				if (!result.ok())
+				{
+					return; // LOG?
 					// TEST
 					//auto* font = engineResources.fontManager.get(fontHandle);
 					//font.set
 				}
 
-				if (fontHandle.isValid())
+				if (auto text = result.take())
 				{
 					Color textColor = Color::black;
 
@@ -521,7 +529,7 @@ namespace cursed_engine
 						textColor.a = value["color"]["a"].asInt();
 					}
 
-					textObj.setTextColor(textColor); // TODO: do in factory? or use abuilder....
+					text->setTextColor(textColor); // TODO: do in factory? or use abuilder....
 
 					FVec2 pivot{};
 					if (value.hasMember("pivot"))
@@ -530,8 +538,8 @@ namespace cursed_engine
 						pivot.y = value["pivot"]["y"].asFloat();
 					}
 
-					handle.attachComponent<TextComponent>(std::move(textObj), pivot); // Only if suceesful??
-					//handle.attachComponent<TextComponent>(textId, fontHandle, std::move(textObj), pivot, textColor); // Only if suceesful??
+					handle.attachComponent<TextComponent>(std::move(text), pivot); // Only if suceesful??
+					//handle.attachComponent<TextComponent>(textId, fontHandle, std::move(text), pivot, textColor); // Only if suceesful??
 				}
 				else
 				{
@@ -572,7 +580,8 @@ namespace cursed_engine
 		registerComponent<AudioComponent>(m_componentRegistry, "audio",
 			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
 			{
-				handle.attachComponent<AudioComponent>();
+				assert(false && "Not implemented!");
+				//handle.attachComponent<AudioComponent>();
 			},
 			[&](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
 			{
