@@ -1,5 +1,6 @@
 #pragma once
 #include <unordered_map>
+#include <cassert>
 
 namespace cursed_engine
 {
@@ -65,12 +66,14 @@ namespace cursed_engine
 	template <typename Key, typename Value>
 	const Value& Registry<Key, Value>::get(const Key& key) const
 	{
+		assert(m_values.contains(key) && "Key not registered!");
 		return m_values.at(key);
 	}
 
 	template <typename Key, typename Value>
 	Value& Registry<Key, Value>::get(const Key& key)
 	{
+		assert(m_values.contains(key) && "Key not registered!"); // here? or "caller"?
 		return m_values.at(key);
 	}
 
