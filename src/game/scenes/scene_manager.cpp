@@ -17,7 +17,10 @@ void SceneManager::init(const ce::EngineContext& context, SceneRegistry registry
 		context.ecs.componentRegistry,
 		context.ecs.systemManager,
 		context.eventBus,
-		context.assets.assetManager
+		context.assets.assetManager,
+		context.rendering.rendererAPI,
+		context.resources.audioManager,
+		context.audio.audioController
 	};
 
 	ce::ComponentInitContext componentInitContext = ce::createComponentInitContext(context);
