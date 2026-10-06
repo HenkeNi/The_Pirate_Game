@@ -1,5 +1,5 @@
 #include "engine/modules/audio_module.h"
-#include "engine/audio/audio_controller.h"
+#include "engine/audio/audio_backend.h"
 #include "engine/core/logger.h"
 #include "engine/core/settings/engine_config.h"
 #include "engine/core/result.h"
@@ -8,7 +8,7 @@
 namespace cursed_engine
 {
 	AudioModule::AudioModule()
-		: m_audioController{ nullptr }
+		: m_backend{ nullptr }
 	{
 	}
 
@@ -23,7 +23,7 @@ namespace cursed_engine
 		switch (backend)
 		{
 		case Backend::SDL:
-			m_audioController = std::make_unique<SDLAudioController>();
+			m_backend = std::make_unique<SDLAudioBackend>();
 			Logger::logInfo(std::format("{}[AudioModule] - Selected backend: SDL", log_format::INDENT));
 			break;
 
@@ -32,7 +32,7 @@ namespace cursed_engine
 			return false;
 		}
 
-		const Result<void> result = m_audioController->init();
+		const Result<void> result = m_backend->init();
 
 		if (!result.ok())
 		{
@@ -46,11 +46,11 @@ namespace cursed_engine
 
 	void AudioModule::shutdown()
 	{
-		m_audioController->shutdown();
+		m_backend->shutdown();
 	}
 
 	const AudioCreator* AudioModule::getAudioCreator() const noexcept
 	{
-		return m_audioController->getAudioCreator();
+		return m_backend->getAudioCreator();
 	}
 }

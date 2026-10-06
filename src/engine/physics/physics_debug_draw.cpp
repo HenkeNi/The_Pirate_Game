@@ -8,7 +8,7 @@ namespace cursed_engine
 {
 	b2DebugDraw g_debugDraw = b2DefaultDebugDraw(); // FIX THIS? - or make static / internal
 
-	void drawPolygon(const b2Vec2* vertices, int vertexCount, b2HexColor color, void* context)
+	void drawPolygon(const b2Vec2* vertices, int vertexCount, b2HexColor color, void* context) // maybe this requires threadsafe render backend???
 	{
 		RenderAPI* renderAPI = static_cast<RenderAPI*>(context);
 

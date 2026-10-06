@@ -19,6 +19,8 @@
 #include "game/components/components.h" // remove later? 
 #include <engine/ecs/component/core_components.h>
 
+#include <engine/audio/audio_controller.h>
+
 using namespace cursed_engine;
 
 OverworldScene::OverworldScene(SceneContext context, ce::PhysicsAPI physicsAPI)
@@ -36,6 +38,14 @@ void OverworldScene::onUpdate(float deltaTime)
 void OverworldScene::onEnter()
 {
 	Logger::logInfo("Entering Overworld Scene..."); // put in scene stack?
+
+	auto audioHandle = m_context.audioManager->getHandle(cursed_engine::AudioDescriptor{ "../assets/sounds/theme/516076__breviceps__pirate-band-performs-drunken-sailor.wav" });
+
+	if (audioHandle.isValid())
+	{
+		auto& audio = m_context.audioManager->get(audioHandle);
+		m_context.audioController.play(audio, cursed_engine::AudioType::Music);
+	}
 
 	m_physicsAPI.setWorldId(m_physicsWorld.getWorldId()); // MAYBE PASS WORLD INSTEAD? AND PHYSICS API extracts it??
 
@@ -72,6 +82,7 @@ void OverworldScene::onEnter()
 
 	m_context.eventBus->publishInstantly<MapChunkCreatedEvent>(0, 0);
 
+	
 
 
 	// m_context.entityFactory->createFromPrefab("raft", ce::FVec2{ 10.f, 20.f });

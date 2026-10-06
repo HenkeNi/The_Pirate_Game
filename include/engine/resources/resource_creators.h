@@ -1,12 +1,9 @@
 #pragma once
 #include "engine/resources/resource_types.h"
-#include <memory>
 #include <string>
 
 struct MIX_Mixer;
 struct SDL_Renderer;
-
-// [Consider] - Text isn't really a 'resource' so maybe put in another file (text_creator.h)?
 
 namespace cursed_engine
 {
