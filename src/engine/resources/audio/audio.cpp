@@ -13,6 +13,10 @@ namespace cursed_engine
 
 	SDLAudio::~SDLAudio()
 	{
+		if (m_audio)
+		{
+			MIX_DestroyAudio(m_audio);
+		}
 	}
 
 	SDLAudio::SDLAudio(SDLAudio&& other) noexcept
@@ -29,26 +33,8 @@ namespace cursed_engine
 		return *this;
 	}
 
-	//Audio::Audio(const SDL_AudioSpec& spec, uint8_t* buffer, uint32_t length)
-	//	: m_stream{ spec }, m_buffer{ buffer }, m_length{ length }
-	//{
-	//}
-
-	//void Audio::init(const SDL_AudioSpec& spec, uint8_t* buffer, uint32_t length)
-	//{
-	//	m_spec = spec;
-	//	m_buffer = buffer;
-	//	m_length = length;
-	//}
-
-	/*SDLAudio::SDLAudio()
-		: m_stream{ nullptr }, m_buffer{ nullptr }, m_length{ 0 }
+	float SDLAudio::getDuration() const
 	{
+		return MIX_GetAudioDuration(m_audio);
 	}
-
-	SDLAudio::SDLAudio(SDL_AudioStream* stream, uint8_t* buffer, uint32_t length)
-		: m_stream{ stream }, m_buffer{ buffer }, m_length{ length }
-	{
-	}*/
-
 }
