@@ -67,7 +67,7 @@ namespace cursed_engine
 		virtual bool setWrapWidth(int width) = 0;
 	};
 
-	class SDLText : public Text
+	class SDLText final : public Text
 	{
 	public:
 		SDLText(TTF_Text* text = nullptr);
