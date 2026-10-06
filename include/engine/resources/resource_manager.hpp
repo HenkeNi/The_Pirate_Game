@@ -14,6 +14,8 @@ namespace cursed_engine
 	// Handle if resource doesnt unload...
 	// Find better name; ResourceService, ResourceHandler? ResourceStore? ResourceAcessor? ResourceCache
 
+
+// use decltyp????????????????!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	template <typename T>
 	class Result;
 
@@ -30,7 +32,7 @@ namespace cursed_engine
 		void update(uint64_t currentFrame, float deltaTime);
 
 		// ==================== Resource insertion ====================
-		ResourceHandle<Resource> insert(Descriptor descriptor, Resource resource);
+		ResourceHandle<Resource> insert(Descriptor descriptor, std::unique_ptr<Resource> resource);
 
 		// ==================== Handle acquisition ====================
 		[[nodiscard]] ResourceHandle<Resource> getHandle(const Descriptor& descriptor);
@@ -41,8 +43,11 @@ namespace cursed_engine
 		[[nodiscard]] ResourceHandle<Resource> findHandle(const Descriptor& descriptor) const;
 
 		// ==================== Resource access ====================
-		[[nodiscard]] const Resource* get(ResourceHandle<Resource> handle) const;
-		[[nodiscard]] Resource* get(ResourceHandle<Resource> handle);
+		[[nodiscard]] const Resource& get(ResourceHandle<Resource> handle) const;
+		[[nodiscard]] Resource& get(ResourceHandle<Resource> handle);
+
+		[[nodiscard]] const Resource* tryGet(ResourceHandle<Resource> handle) const;
+		[[nodiscard]] Resource* tryGet(ResourceHandle<Resource> handle);
 
 		[[nodiscard]] const Resource& operator[](ResourceHandle<Resource> handle) const;
 		[[nodiscard]] Resource& operator[](ResourceHandle<Resource> handle);
@@ -69,6 +74,8 @@ namespace cursed_engine
 		HandleMap m_descriptorToHandle;
 		
 		std::unique_ptr<Loader> m_loader; // does this need to be a pointer?
+
+		// REsourcePool... (add a resource pool => pass to loader!)
 	};
 
 #pragma region Definitions
@@ -99,7 +106,7 @@ namespace cursed_engine
 	}
 	
 	template <typename Resource, typename Descriptor, typename Loader>
-	ResourceHandle<Resource> ResourceManager<Resource, Descriptor, Loader>::insert(Descriptor descriptor, Resource resource)
+	ResourceHandle<Resource> ResourceManager<Resource, Descriptor, Loader>::insert(Descriptor descriptor, std::unique_ptr<Resource> resource)
 	{
 		auto handle = m_cache.store(std::move(resource));
 		m_descriptorToHandle.insert_or_assign(std::move(descriptor), handle);
@@ -137,7 +144,7 @@ namespace cursed_engine
 		}
 		
 		//Resource resource = (*m_loader)(descriptor);
-		Result<Resource> result = (*m_loader)(descriptor);
+		Result<std::unique_ptr<Resource>> result = (*m_loader)(descriptor);
 
 		if (result.ok())
 		{
@@ -165,13 +172,25 @@ namespace cursed_engine
 	}
 
 	template <typename Resource, typename Descriptor, typename Loader>
-	const Resource* ResourceManager<Resource, Descriptor, Loader>::get(ResourceHandle<Resource> handle) const
+	const Resource& ResourceManager<Resource, Descriptor, Loader>::get(ResourceHandle<Resource> handle) const
+	{
+		return m_cache[handle];
+	}
+
+	template <typename Resource, typename Descriptor, typename Loader>
+	Resource& ResourceManager<Resource, Descriptor, Loader>::get(ResourceHandle<Resource> handle)
+	{
+		return m_cache[handle];
+	}
+
+	template <typename Resource, typename Descriptor, typename Loader>
+	const Resource* ResourceManager<Resource, Descriptor, Loader>::tryGet(ResourceHandle<Resource> handle) const
 	{
 		return m_cache.retrieve(handle);
 	}
 
 	template <typename Resource, typename Descriptor, typename Loader>
-	Resource* ResourceManager<Resource, Descriptor, Loader>::get(ResourceHandle<Resource> handle)
+	Resource* ResourceManager<Resource, Descriptor, Loader>::tryGet(ResourceHandle<Resource> handle)
 	{
 		return m_cache.retrieve(handle);
 	}
@@ -205,7 +224,7 @@ namespace cursed_engine
 			return Result<void>::success();
 		}
 		
-		return Result::failure("Descriptor not found!");
+		return Result<void>::failure("Descriptor not found!");
 	}
 
 	template <typename Resource, typename Descriptor, typename Loader>

@@ -3,6 +3,7 @@
 #include "resource_handle.h"
 #include <cassert>
 #include <cstdint>
+#include <memory>
 #include <numeric>
 #include <type_traits>
 #include <utility>
@@ -19,10 +20,10 @@ namespace cursed_engine
 	template <typename T>
 	class ResourceCache
 	{
-	private:		
-		static_assert(std::is_default_constructible_v<T>, "ResourceCache requires T to be default constructible");
+	private:
+		//static_assert(std::is_default_constructible_v<T>, "ResourceCache requires T to be default constructible");
 
-		using Handle = ResourceHandle<T>;
+		using Handle = ResourceHandle<T>; // decltype?
 
 	public:
 		ResourceCache(uint32_t framesBeforeEvict, std::size_t initialSize = 16);
@@ -32,7 +33,7 @@ namespace cursed_engine
 		void update(uint64_t frame);
 
 		// ==================== Resource insertion ====================
-		Handle store(T resource);
+		Handle store(std::unique_ptr<T>&& resource);
 
 		// ==================== Resource access ====================
 		[[nodiscard]] const T* retrieve(Handle handle) const;
@@ -52,15 +53,15 @@ namespace cursed_engine
 	private:
 		struct Entry
 		{
-			Entry(T resource, uint64_t frame)
+			Entry(std::unique_ptr<T>&& resource, uint64_t frame)
 				: resource{ std::move(resource) }, lastFrameUsed{ frame }
 			{
 			}
 
-			T resource;
+			std::unique_ptr<T> resource;
 			uint32_t generation = 1;
 			mutable uint64_t lastFrameUsed = 0;
-			bool isAlive = true; 
+			bool isAlive = true;
 		};
 
 		// ==================== Helpers ====================
@@ -96,7 +97,7 @@ namespace cursed_engine
 	}
 
 	template <typename T>
-	ResourceCache<T>::Handle ResourceCache<T>::store(T resource)
+	ResourceCache<T>::Handle ResourceCache<T>::store(std::unique_ptr<T>&& resource)
 	{
 		if (m_freeList.empty())
 		{
@@ -118,14 +119,13 @@ namespace cursed_engine
 	template <typename T>
 	const T* ResourceCache<T>::retrieve(Handle handle) const
 	{
-		return isValid(handle) ? &m_entries.at(handle.index).resource : nullptr;
+		return isValid(handle) ? m_entries.at(handle.index).resource.get() : nullptr;
 	}
 
 	template <typename T>
 	T* ResourceCache<T>::retrieve(Handle handle)
 	{
 		return const_cast<T*>(std::as_const(*this).retrieve(handle));
-
 	}
 
 	template <typename T>
@@ -134,7 +134,7 @@ namespace cursed_engine
 		assert(isValid(handle) && "ResourceCache::operator[] - Invalid handle!");
 
 		auto& entry = m_entries.at(handle.index);
-		return entry.resource;
+		return *entry.resource;
 	}
 
 	template <typename T>
@@ -143,7 +143,7 @@ namespace cursed_engine
 		assert(isValid(handle) && "ResourceCache::operator[] - Invalid handle!");
 
 		auto& entry = m_entries.at(handle.index);
-		return entry.resource;
+		return *entry.resource;
 	}
 
 	template <typename T>
@@ -183,7 +183,7 @@ namespace cursed_engine
 	template<typename T>
 	void ResourceCache<T>::resetEntry(Entry& entry)
 	{
-		entry.resource = T{}; // TODO; make sure all resources can be default initialized!
+		entry.resource = nullptr; // TODO; make sure all resources can be default initialized!
 		entry.generation++;
 		entry.isAlive = false;
 	}
