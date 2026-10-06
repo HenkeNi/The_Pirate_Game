@@ -102,11 +102,11 @@
 ////				//FVec2 position = transformComponent.position + boundingBoxComponent.offset;
 ////				//FVec2 size = boundingBoxComponent.halfSize * 2.f;
 ////				FVec2 position = transformComponent.position;
-////				FVec2 size = (FVec2)textComponent.textObj.getSize();
+////				FVec2 size = (FVec2)textComponent.text.getSize();
 ////				position -= size * transformComponent.pivot;
 ////
 ////
-////				m_renderer.drawText(textComponent.textObj, position.x, position.y);
+////				m_renderer.drawText(textComponent.text, position.x, position.y);
 ////
 ////				return;
 ////

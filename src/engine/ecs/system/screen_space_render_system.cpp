@@ -44,7 +44,7 @@ namespace cursed_engine
 
 				const auto& textureHandle = m_textureManager->getHandleById(textureAtlas.textureId);
 
-				if (auto* texture = m_textureManager->get(textureHandle))
+				if (auto* texture = m_textureManager->tryGet(textureHandle))
 				{
 					/*FVec2 position = transformComponent.position;
 
@@ -133,12 +133,20 @@ namespace cursed_engine
 		//// TODO; check if possible to have one argument const ref and one argument just ref...
 		view.forEach([&](const TransformComponent& transformComponent, TextComponent& textComponent, const UIComponent&)
 			{
+				if (!textComponent.text)
+				{
+					// Log error!?					
+					return;
+				}
+
+				Text& text = *textComponent.text;
+
 				FVec2 position = transformComponent.position;
-				const FVec2 scaledSize = (FVec2)textComponent.textObj.getSize() * transformComponent.scale;
+				const FVec2 scaledSize = (FVec2)text.getSize() * transformComponent.scale;
 
 				position -= textComponent.pivot * scaledSize;
 
-				m_renderer.drawText(textComponent.textObj, position.x, position.y);
+				m_renderer.drawText(text, position.x, position.y);
 			});
 	}
 }
