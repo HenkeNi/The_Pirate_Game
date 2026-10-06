@@ -1,6 +1,6 @@
 #pragma once
 #include "engine/ecs/system/system.h"
-#include "engine/resources/resource_types.h"
+#include "engine/resources/texture/texture_manager.h"
 #include "engine/rendering/render_api.h"
 #include "engine/math/aabb.hpp"
 
