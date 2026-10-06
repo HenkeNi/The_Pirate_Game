@@ -259,7 +259,7 @@ namespace cursed_engine
 				&impl.physics.getPhysicsDebugDraw()
 			},
 			EngineContext::AudioServices{
-				&impl.audio.getAudioController()
+				impl.audio.getAudioController()
 			},
 			&impl.actionRegistry,
 			&impl.eventBus,

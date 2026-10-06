@@ -4,20 +4,19 @@
 #include "engine/core/events/event_bus.h"
 #include "engine/core/events/events.h"
 #include "engine/audio/audio_controller.h"
-#include "engine/resources/resource_types.h"
 #include "engine/resources/audio/audio.h"
 
 namespace cursed_engine
 {
-	AudioSystem::AudioSystem(AudioManager* audioManager, AudioController* audioController, EventBus* eventBus)
-		: m_audioManager{ audioManager }, m_audioController{ audioController }, m_eventBus{ eventBus }
+	AudioSystem::AudioSystem(AudioController audioController, AudioManager* audioManager, EventBus* eventBus)
+		: m_audioController{ audioController }, m_audioManager{ audioManager }, m_eventBus{ eventBus }
 	{
 		m_eventBus->subscribe<PlaySoundEvent>(
 			[&](PlaySoundEvent e) 
 			{
 				// or put in queue?
 				auto audioHandle = m_audioManager->getHandleById("623175__aphom000__button-click-selection");
-				if (const auto* audio = m_audioManager->get(audioHandle))
+				if (const auto* audio = m_audioManager->tryGet(audioHandle))
 				{
 					//m_audioController->playSound(audio->m_stream, audio->m_buffer, audio->m_length);
 				}
@@ -42,7 +41,7 @@ namespace cursed_engine
 		}
 
 		// How will this work when multiple components referes to the same audio?
-		if (const auto* audio = m_audioManager->get(audioHandle))
+		if (const auto* audio = m_audioManager->tryGet(audioHandle))
 		{
 			//m_audioController->playSound(audio->m_stream, audio->m_buffer, audio->m_length);
 		}

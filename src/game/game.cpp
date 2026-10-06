@@ -147,7 +147,7 @@ void Game::setupSystems(const ce::EngineContext& ctx)
 	systemManager->emplace<CameraSystem>(*ctx.settings); // run after TransformSystem -> sets final position (bounds, follow, etc)
 	systemManager->emplace<UISystem>(ctx.platform.input, ctx.actionRegistry); // OR Accept action registry (and event bus) by pointer?
 	systemManager->emplace<TextSystem>(ctx.rendering.textCreator/*, context.resources.textFactory*/, ctx.assets.localization);
-	systemManager->emplace<AudioSystem>(ctx.resources.audioManager, ctx.audio.audioController, ctx.eventBus); // FIX eventbus ptr
+	systemManager->emplace<AudioSystem>(ctx.audio.audioController, ctx.resources.audioManager, ctx.eventBus); // FIX eventbus ptr
 	systemManager->emplace<PlayerControllerSystem>();
 	systemManager->emplace<MovementSystem>();
 	systemManager->emplace<HierarchySystem>();

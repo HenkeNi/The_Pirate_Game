@@ -1,9 +1,10 @@
 #pragma once
+#include "engine/audio/audio_controller.h"
 #include <memory>
 
 namespace cursed_engine
 {
-	class AudioController;
+	class AudioBackend;
 	class AudioCreator;
 	enum class Backend;
 
@@ -13,15 +14,13 @@ namespace cursed_engine
 		AudioModule();
 		~AudioModule();
 
-		bool init(Backend backend); // or accept AudioBackend?
+		bool init(Backend backend); // or accept AudioBackend type?
 		void shutdown();
 
-		[[nodiscard]] inline AudioController& getAudioController() noexcept { return *m_audioController; }
-		[[nodiscard]] inline const AudioController& getAudioController() const noexcept { return *m_audioController; }
-
+		[[nodiscard]] inline AudioController getAudioController() noexcept { return AudioController{ m_backend.get() }; }
 		[[nodiscard]] const AudioCreator* getAudioCreator() const noexcept;
 
 	private:
-		std::unique_ptr<AudioController> m_audioController;
+		std::unique_ptr<AudioBackend> m_backend;
 	};
 }

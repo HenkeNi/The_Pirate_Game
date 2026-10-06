@@ -1,6 +1,5 @@
 #pragma once
 
-//struct SDL_AudioStream;
 struct MIX_Audio;
 
 namespace cursed_engine
@@ -23,6 +22,8 @@ namespace cursed_engine
 
 		Audio(const Audio&) = delete;
 		Audio& operator=(const Audio&) = delete;
+
+		[[nodiscard]] virtual float getDuration() const = 0;
 	};
 
 	class SDLAudio final : public Audio
@@ -35,16 +36,11 @@ namespace cursed_engine
 		SDLAudio& operator=(SDLAudio&& other) noexcept;
 
 		[[nodiscard]] inline MIX_Audio* getInternal() const noexcept { return m_audio; }
+		[[nodiscard]] float getDuration() const override;
 
 	private:
 		MIX_Audio* m_audio;
 	};
-
-	//	SDL_AudioStream* m_stream;
-	//	//SDL_AudioSpec m_spec; // use the one in audio controller...
-	//	uint8_t* m_buffer; // or data
-	//	uint32_t m_length;
-	//};	
 }
 
 template<>

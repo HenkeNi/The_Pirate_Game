@@ -1,5 +1,6 @@
 #pragma once
 #include "engine/ecs/component/component_registry.h"
+#include "engine/audio/audio_controller.h"
 #include "engine/resources/audio/audio_manager.h"
 #include "engine/resources/font/font_manager.h"
 #include "engine/resources/texture/texture_manager.h"
@@ -53,7 +54,7 @@ namespace cursed_engine
 
 		struct AudioServices
 		{
-			class AudioController* audioController{};
+			AudioController audioController{};
 		} audio;
 
 		class ActionRegistry* actionRegistry;
