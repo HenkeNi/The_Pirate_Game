@@ -25,7 +25,6 @@ namespace cursed_engine
 		FontManager* fontManager{};
 		TextureManager* textureManager{};
 		const class TextCreator* textCreator{};
-		//class TextFactory* textFactory{};
 	};
 
 	struct ComponentPostInitContext
@@ -64,6 +63,7 @@ namespace cursed_engine
 		std::size_t alignment;
 		std::size_t size;
 
+		// TODO return result instead of void?
 		using DeserializeFromJson = std::function<void(EntityHandle& handle, const JsonValue& value, const ComponentInitContext& context)>;
 		using DeserializeFromPrefab = std::function<void(EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)>;
 		

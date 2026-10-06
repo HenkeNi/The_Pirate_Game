@@ -503,18 +503,17 @@ namespace cursed_engine
 
 				if (!fontHandle.isValid())
 				{
+					//Logger::logError();
 					return;
 				}
 
 				const auto& font = ctx.fontManager->get(fontHandle);
 
-				auto result = ctx.textCreator->createText(ctx.localization->getText(textId), font); // ctx.textFactory->createText(ctx.localization->getText(textId), fontHandle);
+				Result<TextPtr> result = ctx.textCreator->createText(ctx.localization->getText(textId), font);
+
 				if (!result.ok())
 				{
-					return; // LOG?
-					// TEST
-					//auto* font = engineResources.fontManager.get(fontHandle);
-					//font.set
+					return; // LOG? or return result 
 				}
 
 				if (auto text = result.take())
