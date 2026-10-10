@@ -2,7 +2,6 @@
 #include "engine/core/settings/engine_config.h"
 #include "engine/resources/resource_loaders.h" // -- maybe make a generic surface loader?
 #include "engine/resources/texture/surface.h"
-#include "engine/platform/window.h"
 #include "engine/core/result.h"
 #include <SDL3_ttf/SDL_ttf.h>
 #include <SDL3/SDL.h>
@@ -12,7 +11,7 @@ namespace cursed_engine
 #pragma region SDL_Platform
 
 	SDLPlatform::SDLPlatform(EventBus& eventBus)
-		: m_eventBus{ eventBus }, m_input{ eventBus }, m_initialized{ false }, m_shouldExit{ false }
+		: m_eventBus{ eventBus }, m_inputHandler{ eventBus }, m_initialized{ false }, m_shouldExit{ false }
 	{
 	}
 
@@ -60,7 +59,7 @@ namespace cursed_engine
 		}
 
 		// Input 
-		return m_input.init(config.input);		
+		return m_inputHandler.init(config.input);		
 	}
 
 	void SDLPlatform::shutdown()
@@ -79,12 +78,12 @@ namespace cursed_engine
 
 	void SDLPlatform::beginFrame()
 	{
-		m_input.beginFrame();
+		m_inputHandler.beginFrame();
 	}
 
 	void SDLPlatform::endFrame()
 	{
-		m_input.endFrame();
+		m_inputHandler.endFrame();
 	}
 
 	void SDLPlatform::processEvents()
@@ -106,7 +105,7 @@ namespace cursed_engine
 
 			default:
 				m_window.processEvent(event);
-				m_input.processInput(event);
+				m_inputHandler.processInput(event);
 				break;
 			}
 		}
@@ -127,9 +126,9 @@ namespace cursed_engine
 		return m_cursor;
 	}
 
-	Input& SDLPlatform::getInput() noexcept
+	InputHandler& SDLPlatform::getInputHandler() noexcept
 	{
-		return m_input;
+		return m_inputHandler;
 	}
 
 #pragma endregion

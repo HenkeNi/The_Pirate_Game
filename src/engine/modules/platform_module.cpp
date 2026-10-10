@@ -118,6 +118,6 @@ namespace cursed_engine
 
 	InputAPI PlatformModule::getInputAPI() noexcept 
 	{ 
-		return &m_platform->getInput(); 
+		return InputAPI{ &m_platform->getInputHandler() };
 	}
 }

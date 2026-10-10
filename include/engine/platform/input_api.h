@@ -1,21 +1,19 @@
 #pragma once
 #include "engine/math/vec2.hpp"
 
-// [Consider] - putt in input.h?
-
 namespace cursed_engine
 {
-	class Input;
+	class InputHandler;
+	struct MouseState;
 	struct InputInfo;
 	enum class InputState;
 	enum class Key;
 	enum class MouseButton : uint8_t;
-	struct MouseState;
 
 	class InputAPI
 	{
 	public:
-		InputAPI(Input* input = nullptr);
+		InputAPI(InputHandler* inputHandler = nullptr);
 
 		[[nodiscard]] bool isKeyPressed(Key key) const;
 		[[nodiscard]] bool isKeyReleased(Key key) const;
@@ -33,6 +31,6 @@ namespace cursed_engine
 		[[nodiscard]] float getMouseScroll() const;
 
 	private:
-		Input* m_input;
+		InputHandler* m_inputHandler;
 	};
 }

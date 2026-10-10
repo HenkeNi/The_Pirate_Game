@@ -1,7 +1,7 @@
 #include "engine/core/settings/settings.h"
 #include "engine/utils/json/json_document.h"
 #include "engine/utils/json/json_value.h"
-#include "engine/platform/input.h" // gets it already from engine config.h...
+#include "engine/platform/input_handler.h" // gets it already from engine config.h...
 #include "engine/core/events/event_bus.h"
 #include "engine/core/logger.h"
 #include "engine/core/result.h"

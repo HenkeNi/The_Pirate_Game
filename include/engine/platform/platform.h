@@ -1,7 +1,7 @@
 #pragma once
 #include "engine/platform/cursor.h"
 #include "engine/platform/window.h"
-#include "engine/platform/input.h"
+#include "engine/platform/input_handler.h"
 
 // [Consider] - having window process window events (enum class EventType, struct WindowResizedEvent : public Event)
 
@@ -39,7 +39,7 @@ namespace cursed_engine
 		[[nodiscard]] virtual Window& getWindow() noexcept = 0;
 
 		[[nodiscard]] virtual Cursor& getCursor() noexcept = 0;
-		[[nodiscard]] virtual Input& getInput() noexcept = 0;
+		[[nodiscard]] virtual InputHandler& getInputHandler() noexcept = 0;
 	};
 
 #pragma endregion
@@ -64,7 +64,7 @@ namespace cursed_engine
 		[[nodiscard]] Window& getWindow() noexcept override;
 
 		[[nodiscard]] Cursor& getCursor() noexcept override;
-		[[nodiscard]] Input& getInput() noexcept override;
+		[[nodiscard]] InputHandler& getInputHandler() noexcept override;
 
 	private:
 		void pollEvents();
@@ -72,7 +72,7 @@ namespace cursed_engine
 		SDLWindow m_window;
 		SDLCursor m_cursor;
 
-		SDLInput m_input;
+		SDLInputHandler m_inputHandler;
 		EventBus& m_eventBus;
 
 		bool m_initialized;
