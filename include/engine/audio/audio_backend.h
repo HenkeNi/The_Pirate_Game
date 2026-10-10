@@ -95,7 +95,7 @@ namespace cursed_engine
 			uint32_t id{};
 			uint32_t generation{};
 
-			mutable std::atomic<bool> inUse{ false }; // ok to be mutable?		
+			mutable std::atomic<bool> inUse{ false };
 		};
 
 		void initializeTracks(AudioType type, int amount);
