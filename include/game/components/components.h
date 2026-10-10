@@ -40,8 +40,10 @@ struct PlayerComponent
 // Gameplay
 struct HealthComponent
 {
-	int currentLife;
-	int maxLife;
+	static constexpr int DEFAULT_MAX_HEALTH = 100;
+
+	int currentLife = DEFAULT_MAX_HEALTH;
+	int maxLife = DEFAULT_MAX_HEALTH;
 };
 
 // 
