@@ -29,6 +29,7 @@ namespace cursed_engine
 
 	struct ComponentPostInitContext
 	{
+		class AssetManager* assetManager{};
 		class PhysicsWorld* physicsWorld{};
 		//ECSRegistry* ecsRegistry{};
 	};
@@ -46,6 +47,14 @@ namespace cursed_engine
 			context.rendering.textCreator
 		};
 	}
+
+
+	// Maybe put elsewhere? Rename: entitySpawnData?
+	struct SpawnData
+	{
+		FVec2 position;
+		float rotation;
+	};
 
 	//template <typename Context>
 	//ComponentPostInitContext createComponentPostInitContext()
@@ -65,7 +74,7 @@ namespace cursed_engine
 
 		// TODO return result instead of void?
 		using DeserializeFromJson = std::function<void(EntityHandle& handle, const JsonValue& value, const ComponentInitContext& context)>;
-		using DeserializeFromPrefab = std::function<void(EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)>;
+		using DeserializeFromPrefab = std::function<void(EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)>;
 		
 		using PostInit = std::function<void(EntityHandle& handle, const ComponentPostInitContext& context)>;
 
