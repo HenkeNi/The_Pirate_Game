@@ -115,14 +115,10 @@ namespace cursed_engine
 
 	// Input API? (facade)
 
-#pragma region Input
-
-	// InputHandler?
-
-	class Input
+	class InputHandler
 	{
 	public:
-		virtual ~Input() = default;
+		virtual ~InputHandler() = default;
 
 		// mark noexcept?
 		[[nodiscard]] virtual bool isKeyPressed(Key key) const = 0;
@@ -141,14 +137,12 @@ namespace cursed_engine
 		[[nodiscard]] virtual float getMouseScroll() const = 0;
 	};
 
-#pragma endregion
+#pragma region SDL_Input_Handler
 
-#pragma region SDL_Input
-
-	class SDLInput final : public Input
+	class SDLInputHandler final : public InputHandler
 	{
 	public:
-		SDLInput(EventBus& eventBus);
+		SDLInputHandler(EventBus& eventBus);
 		
 		Result<void> init(const InputConfig& config); // virtual?
 		void processInput(const SDL_Event& event); // virtual? or SDLPlatform knows about SDLInput so maybe fine?

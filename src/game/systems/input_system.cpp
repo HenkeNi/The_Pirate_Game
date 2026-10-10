@@ -1,8 +1,8 @@
 #include "game/systems/input_system.h"
 #include "game/components/components.h"
 #include <engine/ecs/ecs_registry.h>
-#include <engine/platform/Input_api.h>
-#include <engine/platform/input.h> // include both? move key to input_types? platform_types?
+#include <engine/platform/input_api.h>
+#include <engine/platform/input_handler.h> // include both? move key to input_types? platform_types?
 
 InputSystem::InputSystem(cursed_engine::InputAPI input)
 	: m_input{ input }
