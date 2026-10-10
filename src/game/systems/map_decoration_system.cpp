@@ -13,7 +13,7 @@ MapDecorationSystem::MapDecorationSystem(cursed_engine::EntityFactory& factory, 
 {
 	m_eventBus.subscribe<MapChunkCreatedEvent>([this](const MapChunkCreatedEvent& e)
 		{
-			//onMapChunkCreated(e);
+			onMapChunkCreated(e);
 		});
 }
 
@@ -59,28 +59,15 @@ void MapDecorationSystem::onMapChunkCreated(const MapChunkCreatedEvent& e)
 			{
 				if (cursed_engine::random::generateRandomFloatingPoint(0.f, 1.f) < spawnable.chance)
 				{
-					ce::FVec2 position = getTileWorldPosition(mapChunk->coords.x, mapChunk->coords.y, i);
+					ce::FVec2 position = map::getTileWorldCenter(mapChunk->coords, i);
 
-					auto entityHandle = m_entityFactory.createFromPrefab(spawnable.id, position);
-					//auto entityHandle = m_entityFactory.createFromPrefab("palm_tree");
-					//if (entityHandle.has_value())
-					//{
-					//	//auto& transformComponent = entityHandle.value().getComponent<cursed_engine::TransformComponent>();
+					ce::EntityHandle entityHandle = m_entityFactory.createFromPrefab(spawnable.id, ce::SpawnData{ position, 0.f });
 
-					//	// TEST
-					//	//auto& spriteComponent = entityHandle.value().getComponent<cursed_engine::SpriteComponent>();
-					//	//if (!spriteComponent.atlasHandle.isValid())
-					//	//{
-					//	//	int x = 20;
+					if (!entityHandle.isValid())
+					{
+						int x = 20;
+					}
 
-					//	//}
-					//		// set atlasregion???
-
-					//	//if (spriteComponent.atlasRegion.rect.w < 1 || spriteComponent.atlasRegion.rect.h < 1)
-					//	//{
-					//	//	int x = 20;
-					//	//}
-					//}
 					break;
 				}
 			}

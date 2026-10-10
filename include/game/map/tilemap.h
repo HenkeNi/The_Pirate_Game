@@ -57,61 +57,54 @@ struct MapChunk
 	// helper functions? at? overload[] oeprator?
 };
 
-inline std::pair<int, int> getMapChunkCoordinatesFromWorldPosition(const cursed_engine::FVec2& position)
+namespace map
 {
-	constexpr int chunkWidth = TileLayer::width * map_constants::TILE_SIZE;
-	constexpr int chunkHeight = TileLayer::height * map_constants::TILE_SIZE;
+	// accept const ref vec2 or by value?
+	// Consider returning a WorldPosition struct
 
-	// get coordinates from position...
-	return { static_cast<int>(std::floor(position.x / chunkWidth)),
-		static_cast<int>(std::floor(position.y / chunkHeight)) 
-	};
-}
+	constexpr cursed_engine::FVec2 getTileWorldCenter(cursed_engine::IVec2 mapChunkCoords, int tileIndex)
+	{
+		constexpr float tileHalfSize = map_constants::TILE_SIZE * 0.5f;
 
-inline cursed_engine::FVec2 getTileWorldPosition(int mapChunkX, int mapChunkY, int tileIndex)
-{
-	// Chunk start position
-	const cursed_engine::IVec2 startPosition{
-		mapChunkX * (TileLayer::width * map_constants::TILE_SIZE),
-		mapChunkY * (TileLayer::height * map_constants::TILE_SIZE)
-	};
+		// chunk position (upper-left corner)
+		const cursed_engine::IVec2 startPosition{
+			mapChunkCoords.x * (TileLayer::width * map_constants::TILE_SIZE),
+			mapChunkCoords.y * (TileLayer::height * map_constants::TILE_SIZE)
+		};
 
-	const int x = tileIndex % TileLayer::width;
-	const int y = tileIndex / TileLayer::width;
+		// local tile coordinates.
+		const int x = tileIndex % TileLayer::width;
+		const int y = tileIndex / TileLayer::width;
 
-	return cursed_engine::FVec2{ 
-		startPosition.x + (x * map_constants::TILE_SIZE),
-		startPosition.y + (y * map_constants::TILE_SIZE)
-	};
+		return cursed_engine::FVec2{
+			startPosition.x + (x * map_constants::TILE_SIZE + tileHalfSize),
+			startPosition.y + (y * map_constants::TILE_SIZE + tileHalfSize)
+		};
+	}
 
-	//const int chunkWidth = TileLayer::width * map_constants::TILE_SIZE;
-	//const int chunkHeight = TileLayer::height * map_constants::TILE_SIZE;
+	constexpr cursed_engine::IVec2 worldPositionToMapChunkCoords(const cursed_engine::FVec2& position)
+	{
+		constexpr int chunkWidth = TileLayer::width * map_constants::TILE_SIZE;
+		constexpr int chunkHeight = TileLayer::height * map_constants::TILE_SIZE;
 
-	//cursed_engine::IVec2 worldPosition;
-	//worldPosition.x = mapChunkX * chunkWidth;
-	//worldPosition.y = mapChunkY * chunkHeight;
+		// get coordinates from position...
+		return { static_cast<int>(std::floor(position.x / chunkWidth)),
+			static_cast<int>(std::floor(position.y / chunkHeight))
+		};
+	}
 
-	//const int x = tileIndex % TileLayer::width;
-	//const int y = tileIndex / TileLayer::width;
+	constexpr cursed_engine::IVec2 mapChunkCoordsToWorldPosition(cursed_engine::IVec2 mapChunkCoords)
+	{
+		cursed_engine::IVec2 worldPosition;
+		worldPosition.x = mapChunkCoords.x * (TileLayer::width * map_constants::TILE_SIZE);
+		worldPosition.y = mapChunkCoords.y * (TileLayer::height * map_constants::TILE_SIZE);
 
-	//worldPosition.x += x * map_constants::TILE_SIZE;
-	//worldPosition.y += y * map_constants::TILE_SIZE;
-
-	//return cursed_engine::FVec2{ worldPosition.x, worldPosition.y };
-}
-
-inline cursed_engine::IVec2 getWorldPosition(const MapChunk& mapChunk)
-{
-	// assert(false && "Not tested!");
-
-	cursed_engine::IVec2 worldPosition;
-	worldPosition.x = mapChunk.coords.x * (TileLayer::width * map_constants::TILE_SIZE);
-	worldPosition.y = mapChunk.coords.y * (TileLayer::height * map_constants::TILE_SIZE);
-
-	return worldPosition;
+		return worldPosition;
+	}
 }
 
 
+// remove? or rename MapChunkCoord(s)
 struct ChunkCoord
 {
 	int x;

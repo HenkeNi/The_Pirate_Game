@@ -44,11 +44,11 @@ void MapSystem::update(ce::SystemUpdateContext& context)
 
 	for (const ce::FVec2& corner : corners)
 	{
-		const auto& [xCoord, yCoord] = getMapChunkCoordinatesFromWorldPosition(corner);
+		const auto& [xCoord, yCoord] = map::worldPositionToMapChunkCoords(corner);
 
 		if (!m_tilemap->isValidChunk(xCoord, yCoord))
 		{
-			ce::Logger::logInfo(std::format("Not valid chunk! Coords: {}, {}", xCoord, yCoord));
+			ce::Logger::logInfo(std::format("Generating chunk with coords: {}, {}", xCoord, yCoord));
 
 			// generate new mapchunk
 			auto mapChunk = m_mapGenerator.generateMapChunk(xCoord, yCoord);
@@ -57,39 +57,6 @@ void MapSystem::update(ce::SystemUpdateContext& context)
 			m_eventBus->publishInstantly<MapChunkCreatedEvent>(xCoord, yCoord);
 		}
 	}
-
-	//const auto& [xCoord, yCoord] = getMapChunkCoordinatesFromWorldPosition(worldPosition);
-	////cursed_engine::Logger::logInfo(std::format("Coords: {}, {}", xCoord, yCoord));
-	//
-	//if (!m_tilemap->isValidChunk(xCoord, yCoord))
-	//{
-	//	// generate new mapchunk
-	//	auto mapChunk = m_mapGenerator.generateMapChunk(xCoord, yCoord);
-	//	m_tilemap->insertMapChunk(std::move(mapChunk));
-
-	//	m_eventBus->publishInstantly<MapChunkCreatedEvent>(xCoord, yCoord);
-	//}
-
-	//auto* chunk = m_tilemap->getChunkAtPosition((int)worldPosition.x, (int)worldPosition.y); // pass floats?
-	//
-	//if (chunk)
-	//{
-	//	int x = 20;
-	//}
-	//else
-	//{
-	//	int x = 20;
-	//	// get coordinates... from position 
-	//	 
-	//	
-	//	// 
-	//	// m_mapGenerator.generateMapChunk(x, y);
-	//	// m_tilemap->insertMapChunk(std::move(mapChunk));
-	//}
-	// check if needing to generate new chunk...
-	// 
-	// m_mapGenerator.
-
 }
 
 void MapSystem::setTilemap(Tilemap* map)

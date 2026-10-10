@@ -56,7 +56,7 @@ void MapRenderSystem::render(cursed_engine::SystemRenderContext& context)
 				{
 					assert(m_tileset && "Not a valid tileset!");
 
-					buildMapChunkGeometry(getWorldPosition(*mapChunk), layer, *m_tileset, { texture.getWidth() ,  texture.getHeight() }); // dont pass tielset?!!
+					buildMapChunkGeometry(map::mapChunkCoordsToWorldPosition(mapChunk->coords), layer, *m_tileset, { texture.getWidth() ,  texture.getHeight() }); // dont pass tielset?!!
 					layer.isDirty = false;
 				}
 
