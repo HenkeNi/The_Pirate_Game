@@ -42,41 +42,55 @@ namespace cursed_engine
 		return Result<ColliderType>::failure(std::format("Unknown collider type found: {}", type));
 	}
 
+	static const std::unordered_map<std::string, Shape::Type> shapeTypes
+	{
+		{ "square", Shape::Type::Square },
+		{ "rectangle", Shape::Type::Rectangle },
+		{ "circle", Shape::Type::Circle }
+	};
+
 	static Result<Shape> parseShape(const JsonValue& value)
 	{
-		static const std::unordered_map<std::string, Shape::ShapeType> shapeTypes
-		{
-			{ "square", Shape::ShapeType::Square },
-			{ "rectangle", Shape::ShapeType::Rectangle },
-			{ "circle", Shape::ShapeType::Circle }
-		};
-
 		const std::string shapeType = value["type"].asString();
 
-		auto it = shapeTypes.find(shapeType);
-		if (it == shapeTypes.end())
+		if (shapeType == "square")
 		{
-			return Result<Shape>::failure(std::format("Unknown shape type found: {}", shapeType));
+			return Result<Shape>::success(Shape::square(value["half_extent"].asFloat()));
+		}
+		else if (shapeType == "rectangle")
+		{
+			return Result<Shape>::success(Shape::rectangle(value["width"].asFloat(), value["height"].asFloat()));
+		}
+		else if (shapeType == "circle")
+		{
+			return Result<Shape>::success(Shape::circle(value["radius"].asFloat()));
+		}
+	}
+
+	static Result<Shape> parseShape(const PropertyValue& value)
+	{
+		const ComponentProperties& shapeProperties = value.get<ComponentProperties>();
+
+		const PropertyValue& typeValue = shapeProperties.at("type");
+		const std::string& shapeType = typeValue.get<std::string>();
+
+		if (shapeType == "square")
+		{
+			return Result<Shape>::success(Shape::square(shapeProperties.at("half_extent").get<float>()));
+		}
+		else if (shapeType == "rectangle")
+		{
+			return Result<Shape>::success(Shape::rectangle(
+				shapeProperties.at("width").get<float>(),
+				shapeProperties.at("height").get<float>())
+			);
+		}
+		else if (shapeType == "circle")
+		{
+			return Result<Shape>::success(Shape::circle(shapeProperties.at("radius").get<float>()));
 		}
 
-		Shape shape;
-		shape.type = it->second;
-
-		switch (shape.type)
-		{
-		case Shape::ShapeType::Square:
-			shape.data.Square.halfExtent = value["half_extent"].asFloat();
-			break;
-		case Shape::ShapeType::Rectangle:
-			shape.data.Rectangle.width = value["width"].asFloat(); 
-			shape.data.Rectangle.height = value["height"].asFloat();
-			break;
-		case Shape::ShapeType::Circle:
-			shape.data.Circle.radius = value["radius"].asFloat();
-			break;
-		}
-
-		return Result<Shape>::success(shape);
+		return Result<Shape>::failure("Not a recognized shape!");
 	}
 
 #pragma endregion
@@ -106,206 +120,8 @@ namespace cursed_engine
 
 	void ECSModule::registerCoreComponents()
 	{
-		// TODO; use config to check which subsystems are active, only register if active? (physics -> physicsComponent)
-
-		registerComponent<TransformComponent>(m_componentRegistry, "transform",
-			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
-			{
-				using PropertyMap = std::unordered_map<std::string, PropertyValue>;
-
-				FVec2 position{};
-
-				if (auto it = properties.find("position"); it != properties.end())
-				{
-					const PropertyMap& positionProperty = std::get<PropertyMap>(it->second);
-
-					position.x = std::get<float>(positionProperty.at("x"));
-					position.y = std::get<float>(positionProperty.at("y"));
-				}
-
-				FVec2 scale{};
-
-				if (auto it = properties.find("scale"); it != properties.end())
-				{
-					const PropertyMap& scaleProperty = std::get<PropertyMap>(it->second);
-
-					scale.x = std::get<float>(scaleProperty.at("x"));
-					scale.y = std::get<float>(scaleProperty.at("y"));
-				}
-
-				float rotation = 0;
-
-				if (auto it = properties.find("rotation"); it != properties.end())
-				{
-					rotation = std::get<float>(it->second);
-				}
-
-				handle.attachComponent<TransformComponent>(position, scale, rotation);
-			},
-			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
-			{
-				FVec2 position{};
-
-				if (value.hasMember("position"))
-				{
-					assert(value["position"].isObject() && "position must be an object!");
-
-					const JsonValue positionValue = value["position"];
-
-					position.x = positionValue["x"].asFloat();
-					position.y = positionValue["y"].asFloat();
-				}
-
-				FVec2 scale{};
-
-				if (value.hasMember("scale"))
-				{
-					assert(value["scale"].isObject() && "scale must be an object!");
-
-					const JsonValue scaleValue = value["scale"];
-
-					scale.x = scaleValue["x"].asFloat();
-					scale.y = scaleValue["y"].asFloat();
-				}
-
-				float rotation = 0.f;
-
-				if (value.hasMember("rotation"))
-				{
-					rotation = value["rotation"].asFloat();
-				}
-
-				handle.attachComponent<TransformComponent>(position, scale, rotation);
-			});
-
-		registerComponent<CameraComponent>(m_componentRegistry, "camera",
-			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
-			{
-				handle.attachComponent<CameraComponent>();
-			},
-			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
-			{
-				// TODO; get window size fro msettings class?
-				handle.attachComponent<CameraComponent>(IVec2{ 1280, 720 });
-			});
-
-		registerComponent<VelocityComponent>(m_componentRegistry, "velocity",
-			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
-			{
-				handle.attachComponent<VelocityComponent>();
-			},
-			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
-			{
-				/// assert attachcompoent type is same as registercomponen ttype...
-				handle.attachComponent<VelocityComponent>();
-			});
-
-		registerComponent<SpriteComponent>(m_componentRegistry, "sprite",
-			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
-			{
-				std::string id = std::get<std::string>(properties.at("texture_id"));
-
-				const AssetHandle atlasHandle = ctx.assetManager->getAssetHandle<TextureAtlas>(id); // pass in id?
-
-				if (!atlasHandle.isValid())
-				{
-					Logger::logError("Missing texture atlas with id: " + id);
-					// todo, attach error texture!
-				}
-
-
-				assert(properties.contains("region") && "[Prefab Instantiation] - Invalid property format: SpriteComponent");
-
-				std::string regionId = std::get<std::string>(properties.at("region"));
-				//const AssetHandle handle = ctx.assetManager->getAssetHandle<TextureAtlas>(std::move(region));
-
-				const TextureAtlas& atlas = ctx.assetManager->getAsset<TextureAtlas>(atlasHandle);
-
-
-				std::size_t regionIndex = atlas.idToRegionIndex.at(regionId);
-				AtlasRegion region = atlas.regions[regionIndex];
-
-
-				Color color = Color::white;
-
-				if (properties.contains("color"))
-					int x = 20;
-
-				if (properties.contains("r"))
-				{
-					int y = 20;
-					/*color.r = value["color"]["r"].asInt();
-					color.g = value["color"]["g"].asInt();
-					color.b = value["color"]["b"].asInt();
-
-					if (value["color"].hasMember("a"))
-						color.a = value["color"]["a"].asInt();*/
-				}
-
-				handle.attachComponent<SpriteComponent>(atlasHandle, region, color);
-			},
-			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
-			{
-
-				std::string id = value["texture_id"].asString();
-
-				// [[consider]] if better to store only id at this point, and not reference any manager?
-				//const auto atlasHandle = context.asset.assetManager.getAssetHandle<TextureAtlas>(id); // pass in id?
-				const AssetHandle atlasHandle = ctx.assetManager->getAssetHandle<TextureAtlas>(id); // pass in id?
-
-				if (!atlasHandle.isValid())
-				{
-					Logger::logError("Missing texture atlas with id: " + id);
-					// TODO; attach error texture!
-				}
-
-				const TextureAtlas& atlas = ctx.assetManager->getAsset<TextureAtlas>(atlasHandle);
-
-				AtlasRegion region;
-
-				if (value.hasMember("region"))
-				{
-					std::string regionId = value["region"].asString();
-					std::size_t index = atlas.idToRegionIndex.at(regionId);
-
-					region = atlas.regions.at(index);
-				}
-				else
-				{
-					// TODO; think of a better idea than loading in the resource? size in json? optional atlas region?
-
-					
-
-					// load in resource just to set? make region optional?
-					//IVec2 textureSize = atlas.textureSize; // THIS IS NOT SET! 
-					region.rect.x = 0;
-					region.rect.y = 0;
-					region.rect.w = 1280; //textureSize.x;
-					region.rect.h = 720; //textureSize.y;
-				}
-
-				// Figue out...
-				// Treat background images and texture alias the same? or solve with union/variant?
-
-				Color color = Color::white;
-
-				if (value.hasMember("color"))
-				{
-					assert(value["color"].isObject() && "Color is wrongly formatted in json!");
-
-					color.r = value["color"]["r"].asInt();
-					color.g = value["color"]["g"].asInt();
-					color.b = value["color"]["b"].asInt();
-
-					if (value["color"].hasMember("a"))
-						color.a = value["color"]["a"].asInt();
-				}
-
-				handle.attachComponent<SpriteComponent>(atlasHandle, region, color);
-			});
-
 		registerComponent<AnimationComponent>(m_componentRegistry, "animation",
-			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
+			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
 			{
 				std::string animationSetId = std::get<std::string>(properties.at("animation_set_id"));
 				AssetHandle assetHandle = ctx.assetManager->getAssetHandle<AnimationSet>(std::move(animationSetId));
@@ -324,36 +140,47 @@ namespace cursed_engine
 				handle.attachComponent<AnimationComponent>(std::move(assetHandle), std::move(currentAnimationId));
 			});
 
-		registerComponent<UIComponent>(m_componentRegistry, "ui",
-			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
+		registerComponent<AudioComponent>(m_componentRegistry, "audio",
+			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
 			{
-				handle.attachComponent<UIComponent>();
+				assert(false && "Not implemented!");
+				//handle.attachComponent<AudioComponent>();
 			},
 			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
 			{
-				handle.attachComponent<UIComponent>();
+				std::string sound = value["sound"].asString();
+				auto audioHandle = ctx.audioManager->getHandleById(std::move(sound));
+
+				if (!audioHandle.isValid())
+				{
+
+				}
+
+				bool isLooping = value["should_loop"].asBool();
+
+				// TODO; always check if contains? if no sound fail? if no is looping, default to false?
+
+				handle.attachComponent<AudioComponent>(audioHandle, isLooping);
 			});
 
-		registerComponent<LayoutComponent>(m_componentRegistry, "layout",
-			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
+		registerComponent<BoundingBoxComponent>(m_componentRegistry, "bounding_box",
+			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
 			{
-				handle.attachComponent<LayoutComponent>();
+
 			},
 			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
 			{
-				handle.attachComponent<LayoutComponent>();
+				float xOffset = value["offset"]["x"].asFloat();
+				float yOffset = value["offset"]["y"].asFloat();
+
+				float width = value["size"]["width"].asFloat();
+				float height = value["size"]["height"].asFloat();
+
+				handle.attachComponent<BoundingBoxComponent>(FVec2{ xOffset, yOffset }, FVec2{ width, height });
 			});
 
-		/*registerComponent<InputComponent>(registry, "input",
-			[](EntityHandle& handle, const ComponentProperties& properties)
-			{},
-			[](EntityHandle& handle, const JsonValue& value)
-			{
-			});*/
-
-			// TODO; interaction component instead???
 		registerComponent<ButtonComponent>(m_componentRegistry, "button",
-			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
+			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
 			{
 				handle.attachComponent<ButtonComponent>();
 			},
@@ -430,29 +257,299 @@ namespace cursed_engine
 				handle.attachComponent<ButtonComponent>(action, std::move(args), defaultColor, optHoverColor, optPressedColor);
 			});
 
+		registerComponent<CameraComponent>(m_componentRegistry, "camera",
+			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
+			{
+				handle.attachComponent<CameraComponent>();
+			},
+			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+			{
+				// TODO; get window size fro msettings class?
+				handle.attachComponent<CameraComponent>(IVec2{ 1280, 720 });
+			});
 
-		registerComponent<BoundingBoxComponent>(m_componentRegistry, "bounding_box",
-			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
+		registerComponent<CheckboxComponent>(m_componentRegistry, "checkbox",
+			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
+			{
+			},
+			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+			{
+				std::string checkedRegionId = value["checked_region"].asString();
+				std::string uncheckedRegionId = value["unchecked_region"].asString();
+
+				bool isChecked = value["is_checked"].asBool();
+				handle.attachComponent<CheckboxComponent>(checkedRegionId, uncheckedRegionId, isChecked);
+			},
+			[](EntityHandle& handle, const ComponentPostInitContext& ctx)
+			{
+				const SpriteComponent& spriteComponent = handle.getComponent<SpriteComponent>();
+				const TextureAtlas& atlas = ctx.assetManager->getAsset<TextureAtlas>(spriteComponent.atlasHandle);
+
+				CheckboxComponent& checkboxComponent = handle.getComponent<CheckboxComponent>();
+
+				std::size_t checkedRegionIndex = atlas.idToRegionIndex.at(checkboxComponent.checkedRegionId);
+				std::size_t uncheckedRegionIndex = atlas.idToRegionIndex.at(checkboxComponent.uncheckedRegionId);
+
+				checkboxComponent.checkedRegion = atlas.regions.at(checkedRegionIndex);
+				checkboxComponent.uncheckedRegion = atlas.regions.at(uncheckedRegionIndex);
+			});
+
+		registerComponent<FollowComponent>(m_componentRegistry, "follow",
+			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
+			{
+				handle.attachComponent<FollowComponent>();
+			},
+			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+			{
+				handle.attachComponent<FollowComponent>();
+			});
+
+		// remove either hiearchy or parent compoentn! store offset not in compoennt, but in paretn? /bfe
+		registerComponent<HierarchyComponent>(m_componentRegistry, "hierarchy",
+			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
+			{
+				handle.attachComponent<HierarchyComponent>();
+			},
+			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+			{
+				FVec2 offset{};
+
+				if (value.hasMember("offset"))
+				{
+					assert(value.isObject() && "Offset is wrongly formated");
+
+					const JsonValue offsetValue = value["offset"];
+
+					offset.x = offsetValue["x"].asFloat();
+					offset.y = offsetValue["y"].asFloat();
+				}
+
+				handle.attachComponent<HierarchyComponent>(offset);
+			});
+
+		/*registerComponent<InputComponent>(registry, "input",
+			[](EntityHandle& handle, const ComponentProperties& properties)
+			{},
+			[](EntityHandle& handle, const JsonValue& value)
+			{
+			});*/
+
+		registerComponent<LayoutComponent>(m_componentRegistry, "layout",
+			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
+			{
+				handle.attachComponent<LayoutComponent>();
+			},
+			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+			{
+				handle.attachComponent<LayoutComponent>();
+			});
+
+		//registerComponent<ParentComponent>("parent",
+		//	[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
+		//	{
+		//	},
+		//	[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx) 
+		//	{
+		//		handle.attachComponent<ParentComponent>(value["parent_id"].asString());s
+		//		//how to  find parent? -> send event "Entity Created"? let systme handle it?
+		//	});
+
+		registerComponent<PhysicsComponent>(m_componentRegistry, "physics",
+			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
+			{
+				Result<ColliderType> colliderTypeResult = parseColliderType(properties.at("collider_type").get<std::string>());
+
+				if (!colliderTypeResult.ok())
+				{
+					// LOG error?
+					return;
+				}
+
+				BodyDefinition bodyDefinition;
+				bodyDefinition.type = colliderTypeResult.take();
+
+				Result<Shape> shapeResult = parseShape(properties.at("shape"));
+
+				if (!shapeResult.ok())
+				{
+					return;
+				}
+
+				bodyDefinition.shape = shapeResult.take();
+
+				bodyDefinition.linearDamping = 0.0f;
+				bodyDefinition.angularDamping = 0.0f;
+
+				handle.attachComponent<PhysicsComponent>(std::move(bodyDefinition));
+			},
+			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+			{
+				BodyDefinition bodyDefinition;
+
+				Result<ColliderType> colliderTypeResult = parseColliderType(value["collider_type"].asString());
+
+				if (!colliderTypeResult.ok())
+				{
+					// LOG error?
+					return;
+				}
+
+				bodyDefinition.type = colliderTypeResult.take();
+
+				Result<Shape> shapeResult = parseShape(value["shape"]);
+
+				if (!shapeResult.ok())
+				{
+					return;
+				}
+
+				bodyDefinition.shape = shapeResult.take();
+
+				bodyDefinition.linearDamping = 0.0f;
+				bodyDefinition.angularDamping = 0.0f;
+
+				handle.attachComponent<PhysicsComponent>(std::move(bodyDefinition));
+			},
+			[](EntityHandle& handle, const ComponentPostInitContext& ctx)
+			{
+				assert(ctx.physicsWorld && "Invalid PhysicsWorld");
+
+				PhysicsComponent& physicsComponent = handle.getComponent<PhysicsComponent>();
+				TransformComponent& transformComponent = handle.getComponent<TransformComponent>(); // Is this the best approach?
+
+				// either store collider type, shae, etc directly in physics component or store a "BOdy" and then call body init to actually create?
+
+				physicsComponent.bodyDefinition.position = transformComponent.position;
+				physicsComponent.bodyDefinition.rotation = transformComponent.rotation;
+
+				// DONT use position directly! -> use pivot to? or just center body? (center is middle)
+
+				PhysicsBody body = ctx.physicsWorld->createBody(physicsComponent.bodyDefinition); // This requires body definition data to be stored in component...
+				physicsComponent.physicsBody = std::move(body);
+				// int x = 20;
+				//ctx.physicsWorld->createBody();
+			});
+
+		registerComponent<SliderComponent>(m_componentRegistry, "slider",
+			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
+			{
+				handle.attachComponent<SliderComponent>();
+			},
+			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+			{
+				handle.attachComponent<SliderComponent>();
+			});
+
+		registerComponent<SpriteComponent>(m_componentRegistry, "sprite",
+			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
+			{
+				std::string id = std::get<std::string>(properties.at("texture_id"));
+
+				const AssetHandle atlasHandle = ctx.assetManager->getAssetHandle<TextureAtlas>(id); // pass in id?
+
+				if (!atlasHandle.isValid())
+				{
+					Logger::logError("Missing texture atlas with id: " + id);
+					// todo, attach error texture!
+				}
+
+
+				assert(properties.contains("region") && "[Prefab Instantiation] - Invalid property format: SpriteComponent");
+
+				std::string regionId = std::get<std::string>(properties.at("region"));
+				//const AssetHandle handle = ctx.assetManager->getAssetHandle<TextureAtlas>(std::move(region));
+
+				const TextureAtlas& atlas = ctx.assetManager->getAsset<TextureAtlas>(atlasHandle);
+
+
+				std::size_t regionIndex = atlas.idToRegionIndex.at(regionId);
+				AtlasRegion region = atlas.regions[regionIndex];
+
+
+				Color color = Color::white;
+
+				if (properties.contains("color"))
+					int x = 20;
+
+				if (properties.contains("r"))
+				{
+					int y = 20;
+					/*color.r = value["color"]["r"].asInt();
+					color.g = value["color"]["g"].asInt();
+					color.b = value["color"]["b"].asInt();
+
+					if (value["color"].hasMember("a"))
+						color.a = value["color"]["a"].asInt();*/
+				}
+
+				handle.attachComponent<SpriteComponent>(atlasHandle, region, color);
+			},
+			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+			{
+
+				std::string id = value["texture_id"].asString();
+
+				// [[consider]] if better to store only id at this point, and not reference any manager?
+				//const auto atlasHandle = context.asset.assetManager.getAssetHandle<TextureAtlas>(id); // pass in id?
+				const AssetHandle atlasHandle = ctx.assetManager->getAssetHandle<TextureAtlas>(id); // pass in id?
+
+				if (!atlasHandle.isValid())
+				{
+					Logger::logError("Missing texture atlas with id: " + id);
+					// TODO; attach error texture!
+				}
+
+				const TextureAtlas& atlas = ctx.assetManager->getAsset<TextureAtlas>(atlasHandle);
+
+				AtlasRegion region;
+
+				if (value.hasMember("region"))
+				{
+					std::string regionId = value["region"].asString();
+					std::size_t index = atlas.idToRegionIndex.at(regionId);
+
+					region = atlas.regions.at(index);
+				}
+				else
+				{
+					// TODO; think of a better idea than loading in the resource? size in json? optional atlas region?
+
+
+
+					// load in resource just to set? make region optional?
+					//IVec2 textureSize = atlas.textureSize; // THIS IS NOT SET! 
+					region.rect.x = 0;
+					region.rect.y = 0;
+					region.rect.w = 1280; //textureSize.x;
+					region.rect.h = 720; //textureSize.y;
+				}
+
+				// Figue out...
+				// Treat background images and texture alias the same? or solve with union/variant?
+
+				Color color = Color::white;
+
+				if (value.hasMember("color"))
+				{
+					assert(value["color"].isObject() && "Color is wrongly formatted in json!");
+
+					color.r = value["color"]["r"].asInt();
+					color.g = value["color"]["g"].asInt();
+					color.b = value["color"]["b"].asInt();
+
+					if (value["color"].hasMember("a"))
+						color.a = value["color"]["a"].asInt();
+				}
+
+				handle.attachComponent<SpriteComponent>(atlasHandle, region, color);
+			});
+
+		registerComponent<TextComponent>(m_componentRegistry, "text",
+			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
 			{
 
 			},
 			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
-			{
-				int xOffset = value["offset"]["x"].asInt();
-				int yOffset = value["offset"]["y"].asDouble();
-
-				int width = value["size"]["width"].asInt() * 0.5f; // TODO; use halfextent instead!
-				int height = value["size"]["height"].asInt() * 0.5f; // TODO; decide if float or int...
-
-				handle.attachComponent<BoundingBoxComponent>(FVec2{ (float)xOffset, (float)yOffset }, FVec2{ (float)width, (float)height });
-			});
-
-		registerComponent<TextComponent>(m_componentRegistry, "text",
-			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
-			{
-
-			},
-			[&](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
 			{
 				std::string fontType = value["font"].asString();
 				int fontSize = value["size"].asInt();
@@ -576,145 +673,99 @@ namespace cursed_engine
 				// safe to pass localization? OR handle in TextSystem?
 			});
 
-		registerComponent<AudioComponent>(m_componentRegistry, "audio",
-			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
+		registerComponent<TransformComponent>(m_componentRegistry, "transform",
+			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
 			{
-				assert(false && "Not implemented!");
-				//handle.attachComponent<AudioComponent>();
-			},
-			[&](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
-			{
-				std::string sound = value["sound"].asString();
-				auto audioHandle = ctx.audioManager->getHandleById(std::move(sound));
+				using PropertyMap = std::unordered_map<std::string, PropertyValue>;
 
-				if (!audioHandle.isValid())
+				FVec2 position{};
+
+				if (auto it = properties.find("position"); it != properties.end())
 				{
+					const PropertyMap& positionProperty = std::get<PropertyMap>(it->second);
 
+					position.x = std::get<float>(positionProperty.at("x"));
+					position.y = std::get<float>(positionProperty.at("y"));
+				}
+				else
+				{
+					position = data.position;
 				}
 
-				bool isLooping = value["should_loop"].asBool();
+				FVec2 scale{};
 
-				// TODO; always check if contains? if no sound fail? if no is looping, default to false?
+				if (auto it = properties.find("scale"); it != properties.end())
+				{
+					const PropertyMap& scaleProperty = std::get<PropertyMap>(it->second);
 
-				handle.attachComponent<AudioComponent>(audioHandle, isLooping);
-			});
+					scale.x = std::get<float>(scaleProperty.at("x"));
+					scale.y = std::get<float>(scaleProperty.at("y"));
+				}
 
-		registerComponent<CheckboxComponent>(m_componentRegistry, "checkbox",
-			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
-			{
-			},
-			[&](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
-			{
-				bool isChecked = value["is_checked"].asBool();
-				handle.attachComponent<CheckboxComponent>(isChecked);
+				float rotation = 0;
 
-			});
+				if (auto it = properties.find("rotation"); it != properties.end())
+				{
+					rotation = std::get<float>(it->second);
+				}
 
-		registerComponent<SliderComponent>(m_componentRegistry, "slider",
-			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
-			{
-				handle.attachComponent<SliderComponent>();
+				handle.attachComponent<TransformComponent>(position, scale, rotation);
 			},
 			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
 			{
-				handle.attachComponent<SliderComponent>();
+				FVec2 position{};
+
+				if (value.hasMember("position"))
+				{
+					assert(value["position"].isObject() && "position must be an object!");
+
+					const JsonValue positionValue = value["position"];
+
+					position.x = positionValue["x"].asFloat();
+					position.y = positionValue["y"].asFloat();
+				}
+
+				FVec2 scale{};
+
+				if (value.hasMember("scale"))
+				{
+					assert(value["scale"].isObject() && "scale must be an object!");
+
+					const JsonValue scaleValue = value["scale"];
+
+					scale.x = scaleValue["x"].asFloat();
+					scale.y = scaleValue["y"].asFloat();
+				}
+
+				float rotation = 0.f;
+
+				if (value.hasMember("rotation"))
+				{
+					rotation = value["rotation"].asFloat();
+				}
+
+				handle.attachComponent<TransformComponent>(position, scale, rotation);
 			});
 
-		//m_componentRegistry.registerComponent<ParentComponent>("parent",
-		//	[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
-		//	{
-		//	},
-		//	[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx) 
-		//	{
-		//		handle.attachComponent<ParentComponent>(value["parent_id"].asString());
-
-		//		//how to  find parent? -> send event "Entity Created"? let systme handle it?
-		//	});
-
-		// remove either hiearchy or parent compoentn! store offset not in compoennt, but in paretn? /bfe
-		registerComponent<HierarchyComponent>(m_componentRegistry, "hierarchy",
-			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
+		registerComponent<UIComponent>(m_componentRegistry, "ui",
+			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
 			{
-				handle.attachComponent<HierarchyComponent>();
+				handle.attachComponent<UIComponent>();
 			},
 			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
 			{
-				FVec2 offset{};
-
-				if (value.hasMember("offset"))
-				{
-					assert(value.isObject() && "Offset is wrongly formated");
-
-					const JsonValue offsetValue = value["offset"];
-
-					offset.x = offsetValue["x"].asFloat();
-					offset.y = offsetValue["y"].asFloat();
-				}
-
-				handle.attachComponent<HierarchyComponent>(offset);
+				handle.attachComponent<UIComponent>();
 			});
 
-		registerComponent<FollowComponent>(m_componentRegistry, "follow",
-			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
+		registerComponent<VelocityComponent>(m_componentRegistry, "velocity",
+			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
 			{
-				handle.attachComponent<FollowComponent>();
+				handle.attachComponent<VelocityComponent>();
 			},
 			[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
 			{
-				handle.attachComponent<FollowComponent>();
-			});
-
-		registerComponent<PhysicsComponent>(m_componentRegistry, "physics",
-			[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx)
-			{
-				handle.attachComponent<PhysicsComponent>();
-			},
-			[&](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
-			{
-				BodyDefinition bodyDefinition;
-
-				Result<ColliderType> colliderTypeResult = parseColliderType(value["collider_type"].asString());
-
-				if (!colliderTypeResult.ok())
-				{
-					// LOG error?
-					return;
-				}
-
-				bodyDefinition.type = colliderTypeResult.take();
-				
-				Result<Shape> shapeResult = parseShape(value["shape"]);
-				
-				if (!shapeResult.ok())
-				{
-					return;
-				}
-
-				bodyDefinition.shape = shapeResult.take();
-
-				bodyDefinition.linearDamping = 0.0f;
-				bodyDefinition.angularDamping = 0.0f;
-		
-				handle.attachComponent<PhysicsComponent>(std::move(bodyDefinition));
-			},
-			[](EntityHandle& handle, const ComponentPostInitContext& ctx)
-			{
-				assert(ctx.physicsWorld && "Invalid PhysicsWorld");
-
-				PhysicsComponent& physicsComponent = handle.getComponent<PhysicsComponent>();				
-				TransformComponent& transformComponent = handle.getComponent<TransformComponent>(); // Is this the best approach?
-
-				// either store collider type, shae, etc directly in physics component or store a "BOdy" and then call body init to actually create?
-
-				physicsComponent.bodyDefinition.position = transformComponent.position;
-				physicsComponent.bodyDefinition.rotation = transformComponent.rotation;
-
-				// DONT use position directly! -> use pivot to? or just center body? (center is middle)
-
-				PhysicsBody body = ctx.physicsWorld->createBody(physicsComponent.bodyDefinition); // This requires body definition data to be stored in component...
-				physicsComponent.physicsBody = std::move(body);
-				// int x = 20;
-				//ctx.physicsWorld->createBody();
+				/// assert attachcompoent type is same as registercomponen ttype...
+				handle.attachComponent<VelocityComponent>();
 			});
 	}
 }
