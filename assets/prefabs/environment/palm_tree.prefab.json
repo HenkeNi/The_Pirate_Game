@@ -2,10 +2,6 @@
   "name": "palm_tree",
   "components": {
     "transform": {
-      "position": {
-        "x": 0.0,
-        "y": 0.0
-      },
       "scale": {
         "x": 2.0,
         "y": 3.0
@@ -14,6 +10,13 @@
     "sprite": {
       "texture_id": "palm",
       "region": "palm"
+    },
+    "physics": {
+      "collider_type": "static",
+      "shape": {
+        "type": "circle",
+        "radius": 20.0
+      }
     }
   }
 }

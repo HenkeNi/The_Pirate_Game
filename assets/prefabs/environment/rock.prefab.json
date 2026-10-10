@@ -10,7 +10,13 @@
     "sprite": {
       "texture_id": "rock",
       "region": "rock"
+    },
+    "physics": {
+      "collider_type": "static",
+      "shape": {
+        "type": "circle",
+        "radius": 20.0
+      }
     }
   }
-
 }
