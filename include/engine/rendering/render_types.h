@@ -59,7 +59,7 @@ namespace cursed_engine
 	inline const Color Color::blue{ 0, 0, 255, 255 };
 	inline const Color Color::green{ 0, 255, 0, 255 };
 	inline const Color Color::yellow{ 255, 255, 0, 255 };
-	inline const Color Color::orange{ 255, 208, 160, 255 };
+	inline const Color Color::orange{ 255, 64, 0, 255 };
 	inline const Color Color::brown{ 160, 128, 96, 255 };
 
 	struct Vertex
