@@ -10,8 +10,8 @@
             "y": 0
           },
           "scale": {
-            "x": 1280,
-            "y": 720
+            "x": 1,
+            "y": 1
           }
         },
         "sprite": {
@@ -29,8 +29,8 @@
             "y": 10
           },
           "scale": {
-            "x": 50,
-            "y": 10
+            "x": 1,
+            "y": 1
           }
         },
         "text": {
@@ -38,9 +38,9 @@
           "font": "JackPirate_PERSONAL_USE_ONLY",
           "size": 100,
           "color": {
-            "r": 255,
-            "g": 255,
-            "b": 255,
+            "r": 186,
+            "g": 142,
+            "b": 35,
             "a": 255
           },
           "pivot": {
@@ -57,16 +57,17 @@
       "components": {
         "transform": {
           "position": {
-            "x": 10,
-            "y": 10
+            "x": 100,
+            "y": 40
           },
           "scale": {
-            "x": 50,
-            "y": 50
+            "x": 0.25,
+            "y": 0.25
           }
         },
         "sprite": {
-          "texture_id": "sideswipe"
+          "texture_id": "ui",
+          "region": "return_2"
         },
         "button": {
           "action": "SceneTransition",
@@ -94,31 +95,70 @@
         },
         "bounding_box": {
           "offset": {
-            "x": 0,
-            "y": 0
+            "x": 0.0,
+            "y": 0.0
           },
           "size": {
-            "width": 50,
-            "height": 50
+            "width": 100.0,
+            "height": 100.0
           }
         },
         "ui": {}
       }
     },
     {
+      "id": "vsyc_label",
+      "components": {
+        "transform": {
+          "position": {
+            "x": 1000,
+            "y": 190
+          },
+          "scale": {
+            "x": 0.25,
+            "y": 0.25
+          }
+        },
+        "ui": {},
+        "text": {
+          "text_id": "settings_vsync",
+          "font": "JackPirate_PERSONAL_USE_ONLY",
+          "size": 40,
+          "color": {
+            "r": 255,
+            "g": 255,
+            "b": 255,
+            "a": 255
+          },
+          "pivot": {
+            "x": 1.0,
+            "y": 0.0
+          },
+          "outline": 0
+        }
+      }
+    },
+    {
       "id": "vsync_checkbox",
       "components": {
         "transform": {
-          "x": 500,
-          "y": 200,
-          "width": 50,
-          "height": 50
+          "position": {
+            "x": 1000,
+            "y": 200
+          },
+          "scale": {
+            "x": 0.1,
+            "y": 0.1
+          }
         },
         "sprite": {
-          "texture_id": "square"
+          "texture_id": "ui",
+          "region": "square"
         },
         "checkbox": {
           "is_checked": false,
+          "checked_region": "crossed_bones",
+          "unchecked_region": "square",
           "action": "toggle_vsync",
           "args": {
             "toggle_on": "enable",
@@ -127,12 +167,12 @@
         },
         "bounding_box": {
           "offset": {
-            "x": 0,
-            "y": 0
+            "x": 0.0,
+            "y": 0.0
           },
           "size": {
-            "width": 50,
-            "height": 50
+            "width": 50.0,
+            "height": 50.0
           }
         },
         "ui": {}
@@ -142,13 +182,18 @@
       "id": "master_volume_slider_base",
       "components": {
         "transform": {
-          "x": 200,
-          "y": 200,
-          "width": 50,
-          "height": 250
+          "position": {
+            "x": 200,
+            "y": 200
+          },
+          "scale": {
+            "x": 1,
+            "y": 0.1
+          }
         },
         "sprite": {
-          "texture:id": "square"
+          "texture_id": "ui",
+          "region": "square"
         },
         "slider": {
 
@@ -161,22 +206,27 @@
       "parent": "master_volume_slider_base",
       "components": {
         "transform": {
-          "x": 200,
-          "y": 200,
-          "width": 50,
-          "height": 50
+          "position": {
+            "x": 200,
+            "y": 200
+          },
+          "scale": {
+            "x": 0.25,
+            "y": 0.25
+          }
         },
         "sprite": {
-          "texture_id": "pirate-flag"
+          "texture_id": "ui",
+          "region": "skull_and_bones"
         },
         "bounding_box": {
           "offset": {
-            "x": 0,
-            "y": 0
+            "x": 0.0,
+            "y": 0.0
           },
           "size": {
-            "width": 50,
-            "height": 50
+            "width": 0.25,
+            "height": 0.25
           }
         },
         "ui": {}

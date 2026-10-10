@@ -38,8 +38,8 @@
         "physics": {
           "collider_type": "dynamic",
           "shape": {
-            "type": "square",
-            "half_extent": 20.0
+            "type": "circle",
+            "radius": 20.0
           }
         }
       }
