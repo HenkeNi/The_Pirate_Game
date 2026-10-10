@@ -8,6 +8,9 @@ namespace cursed_engine
 {
 //	struct ComponentInitContext; // why not working?
 	class EventBus;
+
+	template <typename T>
+	class Result;
 }
 
 namespace ce = cursed_engine;
@@ -20,7 +23,7 @@ public:
 	void init(SceneContext sceneCtx, ce::ComponentInitContext initCtx, ce::EventBus* eventBus);
 
 	// rreturn future?
-	std::unique_ptr<Scene> load(const SceneMeta& meta); // return result?
+	ce::Result<ScenePtr> load(const SceneMeta& meta);
 
 private:
 	ce::ComponentInitContext m_componentInitContext;

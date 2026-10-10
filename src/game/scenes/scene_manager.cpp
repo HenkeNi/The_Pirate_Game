@@ -4,6 +4,7 @@
 #include <engine/core/events/event_bus.h>
 #include <engine/core/engine_context.h>
 #include <engine/core/logger.h>
+#include <format>
 
 void SceneManager::init(const ce::EngineContext& context, SceneRegistry registry)
 {
@@ -95,24 +96,34 @@ void SceneManager::push(SceneName name)
 {
 	const SceneMeta& meta = m_registry.get(name);
 
-	if (std::unique_ptr<Scene> scene = m_loader.load(meta))
-	{
-		if (!m_stack.empty())
-		{
-			std::unique_ptr<Scene>& top = m_stack.back();
-			top->onExit();
-		}
+	ce::Result<ScenePtr> result = m_loader.load(meta);
 
-		scene->onCreated();
-		scene->onEnter();
-
-		m_stack.push_back(std::move(scene));
-		m_eventBus->publishInstantly<SceneTransitionEvent>(name);
-	}
-	else
+	if (!result.ok())
 	{
-		ce::Logger::logError("[SceneManager::push] - Failed to create new scene");
+		ce::Logger::logError(std::format("[SceneManager::push] - Failed to create new scene! Reason: {}", result.message()));
+		return;
 	}
+
+	ScenePtr scene = result.take();
+
+	if (!scene) [[unlikely]]
+	{
+		ce::Logger::logError("Newly created scene was nullptr!");
+		return;
+	}
+
+	if (!m_stack.empty())
+	{
+		ScenePtr& top = m_stack.back();
+		top->onExit();
+	}
+
+	scene->onCreated();
+	scene->onEnter();
+
+	m_stack.push_back(std::move(scene));
+	m_eventBus->publishInstantly<SceneTransitionEvent>(name);
+
 }
 
 void SceneManager::swap(SceneName name)
@@ -125,7 +136,7 @@ void SceneManager::pop()
 {
 	if (!m_stack.empty()) [[likely]]
 	{
-		std::unique_ptr<Scene>& top = m_stack.back();
+		ScenePtr& top = m_stack.back();
 		top->onExit();
 		top->onDestroyed();
 
@@ -133,7 +144,7 @@ void SceneManager::pop()
 
 		if (!m_stack.empty()) [[likely]]
 		{
-			std::unique_ptr<Scene>& top = m_stack.back();
+			ScenePtr& top = m_stack.back();
 			top->onEnter();
 		}
 	}

@@ -50,7 +50,7 @@ void OverworldScene::onEnter()
 	m_physicsAPI.setWorldId(m_physicsWorld.getWorldId()); // MAYBE PASS WORLD INSTEAD? AND PHYSICS API extracts it??
 
 	m_context.entityFactory->setEcsRegistry(&m_registry);
-	m_context.entityFactory->setPostInitContext({ &m_physicsWorld });
+	m_context.entityFactory->setPostInitContext({ m_context.assetManager, &m_physicsWorld });
 	m_context.systemManager->getSystem<HUDSystem>().setECSRegistry(&m_registry);
 
 	m_context.systemManager->getSystem<PhysicsSystem>().setPhysicsWorld(&m_physicsWorld);
@@ -82,12 +82,12 @@ void OverworldScene::onEnter()
 
 	m_context.eventBus->publishInstantly<MapChunkCreatedEvent>(0, 0);
 
-	
+
 
 
 	// m_context.entityFactory->createFromPrefab("raft", ce::FVec2{ 10.f, 20.f });
 
-	
+
 
 	// TODO; Maybe attach player (as Target) in Scene?
 	auto playerEntities = m_registry.view<PlayerComponent>();
@@ -127,7 +127,7 @@ void OverworldScene::onEnter()
 
 	cameraHandle.getComponent<ce::FollowComponent>().target = playerHandle;
 
-	m_context.entityFactory->createFromPrefab("spider", FVec2{ 0.f, 0.f });
+	m_context.entityFactory->createFromPrefab("spider", { FVec2{ 0.f, 0.f }, 0.f });
 }
 
 void OverworldScene::onExit()

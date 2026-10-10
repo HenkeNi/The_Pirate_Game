@@ -4,6 +4,7 @@
 #include <engine/utils/json/json_value.h> // TODO; odnt include? shared include for json or include in document?
 #include <engine/core/result.h>
 
+
 #include <engine/ecs/entity/entity_factory.h>
 #include <engine/ecs/component/component_registry.h>
 #include <engine/core/application.h>
@@ -12,6 +13,7 @@
 #include <engine/core/events/event_bus.h>
 #include <engine/core/events/events.h>
 
+//void SceneLoader::init(SceneContext sceneCtx, ce::ComponentInitContext initCtx, ce::ComponentPostInitContext postInitCtx, ce::EventBus* eventBus)
 void SceneLoader::init(SceneContext sceneCtx, ce::ComponentInitContext initCtx, ce::EventBus* eventBus)
 {
 	m_sceneContext = std::move(sceneCtx); 
@@ -20,20 +22,22 @@ void SceneLoader::init(SceneContext sceneCtx, ce::ComponentInitContext initCtx, 
 	m_eventBus = eventBus;
 }
 
-std::unique_ptr<Scene> SceneLoader::load(const SceneMeta& meta)
+ce::Result<ScenePtr> SceneLoader::load(const SceneMeta& meta)
 {
 	cursed_engine::JsonDocument document;
 	const ce::Result<void> result = document.loadFromFile(meta.path);
 
-	//assert(result.ok() && "Failed to load json document!");
-
 	if (!result.ok())
 	{
-		// cursed_engine::Logger::logError(message);
-		return nullptr;
+		return ce::Result<ScenePtr>::failure(result.message());
 	}
 
 	std::unique_ptr<Scene> scene = meta.creator(m_sceneContext);
+
+	if (!scene)
+	{
+		return ce::Result<ScenePtr>::failure("Failed to create scene!"); // improve?! have creator return something?
+	}
 
 	// TODO; attach physcis world? (specify in json, gravity. ect?)
 
@@ -42,8 +46,7 @@ std::unique_ptr<Scene> SceneLoader::load(const SceneMeta& meta)
 
 	if (!componentRegistry)
 	{
-		cursed_engine::Logger::logError("Invalid Component registry!"); // return result instead?
-		return nullptr;
+		return ce::Result<ScenePtr>::failure("Component registry is not valid!");
 	}
 
 	auto& ecsRegistry = scene->m_registry;
@@ -85,6 +88,15 @@ std::unique_ptr<Scene> SceneLoader::load(const SceneMeta& meta)
 				componentData.deserializeFromJson(entityHandle, value, m_componentInitContext);
 			});
 
+		entity["components"].forEachProperty([&](const char* name, cursed_engine::JsonValue value)
+			{
+				const auto& componentData = componentRegistry->get(name);
+				
+				if (componentData.postInit)
+				{
+					componentData.postInit(entityHandle, ce::ComponentPostInitContext{ m_componentInitContext.assetManager, scene->getPhysicsWorld() });
+				}
+			});
 
 		ce::PhysicsWorld* physicsWorld = scene->getPhysicsWorld();
 
@@ -99,7 +111,7 @@ std::unique_ptr<Scene> SceneLoader::load(const SceneMeta& meta)
 			if (!componentData.postInit)
 				continue;
 
-			componentData.postInit(entityHandle, { physicsWorld });
+			componentData.postInit(entityHandle, { m_sceneContext.assetManager, physicsWorld });
 		}
 	}
 
@@ -169,9 +181,5 @@ std::unique_ptr<Scene> SceneLoader::load(const SceneMeta& meta)
 		childHierarchyComponent->parent = parentIt->second;
 	}
 
-
-
-
-
-	return scene;
+	return ce::Result<ScenePtr>::success(std::move(scene));
 }

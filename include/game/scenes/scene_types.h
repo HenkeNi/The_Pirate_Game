@@ -18,6 +18,8 @@ namespace cursed_engine
 	class AssetManager;
 }
 
+class Scene;
+
 namespace ce = cursed_engine;
 
 struct SceneContext
@@ -35,6 +37,7 @@ struct SceneContext
 
 using SceneId = uint32_t;
 using SceneName = std::string;
+using ScenePtr = std::unique_ptr<Scene>;
 using SceneRegistry = ce::Registry<SceneName, struct SceneMeta>;
 using SceneCreator = std::function<std::unique_ptr<class Scene>(SceneContext)>;
 
