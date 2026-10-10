@@ -39,7 +39,7 @@ namespace cursed_engine
 		m_ecsRegistry = ecsRegistry;
 	}
 
-	std::optional<EntityHandle> EntityFactory::createFromPrefab(const std::string& prefabId, FVec2 pos)
+EntityHandle EntityFactory::createFromPrefab(const std::string& prefabId, const SpawnData& data)
 	{
 		assert(m_ecsRegistry && "ECSRegistry is not set!");
 
@@ -55,14 +55,26 @@ namespace cursed_engine
 
 		if (!entityHandle.isValid())
 		{
+			return EntityHandle::invalid();
+			//return entityHandle;
 			int x = 20;
 		}
 
 		for (const auto& [name, properties] : prefab.components)
 		{
 			const ComponentInfo& info = m_componentRegistry.get(name.c_str());
-			info.derserializeFromPrefab(entityHandle, properties, m_initContext);
+			info.derserializeFromPrefab(entityHandle, properties, m_initContext, data);
 		
+			//if (info.postInit)
+			//{
+			//	info.postInit(entityHandle, m_postInitContext);
+			//}
+		}
+
+		// or handle differently????
+		for (const auto& [name, properties] : prefab.components)
+		{
+			const ComponentInfo& info = m_componentRegistry.get(name.c_str());
 			if (info.postInit)
 			{
 				info.postInit(entityHandle, m_postInitContext);
