@@ -94,15 +94,19 @@ void HUDSystem::createHealthContainer(int currentHealth, int maxHealth)
 
 	for (int i = 0; i < maxHealth; ++i)
 	{
-		std::optional<ce::EntityHandle> heartHandle = m_entityFactory.createFromPrefab("heart", ce::FVec2{ 10.f, 10.f });
+		const float heartOffset = 25.f;
+		ce::FVec2 position{ 10.f, 10.f };
+		position.x = float(i) * heartOffset; // TODO; use size plus an offset...
+
+		std::optional<ce::EntityHandle> heartHandle = m_entityFactory.createFromPrefab("heart", { position, 0.f });
 		
 		if (heartHandle)
 		{
-			if (ce::TransformComponent* transformComponent = heartHandle.value().tryGetComponent<ce::TransformComponent>())
-			{
-				const float heartOffset = 25.f;
-				transformComponent->position.x = float(i) * heartOffset; // TODO; use size plus an offset...
-			}
+			//if (ce::TransformComponent* transformComponent = heartHandle.value().tryGetComponent<ce::TransformComponent>())
+			//{
+			//	const float heartOffset = 25.f;
+			//	transformComponent->position.x = float(i) * heartOffset; // TODO; use size plus an offset...
+			//}
 
 			// give prefab either a heirarchy component, or a parent component...
 
