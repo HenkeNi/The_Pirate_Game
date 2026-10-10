@@ -101,6 +101,8 @@ namespace cursed_engine
 
 	void UISystem::handleCheckboxInteractions(ECSRegistry& registry)
 	{
+		// TODO; always set correct region?
+
 		// pass in mouse pos instead?
 		FVec2 mousePosition = m_input.getMousePosition();
 
@@ -114,16 +116,15 @@ namespace cursed_engine
 				{
 					switch (m_input.getMouseInputState(MouseButton::Left))
 					{
-						//case InputState::Pressed:
 					case InputState::Released:
 						checkboxComponent.isChecked = !checkboxComponent.isChecked;
 
 						if (auto* spriteComponent = registry.tryGetComponent<SpriteComponent>(entity))
 						{
-							// TODO; update texture
+							spriteComponent->atlasRegion = checkboxComponent.isChecked ? 
+								checkboxComponent.checkedRegion : checkboxComponent.uncheckedRegion;
 						}
-
-
+						break;
 					}
 				}
 			});
@@ -137,13 +138,16 @@ namespace cursed_engine
 		view.forEach([&](Entity entity, SliderComponent& sliderComponent) 
 			{				
 				// "Thumb"...
-				if (registry.hasComponents<HierarchyComponent>(entity))
+				//if (registry.hasComponents<HierarchyComponent>(entity))
+				if (auto* hierarchyComponent = registry.tryGetComponent<HierarchyComponent>(entity))
 				{
 					int x = 20; 
+					auto& thumb = hierarchyComponent->firstChild;
+
+					// if thumb has been pressed (check if true) && input == held (or listen to release)
+
 				}
 			});
-
-
 	}
 
 	/*void UISystem::updateButtonColor(ButtonComponent::State buttonState, SpriteComponent& spriteComponent)
@@ -175,20 +179,11 @@ namespace cursed_engine
 		int x = 20;
 	}
 
-	// TODO; fix this function...
 	bool UISystem::isMouseInsideBoundingBox(TransformComponent& transformComponent, BoundingBoxComponent& boundingBoxComponent, float mousePosX, float mousePosY) const noexcept
 	{
-		FVec2 buttonPosition = transformComponent.position + boundingBoxComponent.offset;
-		FVec2 size = boundingBoxComponent.halfSize * 2.f;
+		const FVec2 center = transformComponent.position + boundingBoxComponent.offset;
+		const FVec2 halfSize = boundingBoxComponent.size * 0.5f;
 
-		const FVec2 scaledSize = size * transformComponent.scale;
-		buttonPosition -= scaledSize;
-
-
-		//FVec2 buttonPosition = transformComponent.position + boundingBoxComponent.offset;
-		//FVec2 size = boundingBoxComponent.halfSize * 2.f;
-		//buttonPosition -= size * transformComponent.pivot;
-
-		return isInside(buttonPosition, buttonPosition + size, FVec2{ mousePosX, mousePosY });
+		return isInside(center - halfSize, center + halfSize, FVec2{ mousePosX, mousePosY });
 	}
 }

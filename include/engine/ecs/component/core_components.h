@@ -116,7 +116,7 @@ namespace cursed_engine
 	struct BoundingBoxComponent
 	{
 		FVec2 offset;
-		FVec2 halfSize;
+		FVec2 size;
 	};
 
 	struct HierarchyComponent // or name ParentComponent
@@ -197,8 +197,17 @@ namespace cursed_engine
 
 	struct CheckboxComponent
 	{
-		//ResourceHandle<Texture> uncheckedTexture;
-		//ResourceHandle<Texture> checkedTexture;
+		CheckboxComponent() = default;
+		CheckboxComponent(std::string checkedRegionId, std::string uncheckedRegionId, bool checked)
+			: checkedRegionId{ checkedRegionId }, uncheckedRegionId{ uncheckedRegionId }, isChecked{ checked }
+		{
+		}
+
+		AtlasRegion checkedRegion;
+		AtlasRegion uncheckedRegion;
+
+		std::string checkedRegionId;
+		std::string uncheckedRegionId;
 
 		bool isChecked;
 	};
