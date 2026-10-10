@@ -22,26 +22,23 @@ namespace
 		std::abort();
 	}
 
-	b2Vec2 tob2Vec(const FVec2& vec2)
-	{
-		return b2Vec2{ vec2.x, vec2.y };
-	}
-
 	b2Polygon tob2Polygon(const Shape& shape)
 	{
 		switch (shape.type)
 		{
-		case Shape::ShapeType::Square:
-			return b2MakeSquare(shape.data.Square.halfExtent);
-		case Shape::ShapeType::Rectangle:
-			return b2MakeBox(shape.data.Rectangle.width * 0.5f, shape.data.Rectangle.height * 0.5f);
-			//case cursed_engine::Shape::Circle:
-				//return b2MakeRoundedBox()		
-				//return b2MakeAABB();
+		case Shape::Type::Square:
+			return b2MakeSquare(shape.data.square.halfExtent);
+		case Shape::Type::Rectangle:
+			return b2MakeBox(shape.data.rectangle.width * 0.5f, shape.data.rectangle.height * 0.5f);
 		}
 
 		assert(false && "Unhandled ShapeType in tob2Polygon");
 		std::abort();
+	}
+
+	b2Vec2 tob2Vec(const FVec2& vec2)
+	{
+		return b2Vec2{ vec2.x, vec2.y };
 	}
 
 	b2WorldId tob2WorldId(const WorldId& id)
@@ -58,6 +55,23 @@ namespace
 	{
 		return FVec2{ vec.x, vec.y };
 	}
+
+	//b2ShapeId createShape(Shape::Type type)
+	//{
+	//	switch (type)
+	//	{
+	//	case Shape::Type::Square:
+	//		break;
+	//	case Shape::Type::Rectangle:
+	//		break;
+	//	case Shape::Type::Circle:
+	//		break;
+	//	case Shape::Type::Capsule:
+	//		break;
+	//	}
+	//	//b2CreateCircleShape();
+	//	//b2CreateCapsuleShape();
+	//}
 }
 
 namespace cursed_engine
@@ -142,16 +156,21 @@ namespace cursed_engine
 		b2BodyDef bodyDef = b2DefaultBodyDef();
 		bodyDef.type = tob2BodyType(definition.type);
 		bodyDef.position = tob2Vec(definition.position);
+		//bodyDef.rotation = definition.rotation; cos sin
+		bodyDef.name = definition.debugName;
 
 		b2BodyId bodyId = b2CreateBody(tob2WorldId(m_worldId), &bodyDef);
-
-		b2Polygon polygon = tob2Polygon(definition.shape);
 
 		b2ShapeDef shapeDef = b2DefaultShapeDef();
 		shapeDef.density = 1.0f;
 		shapeDef.material.friction = 0.3f;
+		
+		//b2Polygon polygon = tob2Polygon(Shape{ Shape::Type::Square, 10.5f });
+		//b2Polygon polygon = tob2Polygon(definition.shape);
+		//b2ShapeId polygonShapeId = b2CreatePolygonShape(bodyId, &shapeDef, &polygon);
 
-		b2ShapeId shapeId = b2CreatePolygonShape(bodyId, &shapeDef, &polygon);
+		b2Circle circle{ tob2Vec(definition.position), definition.shape.data.circle.radius };
+		b2ShapeId cicle = b2CreateCircleShape(bodyId, &shapeDef, &circle);
 
 		// do something with id?
 
@@ -230,7 +249,7 @@ namespace cursed_engine
 
 	void PhysicsAPI::setDebugDrawEnabled(bool enabled)
 	{
-		m_physicsDebugDraw->setDebugDrawEnabled(enabled);
+		m_physicsDebugDraw->setEnabled(enabled);
 	}
 
 	void PhysicsAPI::setWorldId(WorldId worldId)
@@ -240,6 +259,6 @@ namespace cursed_engine
 
 	constexpr bool PhysicsAPI::isDebugDrawEnabled() const noexcept
 	{
-		return m_physicsDebugDraw->isDebugDrawEnabled();
+		return m_physicsDebugDraw->isEnabled();
 	}
 }

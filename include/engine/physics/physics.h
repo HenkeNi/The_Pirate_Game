@@ -19,32 +19,48 @@ namespace cursed_engine
 
 	struct Shape
 	{
-		enum class ShapeType // Polygon Shape? collider shape?
+		enum class Type // Polygon Shape? collider shape?
 		{
 			Square,
 			Rectangle,
-			Circle
+			Circle,
+			Capsule
 		} type;
 
-		union ShapeData
+		union Data
 		{
-			struct
-			{
-				float halfExtent;
-			} Square;
-
-			struct
-			{
-				float width;
-				float height;
-			} Rectangle;
-
-			struct
-			{
-				float radius;
-			} Circle;
-
+			struct { float halfExtent; } square;
+			struct { float width; float height; } rectangle;
+			struct { float radius; } circle;
 		} data;
+	
+		static Shape square(float halfExtent)
+		{
+			Shape square;
+			square.type = Shape::Type::Square;
+			square.data.square.halfExtent = halfExtent;
+
+			return square;
+		}
+
+		static Shape rectangle(float width, float height)
+		{
+			Shape rectangle;
+			rectangle.type = Shape::Type::Rectangle;
+			rectangle.data.rectangle.width = width;
+			rectangle.data.rectangle.height = height;
+
+			return rectangle;
+		}
+
+		static Shape circle(float radius)
+		{
+			Shape circle;
+			circle.type = Shape::Type::Circle;
+			circle.data.circle.radius = radius;
+
+			return circle;
+		}
 	};
 
 	
@@ -53,11 +69,12 @@ namespace cursed_engine
 	{
 		ColliderType type;
 		Shape shape;
-
 		FVec2 position{};
 		float rotation = 0.0f;
 		float linearDamping = 0.0f;
 		float angularDamping = 0.0f;
+
+		const char* debugName = "";
 	};
 
 

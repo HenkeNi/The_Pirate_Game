@@ -105,13 +105,6 @@ namespace cursed_engine
 			return false;
 		}
 
-		auto& physics = m_impl->physics;
-		if (!physics.init(rendering.getRenderAPI()))
-		{
-			Logger::logError(std::format(initFailedMessage, "PhysicsModule"));
-			return false;
-		}
-
 		auto& asset = m_impl->asset;
 		if (!asset.init())
 		{
@@ -123,6 +116,13 @@ namespace cursed_engine
 		if (!resource.init(rendering.getTextureCreator(), audio.getAudioCreator(), configs.resource, configs.platform.backend))
 		{
 			Logger::logError(std::format(initFailedMessage, "ResourceModule"));
+			return false;
+		}
+
+		auto& physics = m_impl->physics;
+		if (!physics.init({ rendering.getRenderAPI(), &resource.getFontManager(), rendering.getTextCreator() }))
+		{
+			Logger::logError(std::format(initFailedMessage, "PhysicsModule"));
 			return false;
 		}
 
@@ -185,6 +185,7 @@ namespace cursed_engine
 		{
 			const double deltaTime = impl.platform.getDeltaTime(); // Do here (first)?
 
+			//do this inside inner loop? also do endFramE?
 			impl.platform.beginFrame();
 			impl.platform.processEvents(); // tick delta time first of all?
 
@@ -193,8 +194,7 @@ namespace cursed_engine
 				running = false;
 				continue;
 			}
-
-
+			
 			accumulator += deltaTime;
 
 			while (accumulator >= fixedTimeStep)
@@ -207,10 +207,11 @@ namespace cursed_engine
 				// update physics (physics.step())
 
 				// dispatch events again?
+				impl.platform.endFrame();
 
 				accumulator -= fixedTimeStep;
 			}
-
+			
 			impl.resource.update(impl.platform.getFrameCount(), deltaTime);
 			
 			impl.rendering.beginFrame();
@@ -222,7 +223,7 @@ namespace cursed_engine
 			//Logger::logInfo("[Engine] - End frame..");
 
 			impl.rendering.endFrame();
-			impl.platform.endFrame();
+			//impl.platform.endFrame();
 		}
 	}
 
