@@ -76,6 +76,7 @@ namespace cursed_engine
 		std::string textureId; // either here or in Animation to allow multiple textures
 	};
 
+	// Rename PropertiesMap?
 
 	struct PropertyValue : std::variant<
 		std::nullptr_t,
@@ -89,26 +90,36 @@ namespace cursed_engine
 		using variant::variant;
 
 		template <typename T>
-		const T* as() const noexcept
+		const T& get() const
+		{
+			assert(isType<T>() && "Variant doesn't hold requested type!");
+			return std::get<T>(*this);
+		}
+		
+		template <typename T>
+		T& get()
+		{
+			assert(isType<T>() && "Variant doesn't hold requested type!");
+			return std::get<T>(*this);
+		}
+
+		template <typename T>
+		const T* getIf() const noexcept
 		{
 			assert(isType<T>() && "Variant doesn't hold requested type!");
 			return std::get_if<T>(this);
 		}
 
 		template <typename T>
-		T getOr(const T& fallback) const noexcept
+		T* getIf() const noexcept
 		{
 			assert(isType<T>() && "Variant doesn't hold requested type!");
-
-			if (auto p = std::get_if<T>(this))
-				return *p;
-
-			return fallback;
+			return std::get_if<T>(this);
 		}
 
 		[[nodiscard]] bool isNumeric() const noexcept
 		{
-			return std::holds_alternative<int>(*this) || std::holds_alternative<float>(*this); // TODO; double check
+			return std::holds_alternative<int>(*this) || std::holds_alternative<float>(*this);
 		}
 
 		template <typename T>
