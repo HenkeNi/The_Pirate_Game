@@ -46,11 +46,6 @@ namespace cursed_engine
 
 				if (auto* texture = m_textureManager->tryGet(textureHandle))
 				{
-					/*FVec2 position = transformComponent.position;
-
-					const FVec2 scaledSize = spriteComponent.atlasRegion.getSize() * transformComponent.scale;
-					position -= spriteComponent.atlasRegion.pivot * scaledSize;*/
-
 					FVec2 position = transformComponent.position;
 
 					const AtlasRegion& region = spriteComponent.atlasRegion;
@@ -58,23 +53,10 @@ namespace cursed_engine
 
 					position -= region.pivot * scaledSize;
 
-					//position -= scale * region.pivot;
-					//position = computeDrawPosition(position, , region.pivot); // HOTPATH? Dont call compute? dont construct FVec for size?
-
 					FRect src = (FRect)region.rect;
-					//FRect dst{ position.x, position.y, region.getSize().x, region.getSize().y};
 					FRect dst{ position.x, position.y, scaledSize.x, scaledSize.y };
 
 					m_renderer.drawTexture(*texture, std::move(src), std::move(dst), spriteComponent.color);
-
-					/*auto position = transformComponent.position;
-					const auto& scale = transformComponent.scale;
-
-					position -= scale * transformComponent.pivot;*/
-
-					// TODO; use correct region!
-
-					//m_renderer.drawTexture(*texture, position, scaledSize, spriteComponent.color);
 				}
 			});
 	}
@@ -104,25 +86,25 @@ namespace cursed_engine
 					}
 				}
 
-				const FVec2 halfSize =
-					boundingBoxComponent.halfSize * transformComponent.scale; // should scale affect size?
+				const FVec2 center = transformComponent.position + boundingBoxComponent.offset;
+				const FVec2 halfSize = boundingBoxComponent.size * 0.5f;
 
-				const FVec2 topLeft =
-					transformComponent.position + boundingBoxComponent.offset - halfSize;
+				FRect rect
+				{
+					center.x - halfSize.x,
+					center.y - halfSize.y,
+					boundingBoxComponent.size.x,
+					boundingBoxComponent.size.y
+				};
 
-				m_renderer.drawOutlineRect(
-					topLeft.x,
-					topLeft.y,
-					halfSize.x * 2.0f,
-					halfSize.y * 2.0f,
-					color
-				);
-			/*	FVec2 position = transformComponent.position + boundingBoxComponent.offset;
-				const FVec2 size = boundingBoxComponent.halfSize * transformComponent.scale;
-
-				position -= size;
-
-				m_renderer.drawOutlineRect(position.x, position.y, size.x * 2.0f, size.y * 2.0f, color);*/
+				m_renderer.drawOutlineRect(rect, color);
+				//m_renderer.drawOutlineRect(
+				//	topLeft.x,
+				//	topLeft.y,
+				//	halfSize.x * 2.0f,
+				//	halfSize.y * 2.0f,
+				//	color
+				//);
 			});
 	}
 
