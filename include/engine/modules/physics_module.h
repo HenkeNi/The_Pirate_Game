@@ -4,12 +4,10 @@
 
 namespace cursed_engine
 {
-	class RenderAPI;
-
 	class PhysicsModule
 	{
 	public:
-		bool init(RenderAPI renderAPI);
+		bool init(PhysicsDebugDrawContext context);
 		void shutdown();
 
 		//void debugDraw();

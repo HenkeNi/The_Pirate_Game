@@ -4,7 +4,7 @@
 
 namespace cursed_engine
 {
-	bool PhysicsModule::init(RenderAPI renderAPI)
+	bool PhysicsModule::init(PhysicsDebugDrawContext context)
 	{
 		Logger::logInfo(std::format("{}[PhysicsModule] - Initialization started...", log_format::INDENT));
 		//if (!m_physics.init())
@@ -13,7 +13,7 @@ namespace cursed_engine
 		// auto version = b2GetVersion(); -> log this in physics?
 
 
-		m_physicsDebugDraw.init(renderAPI);
+		m_physicsDebugDraw.init(std::move(context));
 
 		Logger::logInfo(std::format("{}[PhysicsModule] - Initialization successful!", log_format::INDENT));
 		return true;

@@ -1,24 +1,34 @@
 #pragma once
-#include "engine/rendering/render_api.h"
 #include "engine/physics/physics_types.h"
+#include "engine/resources/font/font_manager.h"
+#include "engine/rendering/render_api.h"
 
 namespace cursed_engine
 {
+	class TextCreator;
+
+	struct PhysicsDebugDrawContext
+	{
+		RenderAPI renderAPI;
+		FontManager* fontManager;
+		const TextCreator* textCreator;
+	};
+
 	class PhysicsDebugDraw
 	{
 	public:
-		void init(RenderAPI renderAPI);
+		void init(PhysicsDebugDrawContext context);
 		void draw();
 		
-		void setDebugDrawEnabled(bool enabled); // or just setEnabled?
+		void setEnabled(bool enabled);
 		void setWorldId(WorldId worldId);
 
-		[[nodiscard]] inline constexpr bool isDebugDrawEnabled() const noexcept { return m_debugDrawEnabled; } 
+		[[nodiscard]] inline constexpr bool isEnabled() const noexcept { return m_enabled; }
 
 	private:
-		RenderAPI m_renderAPI;
+		PhysicsDebugDrawContext m_drawContext;
 		WorldId m_worldId;
 
-		bool m_debugDrawEnabled = false;
+		bool m_enabled = false;
 	};
 }
