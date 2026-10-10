@@ -4,6 +4,7 @@
     {
       "title_text": "The Cursed Pirate",
       "settings_header": "Settings",
+      "settings_vsync": "Vsync",
       "fps": "FPS"
     }
   ],
