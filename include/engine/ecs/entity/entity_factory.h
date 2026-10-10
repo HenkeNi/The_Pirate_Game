@@ -10,9 +10,8 @@ namespace cursed_engine
 	//class ComponentRegistry;
 	class ECSRegistry;
 	class AssetManager;
-
-	// Reanem PrefabInstantiator (or something) instead?
-
+	struct SpawnData;
+	
 	class EntityFactory // TODO; accept asset mangaer instead!
 	{
 	public:
@@ -24,8 +23,7 @@ namespace cursed_engine
 
 		// OR RETURN AN INVALID ENTIY HANDLE INSTEAD? FROM CREATE_FROM_PREFAB...
 		// contain functions like createEnemy, etc? contain logic to determine which type? sets other data? random strength, etc?
-		std::optional<EntityHandle> createFromPrefab(const std::string& prefabId, FVec2 pos); // TODO; return EntityBuilder instead??? createEntity.withComponent<Transform>(data).withComponent().withTag("Player"´).build();
-		//std::optional<EntityHandle> instantiate(ECSRegistry& ecsRegistry, std::string_view prefab);
+		EntityHandle createFromPrefab(const std::string& prefabId, const SpawnData& data); 
 
 		EntityHandle create();
 
@@ -41,10 +39,6 @@ namespace cursed_engine
 		}
 
 	private:
-		//friend class Engine;
-
-		//void initialize(AssetManager* assetManager); // why both? maybe just use public one
-
 		ComponentRegistry& m_componentRegistry;
 		AssetManager* m_assetManager; // weak ptr?
 		ECSRegistry* m_ecsRegistry;
