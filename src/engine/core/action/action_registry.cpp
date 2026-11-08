@@ -22,4 +22,9 @@ namespace cursed_engine
 	{
 		return m_actions.contains(id);
 	}
+
+	void ActionRegistry::clear()
+	{
+
+	}
 }

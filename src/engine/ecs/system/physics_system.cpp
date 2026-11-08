@@ -23,8 +23,8 @@ namespace cursed_engine
 
 		// update transforms...
 		{
-			auto componentView = context.registry.view<TransformComponent, PhysicsComponent>();
-			componentView.forEach([](TransformComponent& transformComponent, const PhysicsComponent& physicsComponent)
+			auto componentView = context.registry.view<LocalTransformComponent, PhysicsComponent>();
+			componentView.forEach([](LocalTransformComponent& transformComponent, const PhysicsComponent& physicsComponent)
 				{
 					transformComponent.position = physicsComponent.physicsBody.getPosition();
 				});

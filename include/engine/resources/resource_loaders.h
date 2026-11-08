@@ -2,75 +2,53 @@
 #include "engine/resources/resource_types.h"
 #include <filesystem>
 #include <memory>
+#include <span>
+#include <string_view>
 
 namespace cursed_engine
-{	
+{
 	template <typename T>
 	class Result;
 
 	class AudioCreator;
 	class TextureCreator;
-
-	struct AudioDescriptor;
-	struct FontDescriptor;
-	struct TextureDescriptor;
-
-	class AudioLoader
-	{
-	public:
-		virtual ~AudioLoader() = default;
-		[[nodiscard]] virtual Result<AudioPtr> operator()(const AudioDescriptor& descriptor) const = 0;
-	};
-
-	class FontLoader
-	{
-	public:
-		virtual ~FontLoader() = default;
-		[[nodiscard]] virtual Result<FontPtr> operator()(const FontDescriptor& descriptor) const = 0;
-	};
-
-	class TextureLoader
-	{
-	public:
-		virtual ~TextureLoader() = default;
-		[[nodiscard]] virtual Result<TexturePtr> operator()(const TextureDescriptor& descriptor) const = 0;
-	};
-
 	struct Surface;
-
-	// SDLSurface?
-	struct SurfaceLoader
-	{
-		[[nodiscard]] Result<Surface> operator()(const std::filesystem::path& path) const;
-	};
-
-#pragma region SDL_Resource_Loaders
-
-	class SDLAudioLoader final : public AudioLoader
+	
+	class AudioLoader final
 	{
 	public:
-		explicit SDLAudioLoader(const AudioCreator* creator);
-		[[nodiscard]] Result<AudioPtr> operator()(const AudioDescriptor& descriptor) const override;
+		explicit AudioLoader(const AudioCreator* creator);
+		[[nodiscard]] Result<AudioPtr> operator()(const struct AudioDescriptor& descriptor) const;
+
+		// THIS?
+		std::span<const std::string_view> extensions() const noexcept;
 
 	private:
 		const AudioCreator* m_creator;
 	};
 
-	class SDLFontLoader final : public FontLoader
+	class FontLoader final
 	{
 	public:
-		[[nodiscard]] Result<FontPtr> operator()(const FontDescriptor& descriptor) const override;
+		[[nodiscard]] Result<FontPtr> operator()(const struct FontDescriptor& descriptor) const;
+
+		std::span<const std::string_view> extensions() const noexcept;
 	};
 
-	class SDLTextureLoader final : public TextureLoader
+	struct SurfaceLoader final
+	{
+		[[nodiscard]] Result<Surface> operator()(const std::filesystem::path& path) const;
+	};
+
+	class TextureLoader final
 	{
 	public:
-		explicit SDLTextureLoader(const TextureCreator* creator);
-		[[nodiscard]] Result<TexturePtr> operator()(const TextureDescriptor& descriptor) const;
+		explicit TextureLoader(const TextureCreator* creator);
+		[[nodiscard]] Result<TexturePtr> operator()(const struct TextureDescriptor& descriptor) const;
+
+		std::span<const std::string_view> extensions() const noexcept;
 
 	private:
 		const TextureCreator* m_creator;
 	};
-
-#pragma endregion
 }

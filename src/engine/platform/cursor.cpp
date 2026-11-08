@@ -3,19 +3,24 @@
 
 namespace cursed_engine
 {
-	void SDLCursor::SetVisible(bool visible)
+	Cursor::Cursor()
+		: m_cursor{ nullptr }
+	{
+	}
+
+	void Cursor::SetVisible(bool visible)
 	{
 		//SDL_CreateColorCursor
 		//m_cursor->
 		//SDL_SetCursor();
 	}
 
-	/*void SDLCursor::SetImage(const CursorImage& image)
+	/*void Cursor::SetImage(const CursorImage& image)
 	{
 
 	}*/
 
-	void SDLCursor::SetMode(CursorMode mode)
+	void Cursor::SetMode(CursorMode mode)
 	{
 
 	}

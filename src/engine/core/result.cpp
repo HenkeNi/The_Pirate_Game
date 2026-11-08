@@ -22,6 +22,11 @@ namespace cursed_engine
 		return m_message;
 	}
 
+	Result<void>::operator bool() const noexcept
+	{
+		return m_success;
+	}
+
 	Result<void>::Result(bool success, std::string message)
 		: m_success{ success }, m_message{ std::move(message) }
 	{

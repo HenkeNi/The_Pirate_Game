@@ -1,13 +1,7 @@
 #include "game/systems/debug_system.h"
 #include "game/components/components.h"
-#include <engine/utils/frame_timer.h>
 #include <engine/ecs/ecs_registry.h>
 #include <engine/ecs/component/core_components.h> 
-
-DebugSystem::DebugSystem(cursed_engine::FrameTimer& timer)
-	: m_timer{ timer }
-{ 
-}
 
 void DebugSystem::update(cursed_engine::SystemUpdateContext& context)
 {
@@ -21,7 +15,7 @@ void DebugSystem::update(cursed_engine::SystemUpdateContext& context)
 				return;
 			}
 
-			const int fps = (int)m_timer.getFPS();
+			const int fps = (int)context.fps;
 			textComponent.text->setText(std::format("FPS: {}", fps));
 			//textComponent.text.setText("FPS: " + std::to_string(m_timer.getFPS()));
 			int x = 20;

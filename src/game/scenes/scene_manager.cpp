@@ -2,7 +2,8 @@
 #include "game/scenes/scene.h"
 #include "game/events/events.h"
 #include <engine/core/events/event_bus.h>
-#include <engine/core/engine_context.h>
+#include <engine/core/events/events.h>
+#include <engine/core/contexts.h>
 #include <engine/core/logger.h>
 #include <format>
 
@@ -20,7 +21,8 @@ void SceneManager::init(const ce::EngineContext& context, SceneRegistry registry
 		context.eventBus,
 		context.assets.assetManager,
 		context.rendering.rendererAPI,
-		context.resources.audioManager,
+		context.resources,
+		//context.resources.audioManager,
 		context.audio.audioController
 	};
 
@@ -67,12 +69,12 @@ void SceneManager::applyPendingTransition()
 	m_pendingTransition = std::nullopt;
 }
 
-void SceneManager::update(float deltaTime)
+void SceneManager::update(const ce::UpdateContext& ctx)
 {
 	if (!m_stack.empty()) [[unlikely]]
 	{
 		std::unique_ptr<Scene>& top = m_stack.back();
-		top->update(deltaTime);
+		top->update(ctx);
 	}
 
 	applyPendingTransition();
@@ -101,6 +103,8 @@ void SceneManager::push(SceneName name)
 	if (!result.ok())
 	{
 		ce::Logger::logError(std::format("[SceneManager::push] - Failed to create new scene! Reason: {}", result.message()));
+		assert(false);
+
 		return;
 	}
 
@@ -123,7 +127,6 @@ void SceneManager::push(SceneName name)
 
 	m_stack.push_back(std::move(scene));
 	m_eventBus->publishInstantly<SceneTransitionEvent>(name);
-
 }
 
 void SceneManager::swap(SceneName name)

@@ -1,155 +1,60 @@
 #include "engine/platform/window.h"
-#include "engine/core/settings/engine_config.h"
+
 #include "engine/core/result.h"
+
+#include "engine/resources/texture/surface.h"
+
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_video.h>
 
+#include <cassert>
+
 namespace cursed_engine
 {
-#pragma region Window
-
-	Result<void> Window::create(const WindowConfig& config)
+	Window::Window()
+		: m_window{ nullptr }, m_state{}
 	{
-		Result<void> result = onCreate(config);
+	}
 
-		if (result.ok())
+	Window::~Window()
+	{
+		destroy();
+	}
+
+	Result<void> Window::init(const WindowArgs& args)
+	{
+		assert(!m_window && "Window is already initialized");
+
+		if (m_window = SDL_CreateWindow(args.title.c_str(), args.width, args.height, SDL_WINDOW_RESIZABLE))
 		{
-			m_preferences.title = config.title;
-			m_preferences.position = { config.xPos, config.yPos };
-			m_preferences.size = { config.width, config.height };
-			m_preferences.fullscreen = config.fullscreen;
-			m_preferences.vsync = config.vsync;
-			m_preferences.alwaysOnTop = config.alwaysOnTop;
+			const SDL_WindowFlags flags = SDL_GetWindowFlags(m_window);
 
-			setPreferences(std::move(m_preferences));
+			SDL_GetWindowPosition(m_window, &m_state.position.x, &m_state.position.y);
+			SDL_GetWindowSize(m_window, &m_state.size.x, &m_state.size.y);
+
+			m_state.alwaysOnTop = (flags & SDL_WINDOW_ALWAYS_ON_TOP) != 0;
+			m_state.fullscreen = (flags & SDL_WINDOW_FULLSCREEN) != 0;
+			m_state.minimized = (flags & SDL_WINDOW_MINIMIZED) != 0;
+			m_state.focused = (flags & SDL_WINDOW_INPUT_FOCUS) != 0;
+
+			return Result<void>::success();
 		}
-
-		return result;
+		else
+		{
+			return Result<void>::failure(SDL_GetError());
+		}
 	}
 
 	void Window::destroy()
 	{
-		onDestroy();
+		if (m_window)
+		{
+			SDL_DestroyWindow(m_window);
+			m_window = nullptr;
+		}
 	}
 
-	void Window::setPreferences(Preferences preferences)
-	{
-		m_preferences = std::move(preferences);
-
-		setTitle(m_preferences.title.c_str());
-
-		setPosition(m_preferences.position.x, m_preferences.position.y);
-
-		setSize(m_preferences.size.x, m_preferences.size.y);
-
-		setFullscreen(m_preferences.fullscreen);
-
-		setVSync(m_preferences.vsync);
-
-		setAlwaysOnTop(m_preferences.alwaysOnTop);
-	}
-
-	bool Window::setTitle(const char* title)
-	{
-		if (m_preferences.title == title)
-			return true;
-
-		if (!onSetTitle(title))
-			return false;
-
-		m_preferences.title = title;		
-		return true;
-	}
-
-	bool Window::setAlwaysOnTop(bool enable)
-	{
-		if (m_preferences.alwaysOnTop = enable)
-			return true;
-
-		if (!onSetAlwaysOnTop(enable))
-			return false;
-
-		m_preferences.alwaysOnTop = enable;
-		return true;
-	}
-
-	bool Window::setFullscreen(bool enable)
-	{
-		if (m_preferences.fullscreen == m_preferences.fullscreen)
-			return true;
-
-		if (!onSetFullscreen(enable))
-			return false;
-
-		m_preferences.fullscreen = enable;
-		return true;
-	}
-
-	bool Window::setPosition(int x, int y)
-	{
-		if (m_preferences.position.x == x && m_preferences.position.y == y)
-			return true;
-
-		if (!onSetPosition(x, y))
-			return false;
-
-		m_preferences.position = { x, y };
-		return true;
-	}
-
-	bool Window::setSize(int width, int height)
-	{
-		if (m_preferences.size.x == width && m_preferences.size.y == height)
-			return true;
-
-		if (!onSetSize(width, height))
-			return false;
-
-		m_preferences.size = { width, height };
-		return true;
-	}
-
-	bool Window::setIcon(const Icon& icon)
-	{
-		return onSetIcon(icon);
-	}
-
-	bool Window::setVSync(bool enable)
-	{
-		if (m_preferences.vsync == enable)
-			return true;
-
-		if (!onSetVSync(enable))
-			return false;
-
-		m_preferences.vsync = enable;
-		return true;
-	}
-
-#pragma endregion
-
-#pragma region SDLWindow
-
-	SDLWindow::SDLWindow()
-		: m_window{ nullptr }
-	{
-	}
-
-	SDLWindow::SDLWindow(SDLWindow&& other) noexcept
-		: m_window{ other.m_window }
-	{
-		other.m_window = nullptr;
-	}
-
-	SDLWindow& SDLWindow::operator=(SDLWindow&& other) noexcept
-	{
-		m_window = other.m_window;
-		other.m_window = nullptr;
-
-		return *this;
-	}
-
-	void SDLWindow::processEvent(const SDL_Event& event)
+	void Window::processEvent(const SDL_Event& event)
 	{
 		switch (event.type)
 		{
@@ -164,68 +69,62 @@ namespace cursed_engine
 		}
 	}
 
-	void* SDLWindow::getNativeHandle() const noexcept
+	void* Window::getNativeHandle() const noexcept
 	{
 		return m_window;
 	}
-
-	Result<void> SDLWindow::onCreate(const WindowConfig& config)
-	{
-		if (m_window)
-		{
-			onDestroy();
-		}
-
-		m_window = SDL_CreateWindow(config.title.c_str(), config.width, config.height, SDL_WINDOW_RESIZABLE);
-
-		return m_window ? Result<void>::success() : Result<void>::failure(SDL_GetError());
-	}
-
-	void SDLWindow::onDestroy()
-	{
-		SDL_DestroyWindow(m_window);
-		m_window = nullptr;
-	}
-
-	bool SDLWindow::onSetTitle(const char* title)
+	
+	bool Window::setTitle(const char* title)
 	{
 		return SDL_SetWindowTitle(m_window, title);
 	}
 
-	bool SDLWindow::onSetAlwaysOnTop(bool enable)
+	bool Window::setIcon(const Surface& surface)
 	{
-		return SDL_SetWindowAlwaysOnTop(m_window, enable);
+		return SDL_SetWindowIcon(m_window, surface.surface);
 	}
 
-	bool SDLWindow::onSetFullscreen(bool enable)
+	bool Window::setAlwaysOnTop(bool enable)
 	{
-		return SDL_SetWindowFullscreen(m_window, enable);
+		if (m_state.alwaysOnTop == enable)
+			return true;
+
+		if (!SDL_SetWindowAlwaysOnTop(m_window, enable))
+			return false;
+
+		return (m_state.alwaysOnTop = (SDL_GetWindowFlags(m_window) & SDL_WINDOW_ALWAYS_ON_TOP) != 0);
 	}
 
-	bool SDLWindow::onSetPosition(int x, int y)
+	bool Window::setFullscreen(bool enable)
 	{
-		return SDL_SetWindowPosition(m_window, x, y);
+		if (m_state.fullscreen == enable)
+			return true;
+
+		if (!SDL_SetWindowFullscreen(m_window, enable))
+			return false;
+
+		return (m_state.fullscreen = (SDL_GetWindowFlags(m_window) & SDL_WINDOW_FULLSCREEN) != 0);
 	}
 
-	bool SDLWindow::onSetSize(int width, int height)
+	bool Window::setPosition(int x, int y)
 	{
-		return SDL_SetWindowSize(m_window, width, height);
+		if (m_state.position.x == x && m_state.position.y == y)
+			return true;
+
+		if (!SDL_SetWindowPosition(m_window, x, y))
+			return false;
+
+		return SDL_GetWindowPosition(m_window, &m_state.position.x, &m_state.position.y);
 	}
 
-	bool SDLWindow::onSetVSync(bool enable)
+	bool Window::setSize(int width, int height)
 	{
-		return SDL_SetWindowSurfaceVSync(m_window, enable ? 1 : 0);
+		if (m_state.size.x == width && m_state.size.y == height)
+			return true;
+
+		if (!SDL_SetWindowSize(m_window, width, height))
+			return false;
+
+		return SDL_GetWindowSize(m_window, &m_state.size.x, &m_state.size.y);
 	}
-
-	bool SDLWindow::onSetIcon(const Icon& icon)
-	{
-		if (const Surface* surface = std::get_if<Surface>(&icon))
-		{
-			return SDL_SetWindowIcon(m_window, surface->surface);
-		}
-
-		return false;
-	}
-
-#pragma endregion
 }

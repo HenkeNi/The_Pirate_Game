@@ -8,7 +8,7 @@ SettingsScene::SettingsScene(SceneContext context)
 {
 }
 
-void SettingsScene::onUpdate(float deltaTime)
+void SettingsScene::onUpdate(const ce::UpdateContext& ctx)
 {
 	int x = 20;
 }

@@ -58,4 +58,10 @@ namespace cursed_engine
 	{
 		std::vector<Entity> entities;
 	};
+
+	// renmae?
+	struct WorldUnloadingEvent
+	{
+
+	};
 }

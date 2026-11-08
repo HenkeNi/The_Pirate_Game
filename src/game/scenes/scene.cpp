@@ -1,4 +1,5 @@
 #include "game/scenes/scene.h"
+#include <engine/core/contexts.h>
 #include <engine/ecs/system/system_manager.h>
 #include <cassert>
 
@@ -9,13 +10,13 @@ Scene::Scene(SceneContext context)
 {
 }
 
-void Scene::update(float deltaTime)
+void Scene::update(const ce::UpdateContext& ctx)
 {
 	assert(m_context.systemManager && "SystemManager is nullptr!");
 
-	onUpdate(deltaTime);
+	onUpdate(ctx);
 
-	cursed_engine::SystemUpdateContext context{ m_registry, *m_context.eventBus, deltaTime };
+	cursed_engine::SystemUpdateContext context{ m_registry, *m_context.eventBus, ctx.windowSize, ctx.deltaTime };
 	m_context.systemManager->update(context);
 }
 

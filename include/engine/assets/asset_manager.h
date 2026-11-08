@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/assets/asset_loader.h"
+#include "engine/assets/asset_loaders.h"
 #include "engine/utils/concepts.h"
 #include "engine/utils/utils.h"
 #include "engine/core/logger.h"
@@ -48,8 +48,8 @@ namespace cursed_engine
 	class AssetManager
 	{
 	public:
-		void addSearchPath(std::filesystem::path path);
-		void scanAssets();
+		// Put these two funcions somewhere else?
+		void scanAssets(std::filesystem::path path); // or scanDirectory?
 
 		template <typename Asset> // Dont use nodiscard here? 
 		AssetHandle preload(const std::string& id); // Return optional handle?
@@ -109,6 +109,7 @@ namespace cursed_engine
 			//AssetLoaderBase* loader;
 		};
 
+		// Rename AssetEntry
 		struct AssetType
 		{
 			std::unordered_map<std::string, AssetMetaData> idToMetaData;
@@ -118,36 +119,8 @@ namespace cursed_engine
 			std::unique_ptr<AssetLoaderBase> loader = nullptr;
 		};
 
-
-		/*template <typename Asset>
-		AssetCache<Asset>& getOrCreateCache();
-
-		template <typename Asset>
-		AssetCache<Asset>* findCache() const;
-
-		template <typename Asset>
-		[[nodiscard]] AssetLoader<Asset>* getLoader();*/
-
-		
-
-		//[[nodiscard]] std::string extractIdentifier(const std::filesystem::path& path); // TODO; make utlity function?
-
-		//using TypeToAssetCache = std::unordered_map<std::type_index, std::unique_ptr<AssetCacheBase>>;
-		//using TypeToLoader = std::unordered_map<std::type_index, std::unique_ptr<AssetLoaderBase>>;
-
-		//TypeToAssetCache m_cachesByType; // m_cache or asset storage
-		//TypeToLoader m_loadersByType; // m_loaders
-
-		//std::unordered_map<std::string, AssetMetaData> m_idToMetaData;
-		//std::unordered_map<std::string, AssetHandle> m_idToAssetHandle;
-
-		//std::unordered_map<std::filesystem::path, AssetHandle> m_pathToHandles;
-		//std::unordered_map<std::string, std::filesystem::path> m_idsToPaths;
-
-
 		std::unordered_map<std::type_index, AssetType> m_assetTypes;
 
-		std::vector<std::filesystem::path> m_searchPaths;
 
 		// TODO; id's to paths or ids to handles?
 		mutable std::mutex m_mutex; // put in archive?

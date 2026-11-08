@@ -2,7 +2,8 @@
 #include <engine/audio/audio_controller.h>
 #include <engine/utils/containers/registry.hpp>
 #include <engine/ecs/component/component_registry.h>
-#include <engine/resources/audio/audio_manager.h>
+#include <engine/resources/resources.h>
+//#include <engine/resources/audio/audio_manager.h>
 #include <engine/rendering/render_api.h>
 #include <filesystem>
 #include <functional>
@@ -30,7 +31,8 @@ struct SceneContext
 	cursed_engine::EventBus* eventBus;
 	cursed_engine::AssetManager* assetManager;
 	cursed_engine::RenderAPI renderAPI;
-	cursed_engine::AudioManager* audioManager;
+	cursed_engine::Resources resources;
+	//cursed_engine::AudioManager* audioManager;
 	cursed_engine::AudioController audioController; // wrap this and audio manager in an API? make easier to work with...
 };
 

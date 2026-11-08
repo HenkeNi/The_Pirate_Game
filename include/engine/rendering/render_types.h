@@ -129,10 +129,4 @@ namespace cursed_engine
 		FVec2 start;
 		FVec2 end;
 	};
-
-	struct RenderContext
-	{
-		//RenderAPI renderAPI;
-		class RenderPipeline& renderPipeline;
-	};
 }

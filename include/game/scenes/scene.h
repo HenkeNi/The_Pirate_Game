@@ -9,6 +9,7 @@
 namespace cursed_engine
 {
 	class PhysicsWorld;
+	struct UpdateContext;
 }
 
 namespace ce = cursed_engine;
@@ -21,8 +22,8 @@ public:
 	Scene(SceneContext context);
 	virtual ~Scene() = default;
 
-	void update(float deltaTime); // or base scene updates ecs?
-	virtual void onUpdate(float deltaTime) = 0;
+	void update(const ce::UpdateContext& ctx); // or base scene updates ecs?
+	virtual void onUpdate(const ce::UpdateContext& ctx) = 0;
 
 	void render();
 	virtual void onRender() {}; // make const?

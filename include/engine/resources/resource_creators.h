@@ -7,48 +7,29 @@ struct SDL_Renderer;
 
 namespace cursed_engine
 {
+	struct Surface;
+	
 	template <typename T>
 	class Result;
 
-	struct Surface;
-
-	class AudioCreator
-	{
-	public:
-		virtual ~AudioCreator() = default;
-
-		[[nodiscard]] virtual Result<AudioPtr> createAudio(const char* path) const = 0;
-	};
-
-	class TextureCreator
-	{
-	public:
-		virtual ~TextureCreator() = default;
-
-		[[nodiscard]] virtual Result<TexturePtr> createTextureFromSurface(Surface surface) const = 0;
-	};
-
-#pragma region SDL_Resource_Creators
-
-	class SDLAudioCreator final : public AudioCreator
+	class AudioCreator final
 	{
 	public:
 		void init(MIX_Mixer* mixer);
-		[[nodiscard]] Result<AudioPtr> createAudio(const char* path) const override;
-	
+
+		[[nodiscard]] Result<AudioPtr> createAudio(const char* path) const;
+
 	private:
 		MIX_Mixer* m_mixer = nullptr;
 	};
 
-	class SDLTextureCreator final : public TextureCreator
+	class TextureCreator final
 	{
 	public:
 		void init(SDL_Renderer* renderer);
-		[[nodiscard]] Result<TexturePtr> createTextureFromSurface(Surface surface) const override;
+		[[nodiscard]] Result<TexturePtr> createTextureFromSurface(Surface surface) const;
 
 	private:
 		SDL_Renderer* m_renderer = nullptr;
 	};
-
-#pragma endregion
 }

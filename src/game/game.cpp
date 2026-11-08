@@ -22,9 +22,10 @@
 
 #include <engine/assets/asset_manager.h>
 #include <engine/core/action/action_registry.h>
-#include <engine/core/engine_context.h>
+#include <engine/core/contexts.h>
 #include <engine/core/events/event_bus.h>
 #include <engine/core/events/events.h>
+#include <engine/core/localization/localization.h>
 #include <engine/core/settings/settings.h>
 
 #include <engine/ecs/component/component_registry.h>
@@ -43,6 +44,7 @@
 #include <engine/ecs/system/behavior_tree_system.h>
 #include <engine/ecs/system/screen_space_render_system.h>
 #include <engine/ecs/system/world_render_system.h>
+#include <engine/ecs/system/ui_layout_system.h>
 
 #include <engine/utils/json/json_value.h>
 
@@ -53,24 +55,14 @@ using namespace cursed_engine; // move to precompiled header...
 
 
 Game::Game()
-	: m_eventBus{ nullptr }, m_configs{ nullptr }
+	: m_eventBus{ nullptr }
 {
-}
-
-void Game::onUpdate(float deltaTime)
-{
-	m_sceneManager.update(deltaTime);
-}
-
-void Game::onRender(const cursed_engine::RenderContext& ctx)
-{
-	m_sceneManager.render();
 }
 
 void Game::onCreated(const cursed_engine::EngineContext& context)
 {
 	m_eventBus = context.eventBus;
-	m_configs = &context.settings->getEngineConfig();
+	//m_configs = &context.settings->getEngineConfig();
 
 	context.assets.assetManager->addLoader<TilesetLoader>(*context.assets.assetManager);
 	//context.assets.assetManager->preload<Tileset>("tile_types"); // any way of static_assert if havent specified tempalte type?
@@ -91,14 +83,27 @@ void Game::onCreated(const cursed_engine::EngineContext& context)
 	registerComponents(context);
 	setupSystems(context);
 
+	registerLanguages(*context.localization);
+
 	// if publish instantly then scene is entered/created before engine is done initializing...
 	// GAME COULD ALSO SET INITIAL SCENE!?
 	context.eventBus->publish<SceneTransitionRequestEvent>("title_scene", SceneTransitionType::Push);
+	//context.eventBus->publish<SceneTransitionRequestEvent>("overworld_scene", SceneTransitionType::Push);
 }
 
 void Game::onDestroyed()
 {
 	m_sceneManager.shutdown();
+}
+
+void Game::onUpdate(const ce::UpdateContext& ctx)
+{
+	m_sceneManager.update(ctx);
+}
+
+void Game::onRender(const cursed_engine::RenderContext& ctx)
+{
+	m_sceneManager.render();
 }
 
 void Game::setupSystems(const ce::EngineContext& ctx)
@@ -109,16 +114,17 @@ void Game::setupSystems(const ce::EngineContext& ctx)
 	//m_systemManager.emplace<InputSystem>(inputHandler);
 
 	systemManager->emplace<InteractionSystem>();
-	systemManager->emplace<TransformSystem>(); // this or hierarchy system?
 	systemManager->emplace<CameraSystem>(*ctx.settings); // run after TransformSystem -> sets final position (bounds, follow, etc)
-	systemManager->emplace<UISystem>(ctx.platform.input, ctx.actionRegistry); // OR Accept action registry (and event bus) by pointer?
-	systemManager->emplace<TextSystem>(ctx.rendering.textCreator/*, context.resources.textFactory*/, ctx.assets.localization);
-	systemManager->emplace<AudioSystem>(ctx.audio.audioController, ctx.resources.audioManager, ctx.eventBus); // FIX eventbus ptr
+	systemManager->emplace<UISystem>(ctx.platform.input, *ctx.eventBus, ctx.actionRegistry); // OR Accept action registry (and event bus) by pointer?
+	systemManager->emplace<UILayoutSystem>();
+	systemManager->emplace<TextSystem>(ctx.rendering.textCreator/*, context.resources.textFactory*/, ctx.localization);
+	systemManager->emplace<AudioSystem>(ctx.audio.audioController, ctx.resources, ctx.eventBus); // FIX eventbus ptr
 	systemManager->emplace<PlayerControllerSystem>();
-	systemManager->emplace<MovementSystem>();
-	systemManager->emplace<HierarchySystem>();
+	//systemManager->emplace<MovementSystem>();
 	systemManager->emplace<InputSystem>(ctx.platform.input);
 	systemManager->emplace<HUDSystem>(*ctx.eventBus, *ctx.ecs.entityFactory);
+	// systemManager->emplace<HierarchySystem>();
+	systemManager->emplace<TransformSystem>(); // this or hierarchy system?
 
 	// AI system first?
 	systemManager->emplace<BehaviorTreeSystem>();
@@ -129,12 +135,12 @@ void Game::setupSystems(const ce::EngineContext& ctx)
 	systemManager->emplace<cursed_engine::AnimationSystem>(*ctx.assets.assetManager); // update or render?
 	//systemManager->emplace<MapSystem>(m_mapGenerator); - currentyl done in overworld scene!
 	systemManager->emplace<MapDecorationSystem>(*ctx.ecs.entityFactory, *ctx.eventBus);
-	systemManager->emplace<DebugSystem>(*ctx.platform.timer); // only add in debug...
+	systemManager->emplace<DebugSystem>(); // only add in debug...
 	systemManager->emplace<ce::PhysicsSystem>();
 
-	systemManager->emplace<MapRenderSystem>(ctx.rendering.rendererAPI, ctx.resources.textureManager);
-	systemManager->emplace<WorldRenderSystem>(ctx.resources.textureManager, ctx.assets.assetManager, ctx.rendering.rendererAPI, ctx.physics.physicsDebugDraw);
-	systemManager->emplace<ScreenSpaceRenderSystem>(ctx.resources.textureManager, ctx.assets.assetManager, ctx.rendering.rendererAPI);
+	systemManager->emplace<MapRenderSystem>(ctx.rendering.rendererAPI, ctx.resources);
+	systemManager->emplace<WorldRenderSystem>(ctx.resources, ctx.assets.assetManager, ctx.rendering.rendererAPI, ctx.physics.physicsDebugDraw);
+	systemManager->emplace<ScreenSpaceRenderSystem>(ctx.resources, ctx.assets.assetManager, ctx.rendering.rendererAPI);
 }
 
 void Game::registerComponents(const ce::EngineContext& ctx)
@@ -142,17 +148,17 @@ void Game::registerComponents(const ce::EngineContext& ctx)
 	ce::ComponentRegistry* componentRegistry = ctx.ecs.componentRegistry;
 
 	ce::registerComponent<DebugComponent>(*componentRegistry, "debug",
-		[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
+		[](EntityHandle& handle, const ComponentProperties& properties, ComponentInitContext& ctx, const SpawnData& data)
 		{
 			handle.attachComponent<DebugComponent>();
 		},
-		[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+		[](EntityHandle& handle, const JsonValue& value, ComponentInitContext& ctx)
 		{
 			handle.attachComponent<DebugComponent>();
 		});
 
 	ce::registerComponent<HealthComponent>(*componentRegistry, "health",
-		[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
+		[](EntityHandle& handle, const ComponentProperties& properties, ComponentInitContext& ctx, const SpawnData& data)
 		{
 			int maxHealth = HealthComponent::DEFAULT_MAX_HEALTH;
 
@@ -170,7 +176,7 @@ void Game::registerComponents(const ce::EngineContext& ctx)
 
 			handle.attachComponent<HealthComponent>(currentHealth, maxHealth);
 		},
-		[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+		[](EntityHandle& handle, const JsonValue& value, ComponentInitContext& ctx)
 		{
 			int maxHealth = HealthComponent::DEFAULT_MAX_HEALTH;
 
@@ -191,30 +197,30 @@ void Game::registerComponents(const ce::EngineContext& ctx)
 
 	// or input in engine?
 	ce::registerComponent<InputComponent>(*componentRegistry, "input",
-		[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
+		[](EntityHandle& handle, const ComponentProperties& properties, ComponentInitContext& ctx, const SpawnData& data)
 		{},
-		[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+		[](EntityHandle& handle, const JsonValue& value, ComponentInitContext& ctx)
 		{
 			handle.attachComponent<InputComponent>();
 		});
 
 	ce::registerComponent<InteractionComponent>(*componentRegistry, "interaction",
-		[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
+		[](EntityHandle& handle, const ComponentProperties& properties, ComponentInitContext& ctx, const SpawnData& data)
 		{
 			handle.attachComponent<InteractionComponent>();
 		},
-		[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+		[](EntityHandle& handle, const JsonValue& value, ComponentInitContext& ctx)
 		{
 			handle.attachComponent<InteractionComponent>();
 		});
 
 	// Player controller component?
 	ce::registerComponent<PlayerComponent>(*componentRegistry, "player",
-		[](EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)
+		[](EntityHandle& handle, const ComponentProperties& properties, ComponentInitContext& ctx, const SpawnData& data)
 		{
 			handle.attachComponent<PlayerComponent>();
 		},
-		[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+		[](EntityHandle& handle, const JsonValue& value, ComponentInitContext& ctx)
 		{
 			handle.attachComponent<PlayerComponent>();
 		});
@@ -222,7 +228,7 @@ void Game::registerComponents(const ce::EngineContext& ctx)
 	//ce::registerComponent<PlayerControllerComponent>("player_controller",
 	//	[](EntityHandle& handle, const ComponentProperties& properties)
 	//	{},
-	//	[](EntityHandle& handle, const JsonValue& value, const ComponentInitContext& ctx)
+	//	[](EntityHandle& handle, const JsonValue& value, ComponentInitContext& ctx)
 	//	{
 	//		handle.attachComponent<PlayerControllerComponent>();
 	//	});
@@ -291,29 +297,37 @@ void Game::registerActions(const ce::EngineContext& ctx)
 
 void Game::registerScenes(const ce::EngineContext& ctx)
 {
-	const std::filesystem::path sceenPath = m_configs->resource.assetRoot / "scenes/";
+	// TODO, read root path from somewhere...
+	const std::filesystem::path scenePath = "../assets/scenes/"; // m_configs->resource.assetRoot / "scenes/";
 
 	SceneRegistry sceneRegistry;
 
 	// pass root path instead?
-	registerScene<OverworldScene>(sceneRegistry, "overworld_scene", sceenPath / "overworld_scene.json",
+	registerScene<OverworldScene>(sceneRegistry, "overworld_scene", scenePath / "overworld_scene.json",
 		[physics = ctx.physics.physics](SceneContext context)
 		{
 			return std::make_unique<OverworldScene>(std::move(context), physics);
 			//return std::make_unique<OverworldScene>(std::move(context), physics->createWorld());
 		});
 	
-	registerScene<SettingsScene>(sceneRegistry, "settings_scene", sceenPath / "settings_scene.json",
+	registerScene<SettingsScene>(sceneRegistry, "settings_scene", scenePath / "settings_scene.json",
 		[](SceneContext context)
 		{
 			return std::make_unique<SettingsScene>(std::move(context));
 		});
 
-	registerScene<TitleScene>(sceneRegistry, "title_scene", sceenPath / "title_scene.json",
+	registerScene<TitleScene>(sceneRegistry, "title_scene", scenePath / "title_scene.json",
 		[](SceneContext context)
 		{
 			return std::make_unique<TitleScene>(std::move(context));
 		});
 
 	m_sceneManager.init(ctx, std::move(sceneRegistry));
+}
+
+void Game::registerLanguages(ce::Localization& localization)
+{
+	// read from "manifest" (json?)
+	localization.registerLanguage("eng", "../assets/localization/en.json"); // Dont here? read start language from config...
+
 }

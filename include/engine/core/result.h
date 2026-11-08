@@ -19,6 +19,8 @@ namespace cursed_engine
 		[[nodiscard]] const T& peak() const;
 		[[nodiscard]] T take();
 
+		explicit operator bool() const noexcept;
+
 	private:
 		Result(bool success, std::optional<T> value, std::string message);
 
@@ -37,6 +39,8 @@ namespace cursed_engine
 
 		[[nodiscard]] bool ok() const noexcept;
 		[[nodiscard]] const std::string& message() const noexcept;
+
+		explicit operator bool() const noexcept;
 
 	private:
 		Result(bool success, std::string message);
@@ -84,6 +88,12 @@ namespace cursed_engine
 		m_value.reset();
 
 		return result;
+	}
+
+	template <typename T>
+	Result<T>::operator bool() const noexcept
+	{
+		return m_success;
 	}
 
 	template <typename T>

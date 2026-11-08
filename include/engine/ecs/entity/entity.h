@@ -11,8 +11,12 @@ namespace cursed_engine
 		EntityId id = INVALID_ENTITY_ID;
 		EntityVersion version = INVALID_ENTITY_VERSION; // rename generation?
 
-		bool operator==(const Entity& other) const { return id == other.id && version == other.version; }
-		bool isValid() const { return id != INVALID_ENTITY_ID && version != INVALID_ENTITY_VERSION; }
+		// store world id? (or registry id)
+
+		[[nodiscard]] bool operator==(const Entity& other) const noexcept { return id == other.id && version == other.version; }
+		[[nodiscard]] bool operator!=(const Entity& other) const noexcept { return !(*this == other); }
+
+		[[nodiscard]] bool isValid() const { return id != INVALID_ENTITY_ID && version != INVALID_ENTITY_VERSION; }
 	
 		[[nodiscard]] constexpr static Entity invalid() { return Entity{ INVALID_ENTITY_ID, INVALID_ENTITY_VERSION }; }
 	};

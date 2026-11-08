@@ -10,6 +10,7 @@
 namespace cursed_engine
 {
 	struct EngineContext;
+	struct UpdateContext;
 	class EventBus;
 }
 
@@ -44,7 +45,7 @@ private:
 	void shutdown();
 
 	void applyPendingTransition();
-	void update(float deltaTime);
+	void update(const ce::UpdateContext& ctx);
 	void render();
 
 	void push(SceneName name);

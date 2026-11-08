@@ -27,6 +27,7 @@ namespace cursed_engine
 			onLanguageChanged();
 		}
 
+		Logger::logInfo(std::format("{} ~ Language selected: \'{}\'", log_format::INDENT, language));
 		return success;
 	}
 

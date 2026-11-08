@@ -11,14 +11,14 @@
 
 namespace cursed_engine
 {
-	void SDLAudioCreator::init(MIX_Mixer* mixer)
+	void AudioCreator::init(MIX_Mixer* mixer)
 	{
 		m_mixer = mixer;
 	}
 
-	Result<AudioPtr> SDLAudioCreator::createAudio(const char* path) const
+	Result<AudioPtr> AudioCreator::createAudio(const char* path) const
 	{
-		assert(m_mixer && "[SDLAudioCreator::createAudio] - Invalid Mixer!");
+		assert(m_mixer && "[AudioCreator::createAudio] - Invalid Mixer!");
 
 		bool predecode = false;
 		MIX_Audio* audio = MIX_LoadAudio(m_mixer, path, predecode);
@@ -31,14 +31,14 @@ namespace cursed_engine
 		return Result<AudioPtr>::success(std::make_unique<SDLAudio>(audio));
 	}
 
-	void SDLTextureCreator::init(SDL_Renderer* renderer)
+	void TextureCreator::init(SDL_Renderer* renderer)
 	{
 		m_renderer = renderer;
 	}
 
-	Result<TexturePtr> SDLTextureCreator::createTextureFromSurface(Surface surface) const
+	Result<TexturePtr> TextureCreator::createTextureFromSurface(Surface surface) const
 	{
-		assert(m_renderer && "[SDLTextureCreator::createTextureFromSurface] - Invalid renderer!");
+		assert(m_renderer && "[TextureCreator::createTextureFromSurface] - Invalid renderer!");
 
 		SDL_Texture* texture = SDL_CreateTextureFromSurface(m_renderer, surface.surface);
 

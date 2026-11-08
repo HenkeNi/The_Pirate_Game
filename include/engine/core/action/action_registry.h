@@ -21,6 +21,7 @@ namespace cursed_engine
 		using ActionId = std::string;
 		using Action = std::function<void(const ActionArgs&)>;
 
+
 		template <typename F>
 		void registerAction(ActionId id, F&& action);
 
@@ -30,6 +31,8 @@ namespace cursed_engine
 		void execute(const ActionId& id, Args&&... args);*/
 
 		[[nodiscard]] bool isRegistered(const ActionId& id) const noexcept;
+
+		void clear();
 
 	private:
 		using Actions = std::unordered_map<ActionId, Action>;

@@ -18,17 +18,28 @@ namespace cursed_engine
 
 	class Audio;
 	class AudioCreator;
-	class SDLAudioCreator;
 
 	enum class AudioType : uint8_t;
 
 	// Tie different ways of handling no available tracks (wait/queue, drop, replace, etc) to AudioType?
 
-	class AudioBackend
+	struct AudioBackendArgs
+	{
+		struct Options
+		{
+			float volume{};
+			int tracks{};
+		};
+
+		std::array<Options, static_cast<std::size_t>(AudioType::Count)> audioOptions; // TODO; use array instead!
+		float masterVolume{};
+	};
+
+	class AudioBackend final
 	{
 	public:
-		AudioBackend() = default;
-		virtual ~AudioBackend() = default;
+		AudioBackend();
+		~AudioBackend();
 
 		AudioBackend(const AudioBackend&) = delete;
 		AudioBackend(AudioBackend&&) = delete;
@@ -36,57 +47,27 @@ namespace cursed_engine
 		AudioBackend& operator=(const AudioBackend&) = delete;
 		AudioBackend& operator=(AudioBackend&&) = delete;
 
-		virtual Result<void> init() = 0;
-		virtual void shutdown() {};
+		bool init(const AudioBackendArgs& args);
+		void shutdown();
 
-		virtual AudioPlaybackHandle play(const Audio& audio, AudioType type) = 0;
+		AudioPlaybackHandle play(const Audio& audio, AudioType type);
 
-		virtual void pause(AudioPlaybackHandle handle) = 0;
-		virtual void pauseAll() = 0;
+		void pause(AudioPlaybackHandle handle);
+		void pauseAll();
 
-		virtual void stop(AudioPlaybackHandle handle, uint64_t fadeOutInMs = 0) = 0;
-		virtual void stopAll(uint64_t fadeOutInMs = 0) = 0;
+		void stop(AudioPlaybackHandle handle, uint64_t fadeOutInMs = 0);
+		void stopAll(uint64_t fadeOutInMs = 0);
 
-		virtual void setMasterVolume(float volume) = 0;
-		virtual void setVolume(AudioType type, float volume) = 0;
+		void setMasterVolume(float volume);
+		void setVolume(AudioType type, float volume);
 
-		virtual void mute() = 0;
-		virtual void unmute() = 0;
+		void mute();
+		void unmute();
 
-		[[nodiscard]] virtual bool isPlaying(AudioPlaybackHandle handle) const = 0;
-		[[nodiscard]] virtual bool isPaused(AudioPlaybackHandle handle) const = 0;
+		[[nodiscard]] bool isPlaying(AudioPlaybackHandle handle) const;
+		[[nodiscard]] bool isPaused(AudioPlaybackHandle handle) const;
 
-		[[nodiscard]] virtual const AudioCreator* getAudioCreator() const noexcept { return nullptr; }
-
-	};
-
-	class SDLAudioBackend final : public AudioBackend
-	{
-	public:
-		SDLAudioBackend();
-		~SDLAudioBackend() = default;
-
-		Result<void> init() override;
-		void shutdown() override;
-
-		AudioPlaybackHandle play(const Audio& audio, AudioType type) override;
-
-		void pause(AudioPlaybackHandle handle) override;
-		void pauseAll() override;
-
-		void stop(AudioPlaybackHandle handle, uint64_t fadeOutInMs) override;
-		void stopAll(uint64_t fadeOutInMs) override;
-
-		void setMasterVolume(float volume) override;
-		void setVolume(AudioType type, float volume) override;
-
-		void mute() override;
-		void unmute() override;
-
-		[[nodiscard]] bool isPlaying(AudioPlaybackHandle handle) const override;
-		[[nodiscard]] bool isPaused(AudioPlaybackHandle handle) const override;
-
-		[[nodiscard]] const SDLAudioCreator* getAudioCreator() const noexcept override;
+		[[nodiscard]] const AudioCreator* getAudioCreator() const noexcept;
 
 	private:
 		struct Track
@@ -109,7 +90,7 @@ namespace cursed_engine
 		const Track* resolve(AudioPlaybackHandle handle) const;
 		Track* resolve(AudioPlaybackHandle handle);
 
-		SDLAudioCreator m_audioCreator;
+		AudioCreator m_audioCreator;
 		MIX_Mixer* m_mixer;
 
 		// Use MIX_Group instead?

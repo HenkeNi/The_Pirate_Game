@@ -27,7 +27,7 @@ void MapSystem::update(ce::SystemUpdateContext& context)
 
 	if (activeCamera.has_value())
 	{
-		const auto& cameraTransformComponent = context.registry.getComponent<ce::TransformComponent>(activeCamera.value());
+		const auto& cameraTransformComponent = context.registry.getComponent<ce::WorldTransformComponent>(activeCamera.value());
 		//worldPosition = cameraTransformComponent.position;
 		cameraBounds = context.registry.getComponent<ce::CameraComponent>(activeCamera.value()).bounds;
 	}

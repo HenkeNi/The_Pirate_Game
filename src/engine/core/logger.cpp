@@ -1,6 +1,7 @@
 #include "engine/pch.h"
 #include "engine/core/logger.h"
 #include <SDL3/SDL.h>
+#include <format>
 
 namespace cursed_engine
 {
@@ -16,7 +17,8 @@ namespace cursed_engine
 
 	void Logger::logInfo(const std::string& msg)
 	{
-		SDL_Log(msg.c_str());
+		//SDL_Log(std::format("[Info] {}", msg).c_str());
+		SDL_Log(std::format("{}", msg).c_str());
 	}
 
 	void Logger::logInfoExtended(const std::string& msg, const std::source_location& loc)

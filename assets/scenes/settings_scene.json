@@ -4,19 +4,21 @@
     {
       "id": "background",
       "components": {
-        "transform": {
-          "position": {
-            "x": 0,
-            "y": 0
-          },
-          "scale": {
-            "x": 1,
-            "y": 1
+        "ui_layout": {
+          "anchor": {
+            "min": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "max": {
+              "x": 1.0,
+              "y": 1.0
+            }
           }
         },
         "sprite": {
           "texture_id": "settings_screen"
-        },
+        }, 
         "ui": {}
       }
     },
@@ -73,7 +75,19 @@
           "action": "SceneTransition",
           "args": {
             "transition": "pop"
+          }
+        },
+        "bounding_box": {
+          "offset": {
+            "x": 0.0,
+            "y": 0.0
           },
+          "size": {
+            "width": 100.0,
+            "height": 100.0
+          }
+        },
+        "ui_interactable": {
           "default_color": {
             "r": 211,
             "g": 211,
@@ -91,16 +105,6 @@
             "g": 75,
             "b": 75,
             "a": 255
-          }
-        },
-        "bounding_box": {
-          "offset": {
-            "x": 0.0,
-            "y": 0.0
-          },
-          "size": {
-            "width": 100.0,
-            "height": 100.0
           }
         },
         "ui": {}
@@ -196,8 +200,11 @@
           "region": "square"
         },
         "slider": {
-
+          "orientation": "vertical",
+          "length": 200.0,
+          "value": 0.5
         },
+        "ui_interactable": {},
         "ui": {}
       }
     },
@@ -225,11 +232,13 @@
             "y": 0.0
           },
           "size": {
-            "width": 0.25,
-            "height": 0.25
+            "width": 20.0,
+            "height": 20.0
           }
         },
-        "ui": {}
+        "ui_interactable": {},
+        "ui": {},
+        "slider_thumb": {}
       }
     }
   ]

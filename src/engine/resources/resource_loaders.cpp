@@ -8,16 +8,17 @@
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <SDL3/SDL_audio.h>
+#include <array>
 #include <format>
 
 namespace cursed_engine
 {
-	SDLAudioLoader::SDLAudioLoader(const AudioCreator* creator)
+	AudioLoader::AudioLoader(const AudioCreator* creator)
 		: m_creator{ creator }
 	{
 	}
 
-	Result<AudioPtr> SDLAudioLoader::operator()(const AudioDescriptor& key) const
+	Result<AudioPtr> AudioLoader::operator()(const AudioDescriptor& key) const
 	{
 		if (!std::filesystem::exists(key.path))
 		{
@@ -41,7 +42,13 @@ namespace cursed_engine
 		return Result<Audio>::success(SDLAudio{ stream, audioBuffer, audioLength });*/
 	}
 
-	Result<FontPtr> SDLFontLoader::operator()(const FontDescriptor& descriptor) const
+	std::span<const std::string_view> AudioLoader::extensions() const noexcept
+	{
+		static constexpr std::array<std::string_view, 1> extensions{ ".wav" };
+		return extensions;
+	}
+
+	Result<FontPtr> FontLoader::operator()(const FontDescriptor& descriptor) const
 	{
 		if (!std::filesystem::exists(descriptor.path))
 		{
@@ -58,6 +65,12 @@ namespace cursed_engine
 		return Result<FontPtr>::success(std::make_unique<SDLFont>(font, descriptor));
 	}
 
+	std::span<const std::string_view> FontLoader::extensions() const noexcept
+	{
+		static constexpr std::array<std::string_view, 1> extensions{ ".ttf" };
+		return extensions;
+	}
+
 	Result<Surface> SurfaceLoader::operator()(const std::filesystem::path& path) const
 	{
 		auto* surface = SDL_LoadBMP(path.string().c_str());
@@ -69,12 +82,12 @@ namespace cursed_engine
 		return Result<Surface>::success(Surface{ surface });
 	}
 
-	SDLTextureLoader::SDLTextureLoader(const TextureCreator* creator)
+	TextureLoader::TextureLoader(const TextureCreator* creator)
 		: m_creator{ creator }
 	{
 	}
 
-	Result<TexturePtr> SDLTextureLoader::operator()(const TextureDescriptor& key) const
+	Result<TexturePtr> TextureLoader::operator()(const TextureDescriptor& key) const
 	{
 		assert(m_creator && "Not a valid resource creator!");
 
@@ -93,5 +106,11 @@ namespace cursed_engine
 		}
 
 		return m_creator->createTextureFromSurface(Surface{ surface });
+	}
+
+	std::span<const std::string_view> TextureLoader::extensions() const noexcept
+	{
+		static constexpr std::array<std::string_view, 4> extensions{ ".png", ".jpeg", ".jpg", ".bmp" };
+		return extensions;
 	}
 }

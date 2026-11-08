@@ -2,12 +2,13 @@
 #include <engine/ecs/system/system.h>
 #include <engine/rendering/render_api.h>
 #include <engine/rendering/render_types.h>
-#include <engine/resources/texture/texture_manager.h>
+#include <engine/resources/resources.h>
 
-namespace cursed_engine
-{
-	class RenderAPI;
-}
+//namespace cursed_engine
+//{
+//	class RenderAPI;
+//	class Resources;
+//}
 
 //- Rebuild dirty chunk geometry
 //- Frustum / viewport culling
@@ -22,7 +23,7 @@ struct TileLayer;
 class MapRenderSystem : public cursed_engine::RenderSystem
 {
 public:
-	MapRenderSystem(cursed_engine::RenderAPI renderAPI, cursed_engine::TextureManager* textureManager);
+	MapRenderSystem(cursed_engine::RenderAPI renderAPI, cursed_engine::Resources resources);
 
 	void render(cursed_engine::SystemRenderContext& context) override;
 
@@ -35,7 +36,7 @@ private:
 	//void updateMapChunkPosition(TileLayer& tileLayer, const cursed_engine::FVec2& cameraPos); // or do in render backend?
 
 	cursed_engine::RenderAPI m_renderAPI;
-	cursed_engine::TextureManager* m_textureManager;
+	cursed_engine::Resources m_resources;
 
 	const Tileset* m_tileset;
 	//TileRegistry& m_tileRegistry;

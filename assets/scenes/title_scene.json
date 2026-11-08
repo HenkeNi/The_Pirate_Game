@@ -4,14 +4,20 @@
     {
       "id": "background",
       "components": {
-        "transform": {
-          "scale": {
-            "x": 1.0,
-            "y": 1.0
+        "ui_layout": {
+          "anchor": {
+            "min": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "max": {
+              "x": 1.0,
+              "y": 1.0
+            }
           }
         },
         "sprite": {
-          "texture_id": "title_background"         
+          "texture_id": "title_background"
         },
         "ui": {}
       }
@@ -19,14 +25,14 @@
     {
       "id": "title",
       "components": {
-        "transform": {
-          "position": {
-            "x": 640,
-            "y": 10
+        "ui_layout": {
+          "anchor_min": {
+            "x": 0.0,
+            "y": 0.0
           },
-          "scale": {
-            "x": 1,
-            "y": 1
+          "anchor_max": {
+            "x": 0.0,
+            "y": 0.0
           }
         },
         "ui": {},
@@ -51,23 +57,33 @@
     {
       "id": "play_button",
       "components": {
-        "transform": {
-          "position": {
-            "x": 640,
-            "y": 360
+        "ui_layout": {
+          "anchor": {
+            "min": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "max": {
+              "x": 0.5,
+              "y": 0.5
+            }
           },
-          "scale": {
-            "x": 0.50,
-            "y": 0.50
+          "offset": {
+            "min": {
+              "x": 50,
+              "y": 50
+            },
+            "max": {
+              "x": 50,
+              "y": 50
+            }
           }
         },
         "sprite": {
           "texture_id": "ui",
           "region": "play"
         },
-        "ui": {},
-        "button": {
-          "action": "NewGame",
+        "ui_interactable": {
           "default_color": {
             "r": 0,
             "g": 170,
@@ -87,6 +103,10 @@
             "a": 255
           }
         },
+        "ui": {},
+        "button": {
+          "action": "NewGame"
+        },
         "bounding_box": {
           "offset": {
             "x": 0.0,
@@ -102,27 +122,33 @@
     {
       "id": "settings_button",
       "components": {
-        "transform": {
-          "position": {
-            "x": 1200,
-            "y": 40
+        "ui_layout": {
+          "anchor": {
+            "min": {
+              "x": 0.99,
+              "y": 0.11
+            },
+            "max": {
+              "x": 0.99,
+              "y": 0.11
+            }
           },
-          "scale": {
-            "x": 0.1,
-            "y": 0.1
+          "offset": {
+            "min": {
+              "x": 30,
+              "y": 30
+            },
+            "max": {
+              "x": 30,
+              "y": 30
+            }
           }
         },
         "sprite": {
           "texture_id": "ui",
           "region": "cog"
         },
-        "ui": {},
-        "button": {
-          "action": "SceneTransition",
-          "args": {
-            "scene": "settings_scene",
-            "transition": "push"
-          },
+        "ui_interactable": {
           "default_color": {
             "r": 211,
             "g": 211,
@@ -140,6 +166,14 @@
             "g": 75,
             "b": 75,
             "a": 255
+          }
+        },
+        "ui": {},
+        "button": {
+          "action": "SceneTransition",
+          "args": {
+            "scene": "settings_scene",
+            "transition": "push"
           }
         },
         "bounding_box": {

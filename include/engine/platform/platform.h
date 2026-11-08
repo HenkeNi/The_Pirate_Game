@@ -1,25 +1,29 @@
 #pragma once
 #include "engine/platform/cursor.h"
-#include "engine/platform/window.h"
 #include "engine/platform/input_handler.h"
-
-// [Consider] - having window process window events (enum class EventType, struct WindowResizedEvent : public Event)
+#include "engine/platform/window.h"
+#include <filesystem>
 
 namespace cursed_engine
 {
 	struct EngineConfig;
 	class EventBus;
 
-	template <typename T>
-	class Result;
+	struct PlatformArgs
+	{
+		WindowArgs wndArgs;
+		InputArgs inputArgs;
+		std::filesystem::path iconPath;
+		const char* name;
+		const char* version;
+		const char* identifier;
+	};
 
-#pragma region Platform
-
-	class Platform
+	class Platform final
 	{
 	public:
-		Platform() = default;
-		virtual ~Platform() = default;
+		Platform(EventBus& eventBus);
+		~Platform();
 
 		Platform(const Platform&) = delete;
 		Platform(Platform&&) = delete;
@@ -27,57 +31,27 @@ namespace cursed_engine
 		Platform& operator=(const Platform&) = delete;
 		Platform& operator=(Platform&&) = delete;
 		 
-		virtual Result<void> init(const EngineConfig& config) = 0;
-		virtual void shutdown() = 0;
+		bool init(const PlatformArgs& args);
+		void shutdown();
 
-		virtual void beginFrame() = 0;
-		virtual void endFrame() = 0;
+		void beginFrame();
+		void endFrame();
 		
-		virtual void processEvents() = 0;
+		void processEvents();
 
-		[[nodiscard]] virtual bool exitRequested() const noexcept = 0;
-		[[nodiscard]] virtual Window& getWindow() noexcept = 0;
+		[[nodiscard]] bool exitRequested() const noexcept;
+		[[nodiscard]] Window& getWindow() noexcept;
 
-		[[nodiscard]] virtual Cursor& getCursor() noexcept = 0;
-		[[nodiscard]] virtual InputHandler& getInputHandler() noexcept = 0;
-	};
-
-#pragma endregion
-
-#pragma region SDL_Platform
-
-	class SDLPlatform final : public Platform
-	{
-	public:
-		SDLPlatform(EventBus& eventBus);
-		~SDLPlatform();
-
-		Result<void> init(const EngineConfig& config) override;
-		void shutdown() override;
-
-		void beginFrame() override;
-		void endFrame() override;
-
-		void processEvents() override;
-
-		[[nodiscard]] bool exitRequested() const noexcept override;
-		[[nodiscard]] Window& getWindow() noexcept override;
-
-		[[nodiscard]] Cursor& getCursor() noexcept override;
-		[[nodiscard]] InputHandler& getInputHandler() noexcept override;
+		[[nodiscard]] Cursor& getCursor() noexcept;
+		[[nodiscard]] InputHandler& getInputHandler() noexcept;
 
 	private:
-		void pollEvents();
+		Window m_window;
+		Cursor m_cursor;
 
-		SDLWindow m_window;
-		SDLCursor m_cursor;
-
-		SDLInputHandler m_inputHandler;
+		InputHandler m_inputHandler;
 		EventBus& m_eventBus;
 
-		bool m_initialized;
 		bool m_shouldExit;
 	};
-
-#pragma endregion
 }

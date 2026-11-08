@@ -1,6 +1,9 @@
 #pragma once
-#include "engine/core/settings/engine_config.h"
+#include "engine/math/vec2.hpp"
+#include "engine/platform/input_types.h"
 #include <filesystem>
+
+// TODO; add a SettingsChangedEvent?
 
 namespace cursed_engine
 {
@@ -8,19 +11,54 @@ namespace cursed_engine
 	
 	template <typename T>
 	class Result;
-	
-	// SettingsChangedEvent?
 
-	// updates engine config?!
-	class Settings // listen to eevents?
+	struct AssetSettings
+	{
+	};
+	
+	struct AudioSettings
+	{
+		float masterVolume{};
+		float sfxVolume{};
+		float musicVolume{};
+		float ambienceVolume{};
+		float voiceVolume{};
+		float uiVolume{};
+	};
+	
+	struct GraphicsSettings
+	{
+		// brightness...
+		bool vsync{};
+	};
+	
+	struct InputSettings
+	{
+		KeyBindings keyBindings;
+		float mouseSensitivity = 1.f;
+	};
+	
+	struct LocalizationSettings
+	{
+		std::string language;
+	};
+
+	struct WindowSettings
+	{
+		IVec2 size{};
+		bool fullscreen;
+	};
+	
+	class Settings
 	{
 	public:
-		Settings(EventBus& eventBus); // used for what?
+		Settings(EventBus& eventBus);
 
-		Result<void> loadConfig(const std::filesystem::path& path);
-		void saveConfig(const std::filesystem::path& path);
+		Result<void> save(const std::filesystem::path& path);
+		Result<void> load(const std::filesystem::path& path);
 
-		void applySettings();
+
+		void applySettings(); // Sends out event?????????????????????????????????+ (only downside is that event coudl be missed...)
 
 		//[[nodiscard]] bool hasPendingChanges() const noexcept;
 
@@ -40,30 +78,30 @@ namespace cursed_engine
 		
 		[[nodiscard]] bool isVSyncEnabled() const noexcept;
 
-		// Load and applies configs????
-
-		// Audio
-	
 		// does settings provide acess to isMuted, isVsync, etc?
 		void setMasterVolume();
 		void setMuted(bool shouldMute); // or muteAll? mute/unmute? toggleMute?
 
 
+		inline const AssetSettings& getAssetSettings() const noexcept { return m_assets; }
+		inline const AudioSettings& getAudioSettings() const noexcept { return m_audio; }
+		inline const GraphicsSettings& getGraphicsSettings() const noexcept { return m_graphics; }
 
-		bool save();
-		// load();
+		inline const InputSettings& getInputSettings() const noexcept { return m_input; }
+		inline const LocalizationSettings& getLocalizationSettings() const noexcept { return m_localization; }
+		inline const WindowSettings& getWindowSettings() const noexcept { return m_window; }
 
-		// temp!! use IVEc??
-		inline FVec2 getWindowSize() const { return FVec2{ 1280, 720 }; }
-
-
-
-		[[nodiscard]] inline const EngineConfig& getEngineConfig() const noexcept { return m_config; }
-
-		static std::filesystem::path getConfigPath();
+		// static std::filesystem::path getConfigPath(); // or use this in game???????
+		static std::filesystem::path getDefaultPath() noexcept; // fix?
 
 	private:
-		EngineConfig m_config;
+		AssetSettings m_assets;
+		AudioSettings m_audio;
+		GraphicsSettings m_graphics;
+		InputSettings m_input;
+		LocalizationSettings m_localization;
+		WindowSettings m_window;
+
 		EventBus& m_eventBus;
 	};
 }

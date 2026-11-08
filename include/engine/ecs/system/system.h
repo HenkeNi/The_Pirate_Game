@@ -10,7 +10,9 @@ namespace cursed_engine
 	{
 		ECSRegistry& registry;
 		EventBus& eventBus;
-		float deltaTime;
+		FVec2 windowSize{};
+		float deltaTime{};
+		float fps{};
 	};
 
 	struct SystemRenderContext
@@ -18,6 +20,14 @@ namespace cursed_engine
 		ECSRegistry& registry;
 		RenderAPI renderAPI;
 	};
+
+
+	/*template <typename ExecutionContext>
+	class System
+	{
+	public:
+		virtual void execute(ExecutionContext& context) {};
+	};*/
 
 	//class System
 	//{

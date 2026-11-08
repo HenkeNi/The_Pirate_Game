@@ -5,12 +5,12 @@
 
 namespace cursed_engine
 {
-	void SDLTextCreator::init(TTF_TextEngine* textEngine)
+	void TextCreator::init(TTF_TextEngine* textEngine)
 	{
 		m_textEngine = textEngine;
 	}
 
-	Result<TextPtr> SDLTextCreator::createText(const std::string& str, const Font& font) const
+	Result<TextPtr> TextCreator::createText(const std::string& str, const Font& font) const
 	{
 		assert(m_textEngine && "[SDLTextCreator::createText] - Invalid text engine!");
 

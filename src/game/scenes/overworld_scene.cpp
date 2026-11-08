@@ -28,7 +28,7 @@ OverworldScene::OverworldScene(SceneContext context, ce::PhysicsAPI physicsAPI)
 {
 }
 
-void OverworldScene::onUpdate(float deltaTime)
+void OverworldScene::onUpdate(const ce::UpdateContext& ctx)
 {
 
 	int x = 20;
@@ -39,11 +39,11 @@ void OverworldScene::onEnter()
 {
 	Logger::logInfo("Entering Overworld Scene..."); // put in scene stack?
 
-	auto audioHandle = m_context.audioManager->getHandle(cursed_engine::AudioDescriptor{ "../assets/sounds/theme/516076__breviceps__pirate-band-performs-drunken-sailor.wav" });
+	auto audioHandle = m_context.resources.getHandle<Audio>(cursed_engine::AudioDescriptor{ "../assets/sounds/theme/516076__breviceps__pirate-band-performs-drunken-sailor.wav" });
 
 	if (audioHandle.isValid())
 	{
-		auto& audio = m_context.audioManager->get(audioHandle);
+		auto& audio = m_context.resources.get<Audio>(audioHandle);
 		m_context.audioController.play(audio, cursed_engine::AudioType::Music);
 	}
 

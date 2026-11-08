@@ -27,15 +27,18 @@ namespace cursed_engine
 		Vec2& operator=(Vec2&&) = default;
 
 		template <Numeric U>
-		Vec2 operator=(const Vec2<U>& other);
+		Vec2& operator=(const Vec2<U>& other);
 		
 		[[nodiscard]] Vec2& normalize();
 		
 		[[nodiscard]] Vec2 normalized() const;
 
+		[[nodiscard]] Vec2 rotated(T radians) noexcept;
+
 		[[nodiscard]] Vec2 directionTo(const Vec2& target) const;
 
 		[[nodiscard]] T distanceTo(const Vec2& other) const noexcept;
+
 
 		T x{};
 		T y{};
@@ -71,7 +74,7 @@ namespace cursed_engine
 
 	template <Numeric T>
 	template <Numeric U>
-	Vec2<T> Vec2<T>::operator=(const Vec2<U>& other)
+	Vec2<T>& Vec2<T>::operator=(const Vec2<U>& other)
 	{
 		x = static_cast<T>(other.x);
 		y = static_cast<T>(other.y);
@@ -109,30 +112,42 @@ namespace cursed_engine
 		return distance(*this, other);
 	}
 
+	template <Numeric T>
+	Vec2<T> Vec2<T>::rotated(T radians) noexcept
+	{
+		const T cosAngle = std::cos(radians);
+		const T sinAngle = std::sin(radians);
+
+		return {
+			x * cosAngle - y * sinAngle,
+			x * sinAngle + y * cosAngle
+		};
+	}
+
 #pragma endregion
 
 #pragma region Helpers
 
 	template <Numeric T>
-	constexpr T dot(const Vec2<T>& lhs, const Vec2<T>& rhs) noexcept
+	[[nodiscard]] constexpr T dot(const Vec2<T>& lhs, const Vec2<T>& rhs) noexcept
 	{
 		return (lhs.x * rhs.x) + (lhs.y * rhs.y);
 	}
 
 	template <Numeric T>
-	constexpr T LengthSqr(const Vec2<T>& vec) noexcept
+	[[nodiscard]] constexpr T LengthSqr(const Vec2<T>& vec) noexcept
 	{
 		return (vec.x * vec.x) + (vec.y * vec.y);
 	}
 
 	template <Numeric T>
-	T length(const Vec2<T>& vec) noexcept
+	[[nodiscard]] T length(const Vec2<T>& vec) noexcept
 	{
 		return std::sqrt(LengthSqr(vec));
 	}
 
 	template <Numeric T>
-	Vec2<T> normalized(const Vec2<T>& vec)
+	[[nodiscard]] Vec2<T> normalized(const Vec2<T>& vec)
 	{
 		T len = length(vec);
 		assert(len != T{ 0 });
@@ -141,7 +156,7 @@ namespace cursed_engine
 	}
 
 	template <Numeric T>
-	Vec2<T> direction(const Vec2<T>& from, const Vec2<T>& to)
+	[[nodiscard]] Vec2<T> direction(const Vec2<T>& from, const Vec2<T>& to)
 	{
 		Vec2<T> result = to - from;
 		T len = length(result);
@@ -156,7 +171,7 @@ namespace cursed_engine
 	}
 
 	template <Numeric T>
-	T distance(const Vec2<T>& lhs, const Vec2<T>& rhs) noexcept
+	[[nodiscard]] T distance(const Vec2<T>& lhs, const Vec2<T>& rhs) noexcept
 	{
 		return length(lhs - rhs);
 	}

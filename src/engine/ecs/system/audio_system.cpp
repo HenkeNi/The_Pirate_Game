@@ -8,15 +8,15 @@
 
 namespace cursed_engine
 {
-	AudioSystem::AudioSystem(AudioController audioController, AudioManager* audioManager, EventBus* eventBus)
-		: m_audioController{ audioController }, m_audioManager{ audioManager }, m_eventBus{ eventBus }
+	AudioSystem::AudioSystem(AudioController audioController, Resources resources, EventBus* eventBus)
+		: m_audioController{ audioController }, m_resources{ std::move(resources) }, m_eventBus{ eventBus }
 	{
 		m_eventBus->subscribe<PlaySoundEvent>(
 			[&](PlaySoundEvent e) 
 			{
 				// or put in queue?
-				auto audioHandle = m_audioManager->getHandleById("623175__aphom000__button-click-selection");
-				if (const auto* audio = m_audioManager->tryGet(audioHandle))
+				auto audioHandle = m_resources.getHandleById<Audio>("623175__aphom000__button-click-selection");
+				if (const auto* audio = m_resources.tryGet<Audio>(audioHandle))
 				{
 					//m_audioController->playSound(audio->m_stream, audio->m_buffer, audio->m_length);
 				}
@@ -33,7 +33,7 @@ namespace cursed_engine
 	{
 		// holds map of which sound id to sound?
 
-		auto audioHandle = m_audioManager->getHandleById("707884__dave4884__pirates-song");
+		auto audioHandle = m_resources.getHandleById<Audio>("707884__dave4884__pirates-song");
 
 		if (audioHandle.isValid())
 		{
@@ -41,7 +41,7 @@ namespace cursed_engine
 		}
 
 		// How will this work when multiple components referes to the same audio?
-		if (const auto* audio = m_audioManager->tryGet(audioHandle))
+		if (const auto* audio = m_resources.tryGet<Audio>(audioHandle))
 		{
 			//m_audioController->playSound(audio->m_stream, audio->m_buffer, audio->m_length);
 		}

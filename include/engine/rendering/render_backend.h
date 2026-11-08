@@ -8,6 +8,9 @@
 #include <vector>
 
 // [Consider] - replacing std::vector<SDL_Vertex> with SDL_Vertex* (raw array) (no need for SDL3 include)
+// [Consider] - passing Window as pointer (easily to pass null if not used by backend, OR pass a context struct of some sort)
+
+// TODO; add vsync (toggling)!!!!!!!!!!!! (moved from window)...
 
 struct TTF_TextEngine;
 //struct SDL_Renderer; - not needed since including sdl.h?! (for vertex buffer)
@@ -21,13 +24,13 @@ namespace cursed_engine
 	template <typename T>
 	class Result;
 
-#pragma region Render_Backend
+	// TODO; rename Renderer?
 
-	class RenderBackend
+	class RenderBackend final
 	{
 	public:
-		RenderBackend() = default;
-		virtual ~RenderBackend() = default;
+		RenderBackend();
+		~RenderBackend() = default;
 
 		RenderBackend(const RenderBackend&) = delete;
 		RenderBackend(RenderBackend&&) = delete;
@@ -35,74 +38,39 @@ namespace cursed_engine
 		RenderBackend& operator=(const RenderBackend&) = delete;
 		RenderBackend& operator=(RenderBackend&&) = delete;
 
-		[[nodiscard]] virtual Result<void> init(Window& window) = 0;
-		virtual void shutdown() = 0;
+		[[nodiscard]] Result<void> init(Window& window);
+		void shutdown();
 
-		virtual void beginFrame() = 0;
-		virtual void endFrame() = 0;
+		void beginFrame();
+		void endFrame();
 
-		virtual void setRenderState(RenderState state) = 0;
+		void setRenderState(RenderState state);
+		bool setVSync(bool enable);
 
-		[[nodiscard]] virtual const RenderStatistics* getStatistics() const noexcept = 0;
+		[[nodiscard]] const RenderStatistics* getStatistics() const noexcept;
 
-		[[nodiscard]] virtual const TextureCreator* getTextureCreator() const noexcept = 0;
-		[[nodiscard]] virtual const TextCreator* getTextCreator() const noexcept = 0;
+		[[nodiscard]] const TextureCreator* getTextureCreator() const noexcept;
+		[[nodiscard]] const TextCreator* getTextCreator() const noexcept;
 
-		virtual void drawTexture(const Texture& texture, FRect src, FRect dst, Color mod) = 0;
-		virtual void drawGeometry(const Geometry& geometry, const Texture* texture = nullptr) = 0;
+		void drawTexture(const Texture& texture, FRect src, FRect dst, Color mod);
+		void drawGeometry(const Geometry& geometry, const Texture* texture = nullptr);
 
-		virtual void drawOutlineRect(FRect dst, Color color) = 0;
-		virtual	void drawFillRect(FRect dst, Color color) = 0;
-
-		virtual void drawOutlineCircle(FVec2 pos, float radius, Color color) = 0;
-		virtual void drawFillCircle(FVec2 pos, float radius, Color color) = 0;
-
-		virtual	void drawLine(FVec2 start, FVec2 end, Color color) = 0;
-		virtual void drawText(const Text& text, FVec2 pos) = 0;
-	};
-
-#pragma endregion
-
-#pragma region SDL_Render_Device
-
-	class SDLRenderBackend final : public RenderBackend
-	{
-	public:
-		SDLRenderBackend();
-		~SDLRenderBackend() = default;
-
-		[[nodiscard]] Result<void> init(Window& window) override;
-		void shutdown() override;
-
-		void beginFrame() override;
-		void endFrame() override;
-
-		void setRenderState(RenderState state) override;
-
-		[[nodiscard]] const RenderStatistics* getStatistics() const noexcept override;
-
-		[[nodiscard]] const SDLTextureCreator* getTextureCreator() const noexcept override;
-		[[nodiscard]] const SDLTextCreator* getTextCreator() const noexcept override;
-
-		void drawTexture(const Texture& texture, FRect src, FRect dst, Color mod) override;
-		void drawGeometry(const Geometry& geometry, const Texture* texture = nullptr) override;
-
-		void drawOutlineRect(FRect dst, Color color) override;
-		void drawFillRect(FRect dst, Color color) override;
+		void drawOutlineRect(FRect dst, Color color);
+		void drawFillRect(FRect dst, Color color);
 
 		void drawOutlineCircle(FVec2 pos, float radius, Color color);
 		void drawFillCircle(FVec2 pos, float radius, Color color);
 
-		void drawLine(FVec2 start, FVec2 end, Color color) override;
-		void drawText(const Text& text, FVec2 pos) override;
+		void drawLine(FVec2 start, FVec2 end, Color color);
+		void drawText(const Text& text, FVec2 pos);
 
 	private:
 		void populateVertexBuffer(const Geometry& geometry);
 
 		struct ResourceCreators
 		{
-			SDLTextureCreator textureCreator;
-			SDLTextCreator textCreator;
+			TextureCreator textureCreator;
+			TextCreator textCreator;
 		};
 
 		std::vector<SDL_Vertex> m_vertexBuffer;
@@ -114,6 +82,4 @@ namespace cursed_engine
 		TTF_TextEngine* m_textEngine;
 		SDL_Renderer* m_renderer;
 	};
-
-#pragma endregion
 }

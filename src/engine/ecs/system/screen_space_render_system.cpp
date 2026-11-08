@@ -14,8 +14,8 @@ namespace cursed_engine
 
 #endif
 
-	ScreenSpaceRenderSystem::ScreenSpaceRenderSystem(TextureManager* textureManager, AssetManager* assetManager, RenderAPI renderer)
-		: m_textureManager{ std::move(textureManager) }, m_assetManager{ assetManager }, m_renderer{ std::move(renderer) }
+	ScreenSpaceRenderSystem::ScreenSpaceRenderSystem(Resources resources, AssetManager* assetManager, RenderAPI renderer)
+		: m_resources{ resources }, m_assetManager{ assetManager }, m_renderer{ std::move(renderer) }
 	{
 	}
 
@@ -37,50 +37,83 @@ namespace cursed_engine
 
 	void ScreenSpaceRenderSystem::renderSprites(ECSRegistry& registry)
 	{
-		const auto componentView = registry.view<SpriteComponent, TransformComponent, UIComponent>();
-		componentView.forEach([&](const SpriteComponent& spriteComponent, const TransformComponent& transformComponent, const UIComponent&) // TODO; handle filtering... (UIComponent not used)
+		const auto componentView = registry.view<SpriteComponent, UITransformComponent>();
+		componentView.forEach([&](const SpriteComponent& spriteComponent, const UITransformComponent& uiTransformComponent)
 			{
 				const auto& textureAtlas = m_assetManager->getAsset<TextureAtlas>(spriteComponent.atlasHandle); // no asset stored AND invalid index!
 
-				const auto& textureHandle = m_textureManager->getHandleById(textureAtlas.textureId);
+				const auto& textureHandle = m_resources.getHandleById<Texture>(textureAtlas.textureId);
 
-				if (auto* texture = m_textureManager->tryGet(textureHandle))
+				if (auto* texture = m_resources.tryGet<Texture>(textureHandle))
 				{
-					FVec2 position = transformComponent.position;
+					// so if user specifies ancohr points, they are used, if not - the region size?
+
+					FVec2 position = uiTransformComponent.position;
+					FVec2 size = uiTransformComponent.size;
+					//FVec2 scale = uiTransformComponent.scale;
 
 					const AtlasRegion& region = spriteComponent.atlasRegion;
-					const FVec2 scaledSize = region.getSize() * transformComponent.scale;
+					//const FVec2 scaledSize = region.getSize() * scale;
 
-					position -= region.pivot * scaledSize;
+					position -= region.pivot * size;
+					//position -= region.pivot * scaledSize;
 
 					FRect src = (FRect)region.rect;
-					FRect dst{ position.x, position.y, scaledSize.x, scaledSize.y };
+					//FRect dst{ position.x, position.y, scaledSize.x, scaledSize.y };
+					FRect dst{ position.x, position.y, size.x, size.y };
 
 					m_renderer.drawTexture(*texture, std::move(src), std::move(dst), spriteComponent.color);
+					//m_renderer.drawTexture(*texture, std::move(src), screenRectComponent.rect, spriteComponent.color);
 				}
 			});
 	}
 
+	//void ScreenSpaceRenderSystem::renderSprites(ECSRegistry& registry)
+	//{
+	//	const auto componentView = registry.view<SpriteComponent, WorldTransformComponent, UIComponent>();
+	//	componentView.forEach([&](const SpriteComponent& spriteComponent, const WorldTransformComponent& transformComponent, const UIComponent&) // TODO; handle filtering... (UIComponent not used)
+	//		{
+	//			const auto& textureAtlas = m_assetManager->getAsset<TextureAtlas>(spriteComponent.atlasHandle); // no asset stored AND invalid index!
+
+	//			const auto& textureHandle = m_textureManager->getHandleById(textureAtlas.textureId);
+
+	//			if (auto* texture = m_textureManager->tryGet(textureHandle))
+	//			{
+	//				FVec2 position = transformComponent.position;
+
+	//				const AtlasRegion& region = spriteComponent.atlasRegion;
+	//				const FVec2 scaledSize = region.getSize() * transformComponent.scale;
+
+	//				position -= region.pivot * scaledSize;
+
+	//				FRect src = (FRect)region.rect;
+	//				FRect dst{ position.x, position.y, scaledSize.x, scaledSize.y };
+
+	//				m_renderer.drawTexture(*texture, std::move(src), std::move(dst), spriteComponent.color);
+	//			}
+	//		});
+	//}
+
 	void ScreenSpaceRenderSystem::renderDebug(ECSRegistry& registry)
 	{
-		auto view = registry.view<TransformComponent, BoundingBoxComponent, UIComponent>();
-		view.forEach([&](Entity entity, TransformComponent& transformComponent, BoundingBoxComponent& boundingBoxComponent, const UIComponent&)
+		auto view = registry.view<WorldTransformComponent, BoundingBoxComponent, UIComponent>();
+		view.forEach([&](Entity entity, WorldTransformComponent& transformComponent, BoundingBoxComponent& boundingBoxComponent, const UIComponent&)
 			{
 				Color color = Color::green;
 
-				if (auto* buttonComponent = registry.tryGetComponent<ButtonComponent>(entity))
+				if (auto* uiInteractableComponent = registry.tryGetComponent<UIInteractableComponent>(entity))
 				{
-					switch (buttonComponent->currentState)
+					switch (uiInteractableComponent->currentState)
 					{
-					case ButtonComponent::State::Normal:
+					case UIInteractableComponent::State::Normal:
 						color = Color::green;
 						break;
 
-					case ButtonComponent::State::Hovered:
+					case UIInteractableComponent::State::Hovered:
 						color = Color::yellow;
 						break;
 
-					case ButtonComponent::State::Pressed:
+					case UIInteractableComponent::State::Pressed:
 						color = Color::red;
 						break;
 					}
@@ -110,10 +143,10 @@ namespace cursed_engine
 
 	void ScreenSpaceRenderSystem::renderText(ECSRegistry& registry)
 	{
-		auto view = registry.view<TransformComponent, TextComponent, UIComponent>();
+		auto view = registry.view<WorldTransformComponent, TextComponent, UIComponent>();
 
 		//// TODO; check if possible to have one argument const ref and one argument just ref...
-		view.forEach([&](const TransformComponent& transformComponent, TextComponent& textComponent, const UIComponent&)
+		view.forEach([&](const WorldTransformComponent& transformComponent, TextComponent& textComponent, const UIComponent&)
 			{
 				if (!textComponent.text)
 				{

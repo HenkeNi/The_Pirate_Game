@@ -82,12 +82,12 @@ namespace
 
 namespace cursed_engine
 {
-	SDLRenderBackend::SDLRenderBackend()
+	RenderBackend::RenderBackend()
 		: m_renderer{ nullptr }, m_textEngine{ nullptr }, m_statistics{}
 	{
 	}
 
-	Result<void> SDLRenderBackend::init(Window& window)
+	Result<void> RenderBackend::init(Window& window)
 	{
 		auto* nativeHandle = window.getNativeHandle();
 		if (!nativeHandle)
@@ -117,13 +117,13 @@ namespace cursed_engine
 		return Result<void>::success();
 	}
 
-	void SDLRenderBackend::shutdown()
+	void RenderBackend::shutdown()
 	{
 		SDL_DestroyRenderer(m_renderer);
 		TTF_DestroyRendererTextEngine(m_textEngine);
 	}
 
-	void SDLRenderBackend::beginFrame()
+	void RenderBackend::beginFrame()
 	{
 		m_statistics = RenderStatistics{ 0 };
 
@@ -131,17 +131,22 @@ namespace cursed_engine
 		SDL_RenderClear(m_renderer);
 	}
 
-	void SDLRenderBackend::SDLRenderBackend::endFrame()
+	void RenderBackend::endFrame()
 	{
 		SDL_RenderPresent(m_renderer);
 	}
 
-	void SDLRenderBackend::setRenderState(RenderState state)
+	void RenderBackend::setRenderState(RenderState state)
 	{
 		m_renderState = std::move(state);
 	}
 
-	void SDLRenderBackend::drawTexture(const Texture& texture, FRect src, FRect dst, Color mod)
+	bool RenderBackend::setVSync(bool enable)
+	{
+		return SDL_SetRenderVSync(m_renderer, enable);
+	}
+
+	void RenderBackend::drawTexture(const Texture& texture, FRect src, FRect dst, Color mod)
 	{
 		const FVec2 screenPosition = worldToScreen(FVec2{ dst.x, dst.y }, m_renderState.projection, m_renderState.view);
 
@@ -155,7 +160,7 @@ namespace cursed_engine
 		SDL_RenderTexture(m_renderer, internal, &srcRect, &dstRect);
 	}
 
-	void SDLRenderBackend::drawGeometry(const Geometry& geometry, const Texture* texture)
+	void RenderBackend::drawGeometry(const Geometry& geometry, const Texture* texture)
 	{
 		const SDLTexture* sdlTexture = static_cast<const SDLTexture*>(texture);
 	
@@ -163,7 +168,7 @@ namespace cursed_engine
 		SDL_RenderGeometry(m_renderer, sdlTexture ? sdlTexture->getInternal() : nullptr, m_vertexBuffer.data(), m_vertexBuffer.size(), geometry.indices.data(), geometry.indices.size());
 	}
 
-	void SDLRenderBackend::drawOutlineRect(FRect dst, Color color)
+	void RenderBackend::drawOutlineRect(FRect dst, Color color)
 	{
 		const FVec2 screenPosition = worldToScreen(FVec2{ dst.x, dst.y }, m_renderState.projection, m_renderState.view);
 		const SDL_FRect rect = toSDLRect(screenPosition.x, screenPosition.y, dst.w, dst.h);
@@ -172,7 +177,7 @@ namespace cursed_engine
 		SDL_RenderRect(m_renderer, &rect);
 	}
 
-	void SDLRenderBackend::drawFillRect(FRect dst, Color color)
+	void RenderBackend::drawFillRect(FRect dst, Color color)
 	{
 		const FVec2 screenPosition = worldToScreen(FVec2{ dst.x, dst.y }, m_renderState.projection, m_renderState.view);
 		const SDL_FRect rect = toSDLRect(screenPosition.x, screenPosition.y, dst.w, dst.h);
@@ -181,7 +186,7 @@ namespace cursed_engine
 		SDL_RenderFillRect(m_renderer, &rect);
 	}
 
-	void SDLRenderBackend::drawOutlineCircle(FVec2 pos, float radius, Color color)
+	void RenderBackend::drawOutlineCircle(FVec2 pos, float radius, Color color)
 	{
 		SDL_FPoint points[CIRCLE_SEGMENTS + 1];
 
@@ -200,7 +205,7 @@ namespace cursed_engine
 		SDL_RenderLines(m_renderer, points, CIRCLE_SEGMENTS + 1);
 	}
 
-	void SDLRenderBackend::drawFillCircle(FVec2 pos, float radius, Color color)
+	void RenderBackend::drawFillCircle(FVec2 pos, float radius, Color color)
 	{
 		FVec2 worldPosition = worldToScreen(pos, m_renderState.projection, m_renderState.view);
 		SDL_FColor sdlColor = toSDLColor(color);
@@ -237,7 +242,7 @@ namespace cursed_engine
 		SDL_RenderGeometry(m_renderer, nullptr, vertices, vertexCount, indices, indexCount);
 	}
 
-	void SDLRenderBackend::drawLine(FVec2 start, FVec2 end, Color color)
+	void RenderBackend::drawLine(FVec2 start, FVec2 end, Color color)
 	{
 		const FVec2 screenStart = worldToScreen(FVec2{ start.x, start.y }, m_renderState.projection, m_renderState.view);
 		const FVec2 screenEnd = worldToScreen(FVec2{ end.x, end.y }, m_renderState.projection, m_renderState.view);
@@ -246,7 +251,7 @@ namespace cursed_engine
 		SDL_RenderLine(m_renderer, screenStart.x, screenStart.y, screenEnd.x, screenEnd.y);
 	}
 
-	void SDLRenderBackend::drawText(const Text& text, FVec2 pos)
+	void RenderBackend::drawText(const Text& text, FVec2 pos)
 	{
 		assert(text.isValid() && "SDLRenderBackend::drawText - Invalid text found!");
 
@@ -256,22 +261,22 @@ namespace cursed_engine
 		TTF_DrawRendererText(sdlText.getInternal(), screenPosition.x, screenPosition.y);
 	}
 
-	const RenderStatistics* SDLRenderBackend::getStatistics() const noexcept
+	const RenderStatistics* RenderBackend::getStatistics() const noexcept
 	{
 		return &m_statistics;
 	}
 
-	const SDLTextureCreator* SDLRenderBackend::getTextureCreator() const noexcept
+	const TextureCreator* RenderBackend::getTextureCreator() const noexcept
 	{
 		return &m_resourceCreators.textureCreator;
 	}
 
-	const SDLTextCreator* SDLRenderBackend::getTextCreator() const noexcept
+	const TextCreator* RenderBackend::getTextCreator() const noexcept
 	{
 		return &m_resourceCreators.textCreator;
 	}
 
-	void SDLRenderBackend::populateVertexBuffer(const Geometry& geometry)
+	void RenderBackend::populateVertexBuffer(const Geometry& geometry)
 	{
 		m_vertexBuffer.clear();
 		m_vertexBuffer.reserve(geometry.vertices.size());

@@ -8,8 +8,8 @@
 
 using cursed_engine::FVec2;
 
-MapRenderSystem::MapRenderSystem(cursed_engine::RenderAPI renderAPI, cursed_engine::TextureManager* textureManager)
-	: m_renderAPI{ renderAPI }, m_textureManager{ textureManager }, m_tilemap{ nullptr }, m_tileset{ nullptr }
+MapRenderSystem::MapRenderSystem(cursed_engine::RenderAPI renderAPI, cursed_engine::Resources resources)
+	: m_renderAPI{ renderAPI }, m_resources{ resources }, m_tilemap{ nullptr }, m_tileset{ nullptr }
 {
 }
 
@@ -28,9 +28,9 @@ void MapRenderSystem::render(cursed_engine::SystemRenderContext& context)
 
 
 				// TEMP -> figure out best way to get texture...  get texture from tileset? or tilemap?
-		auto handle = m_textureManager->getHandle(cursed_engine::TextureDescriptor{ "../assets/textures/map/island_tileset.png" });
+		auto handle = m_resources.getHandle<cursed_engine::Texture>(cursed_engine::TextureDescriptor{ "../assets/textures/map/island_tileset.png" });
 		//const auto& texture = m_textureManager->get(handle); /////////////////////// HAVIN RENDER BACKEND FRIEND CLASS WOULD MAKE THIS BE ABLE TO BE CONST!
-		auto& texture = m_textureManager->get(handle); // TODO; make const!
+		auto& texture = m_resources.get<cursed_engine::Texture>(handle); // TODO; make const!
 
 		//m_tileset->textureSize.x = texture->getWidth();
 		//m_tileset->textureSize.y = texture->getHeight();
@@ -74,7 +74,7 @@ void MapRenderSystem::render(cursed_engine::SystemRenderContext& context)
 
 				if (activeCamera.has_value())
 				{
-					const auto& cameraTransformComponent = context.registry.getComponent<cursed_engine::TransformComponent>(activeCamera.value());
+					const auto& cameraTransformComponent = context.registry.getComponent<cursed_engine::WorldTransformComponent>(activeCamera.value());
 					worldPosition = cameraTransformComponent.position; //worldPosition = cameraTransformComponent.position + cameraTransformComponent.pivot; //  USE PIVOT?
 
 					//updateMapChunkPosition(layer, worldPosition);

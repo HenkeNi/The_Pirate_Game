@@ -3,6 +3,8 @@
 
 namespace cursed_engine
 {
+	// or ui interaction system?
+
 	class InteractionSystem : public UpdateSystem
 	{
 	public:

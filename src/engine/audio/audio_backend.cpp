@@ -1,64 +1,95 @@
 #include "engine/audio/audio_backend.h"
 #include "engine/audio/audio_types.h"
+
+#include "engine/core/logger.h"
+
 #include "engine/resources/audio/audio.h"
-#include "engine/core/result.h"
+
 #include <algorithm>
 #include <format>
 
 namespace
 {
-	constexpr int NUMBER_OF_SFX_TRACKS = 32;
-	constexpr int NUMBER_OF_MUSIC_TRACKS = 2;
-	constexpr int NUMBER_OF_AMBIENCE_TRACKS = 8;
-	constexpr int NUMBER_OF_VOICE_TRACKS = 4;
-	constexpr int NUMBER_OF_UI_TRACKS = 6;
+	//constexpr int NUMBER_OF_SFX_TRACKS = 32;
+	//constexpr int NUMBER_OF_MUSIC_TRACKS = 2;
+	//constexpr int NUMBER_OF_AMBIENCE_TRACKS = 8;
+	//constexpr int NUMBER_OF_VOICE_TRACKS = 4;
+	//constexpr int NUMBER_OF_UI_TRACKS = 6;
 	constexpr float MAX_VOLUME = 1.0f;
 
 	constexpr uint32_t INVALID_GENERATION = 0;
 
-	struct TrackCallbackData
+	/*struct TrackCallbackData
 	{
 		cursed_engine::SDLAudioBackend* backend;
 		cursed_engine::AudioType type{};
 		std::size_t index{};
-	};
+	};*/
 }
 
 namespace cursed_engine
 {
-	SDLAudioBackend::SDLAudioBackend()
+	AudioBackend::AudioBackend()
 		: m_mixer{ nullptr }
 	{
 	}
 
-	Result<void> SDLAudioBackend::init()
+	AudioBackend::~AudioBackend()
+	{
+		shutdown();
+	}
+
+	bool AudioBackend::init(const AudioBackendArgs& args)
 	{
 		if (!MIX_Init())
 		{
-			return Result<void>::failure(
-				std::format("Failed to initialize SDL3-Mixer! Reason: {}", SDL_GetError()));
+			Logger::logError(std::format("Failed to initialize SDL3-Mixer! Reason: {}", SDL_GetError()));
+			return false;
 		}
 
 		m_mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, nullptr);
 
 		if (!m_mixer)
 		{
-			return Result<void>::failure(
-				std::format("Failed to create mixer! Reason: {}", SDL_GetError()));
+			Logger::logError(std::format("Failed to create mixer device! Reason: {}", SDL_GetError()));
+			return false;
 		}
 
-		initializeTracks(AudioType::Sfx, NUMBER_OF_SFX_TRACKS);
-		initializeTracks(AudioType::Music, NUMBER_OF_MUSIC_TRACKS);
-		initializeTracks(AudioType::Ambience, NUMBER_OF_AMBIENCE_TRACKS);
-		initializeTracks(AudioType::Voice, NUMBER_OF_VOICE_TRACKS);
-		initializeTracks(AudioType::UI, NUMBER_OF_UI_TRACKS);
-
 		m_audioCreator.init(m_mixer);
+		
+		const auto& sfxOptions = args.audioOptions.at(static_cast<std::size_t>(AudioType::Sfx));
+		initializeTracks(AudioType::Sfx, sfxOptions.tracks);
+		setVolume(AudioType::Sfx, sfxOptions.volume);
 
-		return Result<void>::success();
+		const auto& musicOptions = args.audioOptions.at(static_cast<std::size_t>(AudioType::Music));
+		initializeTracks(AudioType::Music, musicOptions.tracks);
+		setVolume(AudioType::Music, musicOptions.volume);
+
+		const auto& ambienceOptions = args.audioOptions.at(static_cast<std::size_t>(AudioType::Ambience));
+		initializeTracks(AudioType::Ambience, ambienceOptions.tracks);
+		setVolume(AudioType::Ambience, ambienceOptions.volume);
+
+		const auto& voiceOptions = args.audioOptions.at(static_cast<std::size_t>(AudioType::Voice));
+		initializeTracks(AudioType::Voice, voiceOptions.tracks);
+		setVolume(AudioType::Voice, voiceOptions.volume);
+
+		const auto& uiOptions = args.audioOptions.at(static_cast<std::size_t>(AudioType::UI));
+		initializeTracks(AudioType::UI, uiOptions.tracks);
+		setVolume(AudioType::UI, uiOptions.volume);
+
+		Logger::logInfo("\'Audio\' successfully initialized!");
+		
+		int version = MIX_Version();
+		Logger::logInfo(std::format("{} ~ SDL_mixer version: {}.{}.{}",
+			log_format::INDENT,
+			SDL_VERSIONNUM_MAJOR(version),
+			SDL_VERSIONNUM_MINOR(version),
+			SDL_VERSIONNUM_MICRO(version)));
+
+		return true;
 	}
 
-	void SDLAudioBackend::shutdown()
+	void AudioBackend::shutdown()
 	{
 		MIX_DestroyMixer(m_mixer);
 		m_mixer = nullptr;
@@ -66,7 +97,7 @@ namespace cursed_engine
 		MIX_Quit();
 	}
 
-	AudioPlaybackHandle SDLAudioBackend::play(const Audio& audio, AudioType type)
+	AudioPlaybackHandle AudioBackend::play(const Audio& audio, AudioType type)
 	{
 		if (const Track* track = getAvailableTrack(type))
 		{
@@ -88,7 +119,7 @@ namespace cursed_engine
 		}
 	}
 
-	void SDLAudioBackend::pause(AudioPlaybackHandle handle)
+	void AudioBackend::pause(AudioPlaybackHandle handle)
 	{
 		if (Track* track = resolve(handle))
 		{
@@ -96,12 +127,12 @@ namespace cursed_engine
 		}
 	}
 
-	void SDLAudioBackend::pauseAll()
+	void AudioBackend::pauseAll()
 	{
 		MIX_PauseAllTracks(m_mixer);
 	}
 
-	void SDLAudioBackend::stop(AudioPlaybackHandle handle, uint64_t fadeOutInMs)
+	void AudioBackend::stop(AudioPlaybackHandle handle, uint64_t fadeOutInMs)
 	{
 		if (Track* track = resolve(handle))
 		{
@@ -109,18 +140,18 @@ namespace cursed_engine
 		}
 	}
 
-	void SDLAudioBackend::stopAll(uint64_t fadeOutInMs)
+	void AudioBackend::stopAll(uint64_t fadeOutInMs)
 	{
 		MIX_StopAllTracks(m_mixer, fadeOutInMs);
 	}
 
-	void SDLAudioBackend::setMasterVolume(float volume)
+	void AudioBackend::setMasterVolume(float volume)
 	{
 		volume = std::clamp(volume, 0.f, MAX_VOLUME);
 		MIX_SetMixerGain(m_mixer, volume);
 	}
 
-	void SDLAudioBackend::setVolume(AudioType type, float volume)
+	void AudioBackend::setVolume(AudioType type, float volume)
 	{
 		volume = std::clamp(volume, 0.f, MAX_VOLUME);
 
@@ -132,18 +163,18 @@ namespace cursed_engine
 		}
 	}
 
-	void SDLAudioBackend::mute()
+	void AudioBackend::mute()
 	{
 		assert(false && "SDLAudioBackend::mute() is not implemented!");
 		// requires storing volumes for each audio type (so it can be restored later?)
 	}
 
-	void SDLAudioBackend::unmute()
+	void AudioBackend::unmute()
 	{
 		assert(false && "SDLAudioBackend::unmute() is not implemented!");
 	}
 
-	bool SDLAudioBackend::isPlaying(AudioPlaybackHandle handle) const
+	bool AudioBackend::isPlaying(AudioPlaybackHandle handle) const
 	{
 		if (const Track* track = resolve(handle))
 		{
@@ -153,7 +184,7 @@ namespace cursed_engine
 		return false;
 	}
 
-	bool SDLAudioBackend::isPaused(AudioPlaybackHandle handle) const
+	bool AudioBackend::isPaused(AudioPlaybackHandle handle) const
 	{
 		if (const Track* track = resolve(handle))
 		{
@@ -163,12 +194,12 @@ namespace cursed_engine
 		return false;
 	}
 
-	const SDLAudioCreator* SDLAudioBackend::getAudioCreator() const noexcept
+	const AudioCreator* AudioBackend::getAudioCreator() const noexcept
 	{
 		return &m_audioCreator;
 	}
 
-	void SDLAudioBackend::initializeTracks(AudioType type, int amount)
+	void AudioBackend::initializeTracks(AudioType type, int amount)
 	{
 		TrackPool& pool = m_trackPools.at(static_cast<std::size_t>(type));
 		pool.init(amount);
@@ -181,11 +212,11 @@ namespace cursed_engine
 			track.generation = INVALID_GENERATION;
 			track.inUse.store(false);
 
-			MIX_SetTrackStoppedCallback(track.internal, &SDLAudioBackend::onTrackStopped, &track);
+			MIX_SetTrackStoppedCallback(track.internal, &AudioBackend::onTrackStopped, &track);
 		}
 	}
 
-	const SDLAudioBackend::Track* SDLAudioBackend::getAvailableTrack(AudioType type) const
+	const AudioBackend::Track* AudioBackend::getAvailableTrack(AudioType type) const
 	{
 		const TrackPool& pool = m_trackPools.at(static_cast<std::size_t>(type));
 
@@ -200,17 +231,17 @@ namespace cursed_engine
 		return nullptr;
 	}
 
-	void SDLAudioBackend::onTrackStopped(void* userdata, MIX_Track* mixTrack)
+	void AudioBackend::onTrackStopped(void* userdata, MIX_Track* mixTrack)
 	{
 		Track* track = static_cast<Track*>(userdata);
 		track->inUse.store(false);
 	}
 
-	void SDLAudioBackend::releaseTrack()
+	void AudioBackend::releaseTrack()
 	{
 	}
 
-	const SDLAudioBackend::Track* SDLAudioBackend::resolve(AudioPlaybackHandle handle) const
+	const AudioBackend::Track* AudioBackend::resolve(AudioPlaybackHandle handle) const
 	{
 		const TrackPool& pool = m_trackPools.at(toIndex(handle.audioType));
 		
@@ -222,8 +253,8 @@ namespace cursed_engine
 		return track.generation == handle.generation ? &track : nullptr;
 	}
 
-	SDLAudioBackend::Track* SDLAudioBackend::resolve(AudioPlaybackHandle handle)
+	AudioBackend::Track* AudioBackend::resolve(AudioPlaybackHandle handle)
 	{
-		return const_cast<SDLAudioBackend::Track*>(std::as_const(*this).resolve(handle));
+		return const_cast<AudioBackend::Track*>(std::as_const(*this).resolve(handle));
 	}
 }

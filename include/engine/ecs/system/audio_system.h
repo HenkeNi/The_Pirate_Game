@@ -1,7 +1,7 @@
 #pragma once
 #include "system.h"
 #include "engine/audio/audio_controller.h"
-#include "engine/resources/audio/audio_manager.h"
+#include "engine/resources/resources.h"
 
 namespace cursed_engine
 {
@@ -11,13 +11,13 @@ namespace cursed_engine
 	class AudioSystem : public UpdateSystem
 	{
 	public:
-		AudioSystem(AudioController audioController, AudioManager* audioManager, EventBus* eventBus);
+		AudioSystem(AudioController audioController, Resources resources, EventBus* eventBus);
 
 		void update(SystemUpdateContext& context) override;
 
 	private:
-		AudioManager* m_audioManager;
 		AudioController m_audioController;
+		Resources m_resources;
 		EventBus* m_eventBus;
 	};
 }

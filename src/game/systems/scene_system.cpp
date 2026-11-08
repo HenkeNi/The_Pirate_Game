@@ -2,6 +2,7 @@
 #include "game/scenes/scene_manager.h"
 #include "game/events/events.h"
 #include <engine/core/events/event_bus.h>
+#include <engine/core/events/events.h>
 #include <engine/core/logger.h>
 
 SceneSystem::SceneSystem(const cursed_engine::ComponentInitContext& ctx, cursed_engine::EventBus* eventBus, SceneManager& sceneManager)
@@ -38,6 +39,7 @@ void SceneSystem::transitionToScene(const SceneTransitionRequestEvent& e)
 	// 
 	//m_sceneManager.requestTransition(e.scene, transitions.at(e.transition));
 	m_sceneManager.requestTransition(e.scene, e.transitionTyp);
+	m_eventBus->publishInstantly<cursed_engine::WorldUnloadingEvent>();
 
 	//std::unique_ptr<Scene> scene{ nullptr };
 

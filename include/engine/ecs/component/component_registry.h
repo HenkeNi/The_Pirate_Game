@@ -2,9 +2,10 @@
 #include "engine/utils/concepts.h"
 #include "engine/ecs/entity/entity_handle.h"
 #include "engine/assets/asset_types.h"
-#include "engine/resources/audio/audio_manager.h"
-#include "engine/resources/font/font_manager.h"
-#include "engine/resources/texture/texture_manager.h"
+#include "engine/resources/resources.h"
+//#include "engine/resources/audio/audio_manager.h"
+//#include "engine/resources/font/font_manager.h"
+//#include "engine/resources/texture/texture_manager.h"
 #include "engine/utils/containers/registry.hpp"
 #include <functional>
 #include <string>
@@ -21,9 +22,10 @@ namespace cursed_engine
 		class AssetManager* assetManager{};
 		class Localization* localization{};
 		
-		AudioManager* audioManager{};
-		FontManager* fontManager{};
-		TextureManager* textureManager{};
+		Resources resources;
+		//AudioManager* audioManager{};
+		//FontManager* fontManager{};
+		//TextureManager* textureManager{};
 		const class TextCreator* textCreator{};
 	};
 
@@ -40,10 +42,11 @@ namespace cursed_engine
 	{
 		return ComponentInitContext{
 			context.assets.assetManager,
-			context.assets.localization,
-			context.resources.audioManager,
-			context.resources.fontManager,
-			context.resources.textureManager,
+			context.localization,
+			context.resources,
+			//context.resources.audioManager,
+			//context.resources.fontManager,
+			//context.resources.textureManager,
 			context.rendering.textCreator
 		};
 	}
@@ -73,8 +76,8 @@ namespace cursed_engine
 		std::size_t size;
 
 		// TODO return result instead of void?
-		using DeserializeFromJson = std::function<void(EntityHandle& handle, const JsonValue& value, const ComponentInitContext& context)>;
-		using DeserializeFromPrefab = std::function<void(EntityHandle& handle, const ComponentProperties& properties, const ComponentInitContext& ctx, const SpawnData& data)>;
+		using DeserializeFromJson = std::function<void(EntityHandle& handle, const JsonValue& value, ComponentInitContext& context)>;
+		using DeserializeFromPrefab = std::function<void(EntityHandle& handle, const ComponentProperties& properties, ComponentInitContext& ctx, const SpawnData& data)>;
 		
 		using PostInit = std::function<void(EntityHandle& handle, const ComponentPostInitContext& context)>;
 

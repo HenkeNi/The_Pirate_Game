@@ -1,17 +1,18 @@
 #pragma once
-#include "engine/resources/texture/texture_manager.h"
-#include "engine/rendering/render_api.h"
 #include "engine/ecs/system/system.h"
+#include "engine/rendering/render_api.h"
+#include "engine/resources/resources.h"
 
 namespace cursed_engine
 {
 	class AssetManager;
 	class ECSRegistry;
 
+	// Rename UIRenderSystem?
 	class ScreenSpaceRenderSystem : public RenderSystem
 	{
 	public:
-		ScreenSpaceRenderSystem(TextureManager* textureManager, AssetManager* assetManager, RenderAPI renderer);
+		ScreenSpaceRenderSystem(Resources resources, AssetManager* assetManager, RenderAPI renderer);
 
 		void render(SystemRenderContext& context) override; // or pass managers in update (renmae render)?
 
@@ -21,7 +22,7 @@ namespace cursed_engine
 		void renderText(ECSRegistry& registry);
 
 		AssetManager* m_assetManager;
-		TextureManager* m_textureManager;
+		Resources m_resources;
 		RenderAPI m_renderer;
 	};
 }

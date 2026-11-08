@@ -3,6 +3,7 @@
 
 namespace cursed_engine
 {
+	// remove class? merge into Network...
 	class NetworkManager
 	{
 	public:

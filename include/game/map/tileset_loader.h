@@ -1,6 +1,6 @@
 #pragma once 
 #include "game/map/map_types.h"
-#include <engine/assets/asset_loader.h>
+#include <engine/assets/asset_loaders.h>
 
 namespace cursed_engine
 {

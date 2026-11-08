@@ -15,7 +15,7 @@ int main()
 
 	if (!engine.init())
 	{
-		std::cerr << "Failed to initialize game!";
+		std::cerr << "Unrecoverable error occured. Terminating application";
 		return 1;
 	}
 

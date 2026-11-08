@@ -21,6 +21,7 @@ namespace cursed_engine
 		std::array<T, 9> m;
 	};
 
+	using FMat3 = Mat3<float>;
 
 #pragma region Definitions
 

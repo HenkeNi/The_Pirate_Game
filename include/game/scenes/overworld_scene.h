@@ -10,7 +10,7 @@ class OverworldScene : public Scene
 {
 public:
 	OverworldScene(SceneContext context, ce::PhysicsAPI physicsAPI); // how to construct scene if need args? facotry?
-	void onUpdate(float deltaTime) override;
+	void onUpdate(const ce::UpdateContext& ctx) override;
 
 	void onEnter();
 	void onExit();

@@ -1,7 +1,7 @@
 #pragma once
 #include "engine/ecs/system/system.h"
-#include "engine/resources/texture/texture_manager.h"
 #include "engine/rendering/render_api.h"
+#include "engine/resources/resources.h"
 #include "engine/math/aabb.hpp"
 
 
@@ -16,7 +16,7 @@ namespace cursed_engine
 	class WorldRenderSystem : public RenderSystem
 	{
 	public:
-		WorldRenderSystem(TextureManager* textureManager, AssetManager* assetManager, RenderAPI renderer, PhysicsDebugDraw* physicsDebugDraw = nullptr);
+		WorldRenderSystem(Resources resources, AssetManager* assetManager, RenderAPI renderer, PhysicsDebugDraw* physicsDebugDraw = nullptr);
 
 		void render(SystemRenderContext& context) override;
 	
@@ -25,9 +25,9 @@ namespace cursed_engine
 		void renderDebug(ECSRegistry& registry, const FAABB& viewBounds);
 
 		AssetManager* m_assetManager;
-		TextureManager* m_textureManager;
 		PhysicsDebugDraw* m_physicsDebugDraw;
 		RenderAPI m_renderer;
+		Resources m_resources;
 	
 		std::vector<Entity> m_entityBuffer;
 	};

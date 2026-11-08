@@ -315,7 +315,7 @@ Mark the cache dirty if so.
 	{
 		if (!m_entityManager.isAlive(entity))
 		{
-			Logger::logWarning("[ECS::TryGetComponent] - Tried access component with an invalid entity!");
+			//Logger::logWarning("[ECS::TryGetComponent] - Tried access component with an invalid entity!");
 			return nullptr;
 		}
 
@@ -376,7 +376,7 @@ Mark the cache dirty if so.
 
 		if (id >= m_componentManagers.size() || !m_componentManagers[id]) // TODO; make sure its safe!
 		{
-			Logger::logWarning("[ECSRegistry::getComponentManager] - Tried to access invalid component manager!");
+			//Logger::logWarning("[ECSRegistry::getComponentManager] - Tried to access invalid component manager!");
 			return nullptr;
 		}
 

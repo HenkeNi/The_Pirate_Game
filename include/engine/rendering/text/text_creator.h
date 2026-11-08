@@ -11,25 +11,13 @@ namespace cursed_engine
 
 	class Font;
 
-	class TextCreator
-	{
-	public:
-		virtual ~TextCreator() = default;
-
-		[[nodiscard]] virtual Result<TextPtr> createText(const std::string& text, const Font& font) const = 0;
-	};
-
-#pragma region SDL_Text_Creator
-
-	class SDLTextCreator final : public TextCreator
+	class TextCreator final
 	{
 	public:
 		void init(TTF_TextEngine* textEngine);
-		[[nodiscard]] Result<TextPtr> createText(const std::string& str, const Font& font) const override;
+		[[nodiscard]] Result<TextPtr> createText(const std::string& str, const Font& font) const;
 
 	private:
 		TTF_TextEngine* m_textEngine = nullptr;
 	};
-
-#pragma endregion
 }

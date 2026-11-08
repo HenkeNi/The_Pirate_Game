@@ -28,7 +28,7 @@ namespace cursed_engine
 			//worldPosition = cameraTransformComponent.position;
 			cameraBounds = registry.getComponent<cursed_engine::CameraComponent>(activeCamera.value()).bounds;
 
-			const auto position = registry.getComponent<cursed_engine::TransformComponent>(activeCamera.value()).position;
+			const auto position = registry.getComponent<cursed_engine::WorldTransformComponent>(activeCamera.value()).position;
 
 			std::array<cursed_engine::FVec2, 4> corners
 			{
@@ -62,8 +62,8 @@ namespace cursed_engine
 
 #pragma endregion
 
-	WorldRenderSystem::WorldRenderSystem(TextureManager* textureManager, AssetManager* assetManager, RenderAPI renderer, PhysicsDebugDraw* physicsDebugDraw)
-		: m_textureManager{ std::move(textureManager) }, m_assetManager{ assetManager }, m_renderer{ std::move(renderer) }, m_physicsDebugDraw{ physicsDebugDraw }
+	WorldRenderSystem::WorldRenderSystem(Resources resources, AssetManager* assetManager, RenderAPI renderer, PhysicsDebugDraw* physicsDebugDraw)
+		: m_resources{ std::move(resources) }, m_assetManager{ assetManager }, m_renderer{ std::move(renderer) }, m_physicsDebugDraw{ physicsDebugDraw }
 	{
 		// Reserve appropriate size?
 		m_entityBuffer.reserve(1000);
@@ -87,7 +87,7 @@ namespace cursed_engine
 
 		Entity camera = cameraEntity.value();
 
-		const auto& transformComponent = registry.getComponent<TransformComponent>(camera);
+		const auto& transformComponent = registry.getComponent<WorldTransformComponent>(camera);
 		const auto& cameraComponent = registry.getComponent<CameraComponent>(camera);
 
 		// IS PIVOT CORRECT HERE??
@@ -149,14 +149,16 @@ namespace cursed_engine
 		// Filter out ui component entities
 		m_entityBuffer.clear();
 
-		auto view = registry.view<SpriteComponent, TransformComponent>();
+		auto view = registry.view<SpriteComponent, WorldTransformComponent>();
 		view.exclude<UIComponent>();
 
 		// TODO; make so for Each works with just an entity as argument? -> check how it's done in Entt...
-		view.forEach([&](Entity entity, const SpriteComponent& spriteComponent, const TransformComponent& transformComponent) // fix so works with only entity!
+		view.forEach([&](Entity entity, const SpriteComponent& spriteComponent, const WorldTransformComponent& worldTransformComponent) // fix so works with only entity!
 			{
 				const AtlasRegion& region = spriteComponent.atlasRegion;
-				const FAABB spriteBounds{ transformComponent.position, FVec2{ transformComponent.position.x + region.rect.w, transformComponent.position.y + region.rect.h } };
+				const FVec2& position = worldTransformComponent.position;
+
+				const FAABB spriteBounds{ position, FVec2{ position.x + region.rect.w, position.y + region.rect.h } };
 
 				if (!viewBounds.intersects(spriteBounds))
 					return;
@@ -167,13 +169,13 @@ namespace cursed_engine
 
 		std::ranges::sort(m_entityBuffer, [&](Entity lhs, Entity rhs)
 			{
-				return registry.getComponent<TransformComponent>(lhs).position.y < registry.getComponent<TransformComponent>(rhs).position.y;
+				return registry.getComponent<WorldTransformComponent>(lhs).position.y < registry.getComponent<WorldTransformComponent>(rhs).position.y;
 				//return registry.getComponent<SpriteComponent>(lhs).zIndex < registry.getComponent<SpriteComponent>(rhs).zIndex;
 			});
 
 		for (const auto& entity : m_entityBuffer)
 		{
-			const auto& [spriteComponent, transformComponent] = registry.getComponents<SpriteComponent, TransformComponent>(entity);
+			const auto& [spriteComponent, worldTransformComponent] = registry.getComponents<SpriteComponent, WorldTransformComponent>(entity);
 
 			const AtlasRegion& region = spriteComponent.atlasRegion;
 
@@ -184,13 +186,13 @@ namespace cursed_engine
 
 			const auto& textureAtlas = m_assetManager->getAsset<TextureAtlas>(spriteComponent.atlasHandle); // no asset stored AND invalid index!
 
-			const auto& textureHandle = m_textureManager->getHandleById(textureAtlas.textureId);
+			const auto& textureHandle = m_resources.getHandleById<Texture>(textureAtlas.textureId);
 
-			if (auto* texture = m_textureManager->get(textureHandle))
+			if (auto* texture = m_resources.tryGet<Texture>(textureHandle))
 			{
-				FVec2 position = transformComponent.position;
+				FVec2 position = worldTransformComponent.position;
 
-				const FVec2 scaledSize = region.getSize() * transformComponent.scale;
+				const FVec2 scaledSize = region.getSize() * worldTransformComponent.scale;
 				
 				position -= region.pivot * scaledSize;
 
@@ -201,6 +203,10 @@ namespace cursed_engine
 				FRect dst{ position.x, position.y, scaledSize.x, scaledSize.y };
 
 				m_renderer.drawTexture(*texture, std::move(src), std::move(dst), spriteComponent.color);
+			}
+			else
+			{
+				int x = 20;
 			}
 		}
 

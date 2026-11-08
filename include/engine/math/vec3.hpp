@@ -1,5 +1,5 @@
 #pragma once
-#include "engine/utils/type_traits.h"
+#include "engine/utils/concepts.h"
 #include <cassert>
 #include <ostream>
 
@@ -20,7 +20,7 @@ namespace cursed_engine
 		Vec3& operator=(Vec3&&) = default;
 
 		template <Numeric U>
-		Vec3 operator=(const Vec3<U>& other);
+		Vec3& operator=(const Vec3<U>& other);
 
 		Vec3& normalize();
 
@@ -28,7 +28,7 @@ namespace cursed_engine
 
 		Vec3 directionTo(const Vec3& target) const noexcept;
 
-		T distanceTo(const Vec3& other) const noexcept;
+		T distanceTo(const Vec3& taget) const noexcept;
 
 		T x{}, y{}, z{};
 	};
@@ -52,6 +52,17 @@ namespace cursed_engine
 	constexpr Vec3<T>::Vec3(const Vec3<U>& other)
 	: x{ static_cast<T>(other.x) }, y{ static_cast<T>(other.y) }, z{ static_cast<T>(other.z) }
 	{
+	}
+
+	template <Numeric T>
+	template <Numeric U>
+	Vec3<T>& Vec3<T>::operator=(const Vec3<U>& other)
+	{
+		x = static_cast<T>(other.x);
+		y = static_cast<T>(other.y);
+		z = static_cast<T>(other.z);
+
+		return *this;
 	}
 
 	template <Numeric T>
@@ -80,9 +91,9 @@ namespace cursed_engine
 	}
 
 	template <Numeric T>
-	T Vec3<T>::distanceTo(const Vec3& other) const noexcept
+	T Vec3<T>::distanceTo(const Vec3& target) const noexcept
 	{
-		return distance(*this, other);
+		return distance(*this, target);
 	}
 
 #pragma endregion
@@ -118,24 +129,24 @@ namespace cursed_engine
 	}
 
 	template <Numeric T>
-	constexpr T LengthSqr(const Vec3<T>& v) noexcept
+	constexpr T LengthSqr(const Vec3<T>& vec) noexcept
 	{
-		return (v.x * v.x) + (v.y * v.y) + (v.z * v.z);
+		return (vec.x * vec.x) + (vec.y * vec.y) + (vec.z * vec.z);
 	}
 
 	template <Numeric T>
-	T length(const Vec2<T>& vec) noexcept
+	T length(const Vec3<T>& vec) noexcept
 	{
 		return std::sqrt(LengthSqr(vec));
 	}
 
 	template <Numeric T>
-	Vec3<T> normalized(const Vec3<T>& v)
+	Vec3<T> normalized(const Vec3<T>& vec)
 	{
-		T len = length(v);
+		T len = length(vec);
 		assert(len != T{ 0 });
 
-		return v / len;
+		return vec / len;
 	}
 
 #pragma endregion
@@ -143,9 +154,9 @@ namespace cursed_engine
 #pragma region Operators
 
 	template <Numeric T>
-	constexpr Vec3<T> operator-(const Vec3<T>& v) noexcept
+	constexpr Vec3<T> operator-(const Vec3<T>& vec) noexcept
 	{
-		return { -v.x, -v.y, -v.z };
+		return { -vec.x, -vec.y, -vec.z };
 	}
 
 	template <Numeric T>
@@ -161,13 +172,13 @@ namespace cursed_engine
 	}
 
 	template <Numeric T, Numeric U>
-	constexpr Vec3<T> operator*(const Vec3<T>& v, U scalar) noexcept
+	constexpr Vec3<T> operator*(const Vec3<T>& vec, U scalar) noexcept
 	{
-		return { v.x * scalar, v.y * scalar, v.z * scalar };
+		return { vec.x * scalar, vec.y * scalar, vec.z * scalar };
 	}
 
 	template <Numeric T, Numeric U>
-	constexpr Vec3<T> operator*(U scalar, const Vec3<T>& v) noexcept
+	constexpr Vec3<T> operator*(U scalar, const Vec3<T>& vec) noexcept
 	{
 		return vec * scalar;
 	}
@@ -179,10 +190,10 @@ namespace cursed_engine
 	}
 
 	template <Numeric T, Numeric U>
-	constexpr Vec3<T> operator/(const Vec3<T>& v, U scalar)
+	constexpr Vec3<T> operator/(const Vec3<T>& vec, U scalar)
 	{
 		assert(scalar != T{ 0 });
-		return { v.x / scalar, v.y / scalar, v.z / scalar };
+		return { vec.x / scalar, vec.y / scalar, vec.z / scalar };
 	}
 
 	template <Numeric T>
@@ -206,11 +217,11 @@ namespace cursed_engine
 	}
 
 	template <Numeric T, Numeric U>
-	constexpr Vec3<T>& operator*=(Vec3<T>& v, U scalar) noexcept
+	constexpr Vec3<T>& operator*=(Vec3<T>& vec, U scalar) noexcept
 	{
-		v.x *= scalar;
-		v.y *= scalar;
-		v.z *= scalar;
+		vec.x *= scalar;
+		vec.y *= scalar;
+		vec.z *= scalar;
 
 		return vec;
 	}
@@ -250,9 +261,9 @@ namespace cursed_engine
 	}
 
 	template <Numeric T>
-	std::ostream& operator<<(std::ostream& os, const Vec3<T>& v)
+	std::ostream& operator<<(std::ostream& os, const Vec3<T>& vec)
 	{
-		os << "[" << v.x << ", " << v.y << ", " << v.z << "]";
+		os << "[" << vec.x << ", " << vec.y << ", " << vec.z << "]";
 		return os;
 	}
 

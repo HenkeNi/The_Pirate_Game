@@ -5,7 +5,7 @@ class TitleScene : public Scene
 {
 public:
 	TitleScene(SceneContext context);
-	void onUpdate(float deltaTime) override;
+	void onUpdate(const ce::UpdateContext& ctx) override;
 
 	void onEnter();
 	void onExit();

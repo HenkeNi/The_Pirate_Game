@@ -8,7 +8,7 @@ TitleScene::TitleScene(SceneContext context)
 {
 }
 
-void TitleScene::onUpdate(float deltaTime)
+void TitleScene::onUpdate(const ce::UpdateContext& ctx)
 {
 	int x = 20;
 }

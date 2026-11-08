@@ -4,6 +4,7 @@
 #include "engine/core/action/action_registry.h" // or put type alisas in action.h?
 #include "engine/ecs/entity/entity_handle.h"
 #include "engine/math/vec2.hpp"
+#include "engine/math/mat3.hpp"
 #include "engine/math/aabb.hpp"
 #include "engine/physics/physics.h"
 #include "engine/physics/physics_types.h"
@@ -19,16 +20,14 @@
 
 namespace cursed_engine
 {
-	// Consider TransformComponent; have localPosition, localScale, localRotation instead?
-	// UITransformComponent as well?
 
 	// Core
-	struct TransformComponent
-	{
-		FVec2 position{ 0.f, 0.f };
-		FVec2 scale{ 1.f, 1.f }; // use this as scale not size!!!
-		float rotation = 0.f;
-	};
+	//struct TransformComponent
+	//{
+	//	FVec2 position{ 0.f, 0.f };
+	//	FVec2 scale{ 1.f, 1.f }; // use this as scale not size!!!
+	//	float rotation = 0.f;
+	//};
 
 	struct VelocityComponent
 	{
@@ -132,7 +131,7 @@ namespace cursed_engine
 		// handles? optionals?
 		EntityHandle parent = EntityHandle::invalid();
 		EntityHandle nextSibling = EntityHandle::invalid();
-		EntityHandle prevSibling = EntityHandle::invalid();
+		EntityHandle prevSibling = EntityHandle::invalid(); // used when removing entity?
 		EntityHandle firstChild = EntityHandle::invalid();
 		//	// also children?
 	};
@@ -143,8 +142,8 @@ namespace cursed_engine
 		//using ActionValue = std::variant<std::string, int, double, bool>;
 
 		ButtonComponent() = default;
-		ButtonComponent(std::string action, ActionArgs args, Color defaultColor, std::optional<Color> hoverColor = std::nullopt, std::optional<Color> pressedColor = std::nullopt)
-			: action{ action }, actionArgs{ std::move(args) }, defaultColor{ defaultColor }, hoverColor{ hoverColor }, pressedColor{ pressedColor }
+		ButtonComponent(std::string action, ActionArgs args)
+			: action{ action }, actionArgs{ std::move(args) }
 		{
 		}
 
@@ -214,22 +213,27 @@ namespace cursed_engine
 
 	struct SliderComponent
 	{
-		/*SliderComponent(Orientation orientation, float minValue, float maxValue, float currentValue = 0.f)
-			: orientation{ orientation }, minValue{ minValue }, maxValue{ maxValue }, currentValue{ currentValue }
+		SliderComponent() = default;
+		SliderComponent(Orientation orientation, float length, float value = 0.f)
+			: orientation{ orientation }, length{ length }, value{ value }
 		{
-		}*/
+		}
 
 		// cant make const? needs to be able to be initialized form other 
 		Orientation orientation;
-		float minValue; // or line?
-		float maxValue;
+		float length;
 
-		float currentValue;
+		float minValue = 0.0f;  // constexpr?
+		float maxValue = 1.0f; // constexpr?
+		float value = 0.5f; // normalized
+
+		//float currentValue;
 	};
 
-	struct SliderHandleComponent
+	struct SliderThumbComponent
 	{
-		// 
+		// store orientation here or in slider? (might make more sense in slider?)
+		// store current value here?
 	};
 
 	// or TargetComponent??
@@ -240,6 +244,29 @@ namespace cursed_engine
 
 	struct InputFieldComponent // or TextField
 	{
+	};
+
+	struct UIInteractableComponent
+	{
+		UIInteractableComponent() = default;
+
+		UIInteractableComponent(Color defaultColor, std::optional<Color> hoverColor = std::nullopt, std::optional<Color> pressedColor = std::nullopt)
+			: defaultColor{ defaultColor }, hoverColor{ hoverColor }, pressedColor{ pressedColor }
+		{
+		}
+
+		enum class State { Normal, Hovered, Pressed }; // replace with input state instead? None or Normal
+		State currentState = State::Normal;
+		State previousState = State::Normal;
+
+		
+		Color defaultColor; // dont read default color from json? store/save when setting hover color? or store modifier (color) in sprite?
+		std::optional<Color> hoverColor;
+		std::optional<Color> pressedColor;
+
+		bool hovered = false; // maybe enough?
+		//bool pressed = false;
+		//bool enabled = true;
 	};
 
 	struct RadioButton
@@ -271,6 +298,47 @@ namespace cursed_engine
 	struct BehaviorTreeComponent
 	{
 	};
+
+	// "write"
+	struct LocalTransformComponent
+	{
+		FVec2 position{};
+		FVec2 scale{ 1.f, 1.f };
+		float rotation = 0.f;
+	};
+
+	// "read"
+	struct WorldTransformComponent
+	{
+		FVec2 position{};
+		FVec2 scale{ 1.f, 1.f }; // replace with float?
+		float rotation = 0.f;
+
+		//FMat3 matrix = FMat3::identity(); if needing non uniform scale...
+	};
+
+	// or just layout component
+	struct UILayoutComponent
+	{
+		FVec2 anchorMin{}; // normalized
+		FVec2 anchorMax{};
+
+		FVec2 offsetMin{};
+		FVec2 offsetMax{};
+
+		FVec2 pivot{ 0.5f, 0.5f };
+	};
+
+	struct UITransformComponent
+	{
+		FVec2 position{};
+		FVec2 size{};
+		float rotation{};
+	};
+	//struct ScreenRectComponent
+	//{
+	//	FRect rect;
+	//};
 
 	//struct TransformComponent
 	//{

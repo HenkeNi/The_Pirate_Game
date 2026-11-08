@@ -1,23 +1,93 @@
 #include "engine/core/engine.h"
-#include "engine/core/engine_context.h"
+
+#include "engine/core/action/action_registry.h"
 #include "engine/core/application.h"
+#include "engine/core/config.h"
+#include "engine/core/contexts.h"
+//#include "engine/core/file_catalog.h"
 #include "engine/core/logger.h"
-#include "engine/modules/asset_module.h"
-#include "engine/modules/audio_module.h"
-#include "engine/modules/ecs_module.h"
-#include "engine/modules/network_module.h"
-#include "engine/modules/platform_module.h"
-#include "engine/modules/render_module.h"
-#include "engine/modules/resource_module.h"
-#include "engine/modules/physics_module.h"
 #include "engine/core/events/event_bus.h" 
 #include "engine/core/settings/settings.h"
-#include "engine/core/action/action_registry.h"
+
+#include "engine/assets/asset_store.h"
+#include "engine/audio/audio_backend.h"
+#include "engine/ecs/ecs.h"
+#include "engine/graphics/graphics.h"
+#include "engine/network/network.h"
+#include "engine/physics/physics.h"
+#include "engine/platform/platform.h"
+#include "engine/resources/resource_managers.h"
+
+#include "engine/utils/frame_timer.h"
+
 #include <cassert>
+
+#include "engine/platform/window.h" // remove later...
 
 namespace
 {
-	constexpr const char* initFailedMessage = "[Engine] - Initialization Failed! Module: {}";
+	using namespace cursed_engine;
+
+	constexpr const char* errorMessage = "Engine initialization aborted.";
+
+	[[nodiscard]] AudioBackendArgs createAudioBackendArgs(const Config::Audio& config, const AudioSettings& settings)
+	{
+		return AudioBackendArgs
+		{
+			{
+				AudioBackendArgs::Options{ settings.sfxVolume, config.sfxTrackCount },
+				AudioBackendArgs::Options{ settings.musicVolume, config.musicTrackCount },
+				AudioBackendArgs::Options{ settings.ambienceVolume, config.ambienceTrackCount },
+				AudioBackendArgs::Options{ settings.voiceVolume, config.voiceTrackCount },
+				AudioBackendArgs::Options{ settings.uiVolume, config.uiTrackCount }
+			},
+			settings.masterVolume
+		};
+	}
+
+	[[nodiscard]] GraphicsArgs createGraphicsArgs(const GraphicsSettings& settings) noexcept
+	{
+		return GraphicsArgs
+		{
+			settings.vsync
+		};
+	}
+
+	[[nodiscard]] PlatformArgs createPlatformArgs(const Config& config, const Settings& settings) noexcept
+	{
+		const WindowSettings& wndSettings = settings.getWindowSettings();
+		const InputSettings& inputSettings = settings.getInputSettings();
+		const Config::Window& wndConfig = config.window;
+
+		return PlatformArgs
+		{
+			WindowArgs
+			{
+				config.appInfo.name,
+				IVec2{ wndConfig.xPos, wndConfig.yPos },
+				wndSettings.size.x,
+				wndSettings.size.y,
+				wndSettings.fullscreen,
+				wndConfig.alwaysOnTop,
+			},
+			InputArgs
+			{
+				inputSettings.keyBindings,
+				inputSettings.mouseSensitivity
+			},
+			wndConfig.iconPath,
+			config.appInfo.name.c_str(),
+			config.appInfo.version.c_str(),
+			config.appInfo.identifier.c_str()
+		};
+	}
+
+	void registerAssetLoaders(AssetManager& assetManager)
+	{
+		assetManager.addLoader<AnimationLoader>();
+		assetManager.addLoader<TextureAtlasLoader>();
+		assetManager.addLoader<PrefabLoader>();
+	}
 }
 
 namespace cursed_engine
@@ -29,33 +99,28 @@ namespace cursed_engine
 		{
 		}
 
-		// Core 
-		PlatformModule platform;
 		EventBus eventBus;
+		//FileCatalog fileCatalog;
 		Settings settings;
-
-		// Resource
-		AssetModule asset;
-		ResourceModule resource;
-
-		// Output
-		RenderModule rendering;
-		AudioModule audio;
-
-		// Simulation
-		ECSModule ecs;
-		PhysicsModule physics;
+		Platform platform;
+		Graphics graphics;
+		AudioBackend audio; //rename AudioPlayback AudioPlayer; or simply Audio
+		ResourceManagers resources; // ResourceRegistry => Resources
+		Physics physics;
+		Network network;
+		AssetManager assets;  // AssetRegistry? => Assets (or AssetStore?)
+		ECS ecs;
+		Localization localization;
 		ActionRegistry actionRegistry;
 
-		// Network
-		NetworkModule network;
-
+		std::uint64_t frameCount{}; // put in frame timer?
 		Application& application;
-
-		// LayerStack??? ImGuilayer? debug layer? ui layer? game layer?
 
 		// Task system/Thread pool
 		// Profiler
+		// FIlesystem I/O
+
+		// World manager?
 	};
 
 	Engine::Engine(Application& app)
@@ -69,123 +134,131 @@ namespace cursed_engine
 
 	bool Engine::init()
 	{
-		Logger::logInfo("[Engine] - Began initialization...\n");
+		Logger::logInfo("Engine initializing...\n");
 		assert(m_impl && "Engine::Impl is null!");
 
-		auto& settings = m_impl->settings;
-
-		Result result = settings.loadConfig(Settings::getConfigPath());
-
-		if (!result.ok())
+		Config config;
+		if (Result<void> result = config.load(Config::getDefaultPath()); !result)
 		{
-			Logger::logError(std::format("[Engine] - Error occured trying to read engine configs. Reason: {}", result.message()));
+			Logger::logError(std::format("{}. {}", errorMessage, result.message()));
 			return false;
 		}
 
-		const auto& configs = settings.getEngineConfig();
-
-		auto& platform = m_impl->platform;
-		if (!platform.init(configs))
+		Settings& settings = m_impl->settings;
+		if (Result<void> result = settings.load(Settings::getDefaultPath()); !result)
 		{
-			Logger::logError(std::format(initFailedMessage, "PlatformModule"));
+			Logger::logError(std::format("Failed to read settings. Reason: {}", result.message()));
 			return false;
 		}
 
-		auto& rendering = m_impl->rendering;
-		if (!rendering.init(platform.getWindow(), configs.render, configs.platform.backend))
+		Platform& platform = m_impl->platform;
+		if (!platform.init(createPlatformArgs(config, settings)))
 		{
-			Logger::logError(std::format(initFailedMessage, "RenderModule"));
+			Logger::logError(errorMessage);
 			return false;
 		}
 
-		auto& audio = m_impl->audio;
-		if (!audio.init(configs.platform.backend))
+		Graphics& graphics = m_impl->graphics;
+		if (!graphics.init(platform.getWindow(), createGraphicsArgs(settings.getGraphicsSettings())))
 		{
-			Logger::logError(std::format(initFailedMessage, "AudioModule"));
+			Logger::logError(errorMessage);
 			return false;
 		}
 
-		auto& asset = m_impl->asset;
-		if (!asset.init())
+		AudioBackend& audio = m_impl->audio;
+		if (!audio.init(createAudioBackendArgs(config.audio, settings.getAudioSettings())))
 		{
-			Logger::logError(std::format(initFailedMessage, "AssetModule"));
+			Logger::logError(errorMessage);
+			return false;
+		}
+		
+		ResourceManagers& resources = m_impl->resources;
+		if (!resources.init(graphics.getTextureCreator(), audio.getAudioCreator()))
+		{
+			Logger::logError(errorMessage);
 			return false;
 		}
 
-		auto& resource = m_impl->resource;
-		if (!resource.init(rendering.getTextureCreator(), audio.getAudioCreator(), configs.resource, configs.platform.backend))
+		Physics& physics = m_impl->physics;
+		if (!physics.init({ graphics.getRenderAPI(), &resources.getFontManager(), graphics.getTextCreator() }))
 		{
-			Logger::logError(std::format(initFailedMessage, "ResourceModule"));
+			Logger::logError(errorMessage);
 			return false;
 		}
 
-		auto& physics = m_impl->physics;
-		if (!physics.init({ rendering.getRenderAPI(), &resource.getFontManager(), rendering.getTextCreator() }))
-		{
-			Logger::logError(std::format(initFailedMessage, "PhysicsModule"));
-			return false;
-		}
-
-		auto& network = m_impl->network;
+		Network& network = m_impl->network;
 		if (!network.init())
 		{
-			Logger::logError(std::format(initFailedMessage, "NetworkModule"));
+			Logger::logError(errorMessage);
 			return false;
 		}
+
+		AssetManager& assets = m_impl->assets;
+		registerAssetLoaders(assets);
 
 		auto ctx = context();
 
-		auto& ecs = m_impl->ecs;
-		if (!ecs.init(ctx))
+		ECS& ecs = m_impl->ecs;
+		if (!ecs.init(&assets))
 		{
-			Logger::logError(std::format(initFailedMessage, "ECSModule"));
+			Logger::logError(errorMessage);
 			return false;
 		}
 
 		m_impl->application.onCreated(ctx);
 
-		asset.scanAssets();
+		Localization& localization = m_impl->localization;
+		if (!localization.setLanguage(settings.getLocalizationSettings().language))
+		{
+			Logger::logError(errorMessage);
+			return false;
+		}
 
-		Logger::logInfo("[Engine] - Initialization successful!");
+		assets.scanAssets("../assets/");
+
+		Logger::logInfo("[Engine initialization completed]");
 		return true;
 	}
 
 	void Engine::shutdown()
 	{
-		Logger::logInfo("[Engine] - Shutdown began...");
+		Logger::logInfo("[Engine shutdown began]");
 		assert(m_impl && "Engine::Impl is null!");
 
 		auto& impl = *m_impl;
 
 		impl.application.onDestroyed();
-		impl.asset.shutdown();
-		impl.audio.shutdown();
 		impl.ecs.shutdown();
+		impl.resources.shutdown();
+		// impl.assets.shutdown();
+		impl.assets.unloadAll();
 		impl.physics.shutdown();
-		impl.resource.shutdown();
-		impl.rendering.shutdown();
+		impl.audio.shutdown();
+		impl.graphics.shutdown();
 		impl.platform.shutdown();
 
-		Logger::logInfo("[Engine] - Shutdown complete!");
+		Logger::logInfo("[Engine shutdown completed!]");
 	}
 
 	void Engine::run()
 	{
-		Logger::logInfo("[Engine] - Starting game loop...");
+		//Logger::logInfo("[Engine] - Starting game loop...");
 		assert(m_impl && "Engine::Impl is null!");
 
 		auto& impl = *m_impl;
 
 		bool running = true; // EngineState struct that contains paused, minimized, hasFocus?
-		
+		FrameTimer timer;
+
 		constexpr float fixedTimeStep = 1.0f / 60.0f;
 		double accumulator = 0.0;
 
 		while (running)
 		{
-			const double deltaTime = impl.platform.getDeltaTime(); // Do here (first)?
+			const double deltaTime = timer.getDeltaTime(); // Do here (first)?
 
 			//do this inside inner loop? also do endFramE?
+			timer.tick();
 			impl.platform.beginFrame();
 			impl.platform.processEvents(); // tick delta time first of all?
 
@@ -194,14 +267,14 @@ namespace cursed_engine
 				running = false;
 				continue;
 			}
-			
+
 			accumulator += deltaTime;
 
 			while (accumulator >= fixedTimeStep)
 			{
 				impl.eventBus.dispatchAll();
 
-				impl.application.onUpdate(fixedTimeStep);
+				impl.application.onUpdate(UpdateContext{ fixedTimeStep, impl.platform.getWindow().getState().size }); // have platform return preferences instead??
 
 				// update game
 				// update physics (physics.step())
@@ -211,19 +284,20 @@ namespace cursed_engine
 
 				accumulator -= fixedTimeStep;
 			}
-			
-			impl.resource.update(impl.platform.getFrameCount(), deltaTime);
-			
-			impl.rendering.beginFrame();
-			impl.application.onRender(RenderContext{ impl.rendering.getRenderPipeline() }); // DONT PASS rendering api and pipeline?
+
+			impl.resources.update(impl.frameCount, deltaTime);
+
+			impl.graphics.beginFrame();
+			impl.application.onRender(RenderContext{}); // DONT PASS rendering api and pipeline?
 
 			// Update ecs systems here?
 			//m_impl->systemManager.update(deltaTime); // After application update?
 
 			//Logger::logInfo("[Engine] - End frame..");
 
-			impl.rendering.endFrame();
+			impl.graphics.endFrame();
 			//impl.platform.endFrame();
+			++impl.frameCount;
 		}
 	}
 
@@ -233,23 +307,22 @@ namespace cursed_engine
 
 		return EngineContext{
 			EngineContext::PlatformServices{
-				impl.platform.getInputAPI(),
-				&impl.platform.getFrameTimer()
+				InputAPI{ &impl.platform.getInputHandler() }
+				//&impl.platform.getFrameTimer()
 			},
 			EngineContext::RenderingServices {
-				impl.rendering.getRenderAPI(),
-				impl.rendering.getRenderPipeline(),
-				impl.rendering.getTextCreator()
+				impl.graphics.getRenderAPI(),
+				&impl.graphics.getRenderPipeline(),
+				impl.graphics.getTextCreator()
 			},
 			EngineContext::AssetServices{
-				&impl.asset.getAssetManager(),
-				&impl.asset.getLocalization()
+				&impl.assets
 			},
-			EngineContext::ResourceServices{
-				&impl.resource.getAudioManager(),
-				&impl.resource.getFontManager(),
-				&impl.resource.getTextureManager(),
-			},
+			/*EngineContext::ResourceServices{
+				&impl.resources.getAudioManager(),
+				&impl.resources.getFontManager(),
+				&impl.resources.getTextureManager(),
+			},*/
 			EngineContext::ECSServices{
 				&impl.ecs.getEntityFactory(),
 				&impl.ecs.getComponentRegistry(),
@@ -260,9 +333,16 @@ namespace cursed_engine
 				&impl.physics.getPhysicsDebugDraw()
 			},
 			EngineContext::AudioServices{
-				impl.audio.getAudioController()
+				AudioController{ &impl.audio }
+			},
+			Resources
+			{ 
+				&impl.resources.getAudioManager(),
+				&impl.resources.getFontManager(),
+				&impl.resources.getTextureManager()
 			},
 			&impl.actionRegistry,
+			&impl.localization,
 			&impl.eventBus,
 			&impl.settings
 		};

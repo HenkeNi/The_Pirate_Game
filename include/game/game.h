@@ -6,7 +6,8 @@
 namespace cursed_engine
 {
 	class EventBus;
-	struct EngineConfig;
+	class Localization;
+	// struct EngineConfig;
 }
 
 namespace ce = cursed_engine;
@@ -17,12 +18,12 @@ public:
 	Game();
 	~Game() = default;
 
-	void onUpdate(float deltaTime) override;
-	void onRender(const ce::RenderContext& ctx) override;
-	
 	void onCreated(const ce::EngineContext& ctx) override; // pass by value?
 	void onDestroyed() override;
 
+	void onUpdate(const ce::UpdateContext& ctx) override;
+	void onRender(const ce::RenderContext& ctx) override;
+	
 private:	
 	void registerActions(const ce::EngineContext& ctx);
 	void registerScenes(const ce::EngineContext& ctx);
@@ -30,10 +31,12 @@ private:
 	void registerComponents(const ce::EngineContext& ctx);
 	void setupSystems(const ce::EngineContext& ctx);
 	
+	void registerLanguages(ce::Localization& localization);
+
 	// Pimpl??
 	SceneManager m_sceneManager;
 	
 	ce::EventBus* m_eventBus;
-	const ce::EngineConfig* m_configs;
+	//const ce::EngineConfig* m_configs;
 	//MapGenerator m_mapGenerator; // put in GameScene? (base)
 };

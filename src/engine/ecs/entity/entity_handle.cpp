@@ -18,4 +18,25 @@ namespace cursed_engine
 	{
 		return m_registry && m_registry->isAlive(m_entity);
 	}
+
+
+	bool EntityHandle::operator==(const EntityHandle& other) const noexcept
+	{
+		return m_entity == other.m_entity;
+	}
+
+	bool EntityHandle::operator==(const Entity& other) const noexcept
+	{
+		return m_entity == other;
+	}
+
+	bool EntityHandle::operator!=(const EntityHandle& other) const noexcept
+	{
+		return !(*this == other);
+	}
+
+	bool EntityHandle::operator!=(const Entity& other) const noexcept
+	{
+		return !(*this == other);
+	}
 }

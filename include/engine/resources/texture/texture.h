@@ -12,7 +12,7 @@ namespace cursed_engine
 		virtual ~Texture() = default;
 
 		Texture(const Texture&) = delete;
-		Texture(Texture&& other) noexcept = default;
+		Texture(Texture&& other) noexcept = default; // delete or default? provide override in derived?
 
 		Texture& operator=(const Texture& other) = delete;
 		Texture& operator=(Texture&& other) noexcept = default;

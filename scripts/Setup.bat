@@ -3,7 +3,11 @@ REM -------------------------------
 REM setup.bat - bootstrap vcpkg and install dependencies from vcpkg.json
 REM -------------------------------
 
-cd /d "%~dp0\.."
+cd /d "%~dp0\.." || (
+	echo Failed to change directory
+	pause
+	exit /b 1
+)
 
 git submodule update --init --recursive
 
@@ -16,8 +20,13 @@ if %errorlevel% neq 0 (
 echo submodules updated successfully!
 
 REM Build vcpkg (Windows)
-cd extern/vcpkg
-bootstrap-vcpkg.bat
+cd extern/vcpkg || (
+	echo Failed to enter extern/vcpkg
+	pause
+	exit /b 1
+)
+
+call bootstrap-vcpkg.bat
 
 if %errorlevel% neq 0 (
 	echo Failed to run the vcpkg/bootstrap.bat script!

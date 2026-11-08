@@ -51,6 +51,12 @@ namespace cursed_engine
 
 		[[nodiscard]] bool isValid() const noexcept;
 
+		[[nodiscard]] bool operator==(const EntityHandle& other) const noexcept;
+		[[nodiscard]] bool operator==(const Entity& other) const noexcept;
+
+		[[nodiscard]] bool operator!=(const EntityHandle& other) const noexcept;
+		[[nodiscard]] bool operator!=(const Entity& other) const noexcept;
+
 	private:
 		ECSRegistry* m_registry;
 		Entity m_entity;

@@ -2,68 +2,33 @@
 
 namespace cursed_engine
 {
-	void AssetManager::addSearchPath(std::filesystem::path path)
+	void AssetManager::scanAssets(std::filesystem::path path)
 	{
-		m_searchPaths.push_back(std::move(path));
-	}
-
-	void AssetManager::scanAssets()
-	{
-		for (const std::filesystem::path& searchPath : m_searchPaths)
-		{
-			for (const std::filesystem::directory_entry& entry : std::filesystem::recursive_directory_iterator(searchPath))
-			{
-				if (!entry.is_regular_file())
-					continue;
-
-				const std::filesystem::path& path = entry.path();
-				const std::string filename = path.string();
-
-				auto it = std::find_if(m_assetTypes.begin(), m_assetTypes.end(),
-					[&](const auto& pair)
-					{
-						//pair.second.loader->format();
-						return filename.ends_with(pair.second.loader->format());
-					});
-
-				if (it != m_assetTypes.end())
-				{
-					AssetType& assetType = it->second;
-					std::string id = extractAssetId(path, assetType.loader->format());
-
-					assetType.idToMetaData.insert_or_assign(std::move(id), AssetMetaData{ path });
-
-					//m_idsToPaths.insert_or_assign(std::move(id), path);
-				}
-			}
-		}
-
-		/*for (const auto& [index, loaderBase] : m_loadersByType)
-		{
-			loaderBase->format();
-		}*/
-
-		/*for (const auto& entry : std::filesystem::recursive_directory_iterator("../assets/"))
+		for (const std::filesystem::directory_entry& entry : std::filesystem::recursive_directory_iterator(path))
 		{
 			if (!entry.is_regular_file())
 				continue;
 
-			const auto& path = entry.path();
-			std::string filename = path.string();
+			const std::filesystem::path& path = entry.path();
+			const std::string filename = path.string();
 
-			if (filename.ends_with("animation.json"))
+			auto it = std::find_if(m_assetTypes.begin(), m_assetTypes.end(),
+				[&](const auto& pair)
+				{
+					//pair.second.loader->format();
+					return filename.ends_with(pair.second.loader->format());
+				});
+
+			if (it != m_assetTypes.end())
 			{
-				auto handle = m_assetManager.loadAsset<AnimationSet>(path);
+				AssetType& assetType = it->second;
+				std::string id = extractAssetId(path, assetType.loader->format());
+
+				assetType.idToMetaData.insert_or_assign(std::move(id), AssetMetaData{ path });
+
+				//m_idsToPaths.insert_or_assign(std::move(id), path);
 			}
-			else if (filename.ends_with("texture_atlas.json"))
-			{
-				auto handle = m_assetManager.loadAsset<TextureAtlas>(path);
-			}
-			else if (filename.ends_with("prefab.json"))
-			{
-				auto handle = m_assetManager.loadAsset<Prefab>(entry.path());
-			}
-		}*/
+		}
 	}
 
 	void AssetManager::unloadAll()

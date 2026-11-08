@@ -7,8 +7,21 @@ namespace cursed_engine
 	template <Numeric T>
 	struct AABB
 	{
-		// get center? (min + max) * 0.5
+		AABB() = default;
+
+		AABB(T x, T y, T w, T h)
+			: min{ x, y }, max{ x + w, y + h }
+		{
+		}
+
+		AABB(Vec2<T> min, Vec2<T> max)
+			: min{ min }, max{ max }
+		{
+		}
+
+		[[nodiscard]] bool contains(const Vec2<T>& point) const noexcept;
 		[[nodiscard]] bool intersects(const AABB<T>& other) const noexcept;
+
 		[[nodiscard]] Vec2<T> center() const noexcept;
 
 		Vec2<T> min;
@@ -24,6 +37,13 @@ namespace cursed_engine
 	using Bounds = AABB<float>;
 
 #pragma region Definitions
+
+	template <Numeric T>
+	bool AABB<T>::contains(const Vec2<T>& point) const noexcept
+	{
+		return point.x >= min.x && point.x <= max.x
+			&& point.y >= min.y && point.y <= max.y;
+	}
 
 	template <Numeric T>
 	bool AABB<T>::intersects(const AABB<T>& other) const noexcept

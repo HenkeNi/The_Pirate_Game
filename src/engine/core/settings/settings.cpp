@@ -7,179 +7,108 @@
 #include "engine/core/result.h"
 
 namespace cursed_engine
-{
-	bool loadAppInfo(const JsonDocument& document, AppInfo& outAppInfo)
+{	
+	bool loadAssetSettings(const JsonValue& value, AssetSettings& outAssetSettings)
 	{
-		outAppInfo.name = document["name"].asString();
-		outAppInfo.version = document["version"].asString();
-		outAppInfo.identifier = document["identifier"].asString();
+		return true;
+	}
+
+	bool loadAudioSettings(const JsonValue& value, AudioSettings& outAudioSettings)
+	{
+		const JsonValue& volumes = value["volumes"];
+		outAudioSettings.musicVolume = volumes["music"].asFloat();
+		outAudioSettings.sfxVolume = volumes["sfx"].asFloat();
+		outAudioSettings.ambienceVolume = volumes["ambience"].asFloat();
+		outAudioSettings.voiceVolume = volumes["voice"].asFloat();
+		outAudioSettings.uiVolume = volumes["ui"].asFloat();
+		
+		outAudioSettings.masterVolume = volumes["master"].asFloat();
 
 		return true;
 	}
 
-	bool loadPlatformConfig(const JsonValue& jsonValue, PlatformConfig& outPlatformConfig)
+	bool loadGraphicsSettings(const JsonValue& value, GraphicsSettings& outGraphicsSettings)
 	{
-		std::string backend = jsonValue["backend"].asString();
+		outGraphicsSettings.vsync = value["vsync"].asBool();
 
-		if (backend == "SDL")
-		{
-			outPlatformConfig.backend = Backend::SDL;
-		}
-		else
-		{
-			Logger::logError("Unrecognized Platform backend: " + backend);
-			return false;
-		}
-
-		return true;
-	}
-
-	bool loadRenderConfig(const JsonValue& jsonValue, RenderConfig& outRenderConfig)
-	{
 		return true;
 
 	}
 
-	bool loadWindowConfig(const JsonValue& jsonValue, WindowConfig& outWindowConfig)
+	bool loadInputSettings(const JsonValue& value, InputSettings& outInputSettings)
 	{
-		outWindowConfig.iconPath = jsonValue["icon_path"].asString();
-		outWindowConfig.width = jsonValue["width"].asInt();
-		outWindowConfig.height = jsonValue["height"].asInt();
-		outWindowConfig.vsync = jsonValue["vsync"].asBool();
-		outWindowConfig.fullscreen = jsonValue["fullscreen"].asBool();
+
+		return true;
+	}
+	bool loadLocalizationSettings(const JsonValue& value, LocalizationSettings& outLocalizationSettings)
+	{ 
+		outLocalizationSettings.language = value["language"].asString();
+		return true;
+	}
+
+	bool loadWindowSettings(const JsonValue& value, WindowSettings& outWindowSettings)
+	{
+		outWindowSettings.size.x = value["width"].asInt();
+		outWindowSettings.size.y = value["height"].asInt();
+		// size, etc...
 
 		return true;
 	}
 
-	bool loadInputConfig(const JsonValue& jsonValue, InputConfig& outInputConfig)
-	{
-		outInputConfig.keyBindings.insert({ Key::W, Action::MoveUp });
-		outInputConfig.keyBindings.insert({ Key::A, Action::MoveLeft });
-		outInputConfig.keyBindings.insert({ Key::S, Action::MoveDown });
-		outInputConfig.keyBindings.insert({ Key::D, Action::MoveRight });
+	//bool loadAssetPaths(ResourceConfig& resourceConfig)
+	//{
+	//	for (const auto& entry : std::filesystem::recursive_directory_iterator("../assets"))
+	//	{
+	//		if (!entry.is_regular_file())
+	//			continue;
 
-		return true;
-	}
+	//		const auto& path = entry.path();
 
-	bool loadResourceConfig(const JsonValue& jsonValue, ResourceConfig& resourceConfig)
-	{
-		for (const auto& supportedFormat : jsonValue["supported_image_formats"].asArray())
-		{
-			resourceConfig.validTextureFormats.push_back(supportedFormat.asString());
-		}
+	//		std::string filename = path.string();
 
-		for (const auto& supportedFormat : jsonValue["supported_audio_formats"].asArray())
-		{
-			resourceConfig.validAudioFormats.push_back(supportedFormat.asString());
-		}
+	//		if (hasValidFileExtension(filename, resourceConfig.validTextureFormats)
+	//			|| hasValidFileExtension(filename, resourceConfig.validAudioFormats)
+	//			|| hasValidFileExtension(filename, resourceConfig.validFontFormats))
+	//		{
+	//			auto id = extractResourceId(path);
+	//			resourceConfig.resourceIdToPath.insert_or_assign(std::move(id), path.string());
+	//		}
+	//	}
 
-		for (const auto& supportedFormat : jsonValue["supported_font_formats"].asArray())
-		{
-			resourceConfig.validFontFormats.push_back(supportedFormat.asString());
-		}
-
-		return true;
-	}
-
-	std::string extractResourceId(const std::filesystem::path& path) noexcept
-	{
-		return path.stem().string();
-		/*std::string filename = path.filename().string();
-
-		for (const auto& extension : extensions)
-		{
-			if (filename.ends_with(extension))
-			{
-				return filename.substr(0, filename.length() - extension.length());
-			}
-		}
-
-		size_t firstDot = filename.find('.');
-		if (firstDot != std::string::npos && firstDot > 0)
-		{
-			return filename.substr(0, firstDot);
-		}
-
-		return filename;*/
-	}
-
-	bool hasValidFileExtension(const std::string& filename, const std::vector<std::string>& extensions) noexcept
-	{
-		for (const auto& extension : extensions)
-		{
-			if (filename.ends_with(extension))
-				return true;
-		}
-
-		return false;
-	}
-
-	bool loadAssetPaths(ResourceConfig& resourceConfig)
-	{
-		for (const auto& entry : std::filesystem::recursive_directory_iterator("../assets"))
-		{
-			if (!entry.is_regular_file())
-				continue;
-
-			const auto& path = entry.path();
-
-			std::string filename = path.string();
-
-			if (hasValidFileExtension(filename, resourceConfig.validTextureFormats)
-				|| hasValidFileExtension(filename, resourceConfig.validAudioFormats)
-				|| hasValidFileExtension(filename, resourceConfig.validFontFormats))
-			{
-				auto id = extractResourceId(path);
-				resourceConfig.resourceIdToPath.insert_or_assign(std::move(id), path.string());
-			}
-		}
-
-		return true;
-	}
-
-	// TODO; PUT IN CONFIG STRUCT? Read from json...?
-	// TODO; put in utility file? FileUtils? static member?
-	/*static const std::vector<std::string> extensions = {
-		".jpeg",
-		".png",
-		".bmp",
-		".mp3",
-		".wav",
-	};*/
+	//	return true;
+	//}
 
 	Settings::Settings(EventBus& eventBus)
 		: m_eventBus{ eventBus }
 	{
 	}
 
-	Result<void> Settings::loadConfig(const std::filesystem::path& path)
+	Result<void> Settings::save(const std::filesystem::path& path)
 	{
-		m_config.resource.assetRoot = "../assets/"; // find root instead?
+		return Result<void>::success();
+	}
 
+	Result<void> Settings::load(const std::filesystem::path& path)
+	{
 		JsonDocument document;
-		Result<void> result = document.loadFromFile(path);
 
-		if (!result.ok())
+		if (Result<void> result = document.loadFromFile(path); !result)
 		{
+			Logger::logError(result.message());
 			return result;
 		}
 
 		bool success = true;
 
-		success &= loadAppInfo(document, m_config.appInfo);
-		success &= loadPlatformConfig(document["platform"], m_config.platform);
-		success &= loadRenderConfig(document["renderer"], m_config.render);
-		success &= loadWindowConfig(document["window"], m_config.window);
-		success &= loadInputConfig(document["input"], m_config.input);
-		success &= loadResourceConfig(document["resource"], m_config.resource);
+		success &= loadAssetSettings(document["assets"], m_assets);
+		success &= loadAudioSettings(document["audio"], m_audio);
+		success &= loadGraphicsSettings(document["graphics"], m_graphics);
+		success &= loadInputSettings(document["input"], m_input);
+		success &= loadLocalizationSettings(document["localization"], m_localization);
+		success &= loadWindowSettings(document["window"], m_window);
 
-		success &= loadAssetPaths(m_config.resource);
-
-		return Result<void>::success();
-	}
-
-	void Settings::saveConfig(const std::filesystem::path& path)
-	{
+		return success ?
+			Result<void>::success() : Result<void>::failure("Failed to load configs");
 	}
 
 	void Settings::applySettings()
@@ -192,15 +121,20 @@ namespace cursed_engine
 			vsync);*/
 	}
 
-	std::filesystem::path Settings::getConfigPath()
+	//std::filesystem::path Settings::getConfigPath()
+	//{
+	//	static const std::filesystem::path path = [] {
+
+	//		return "../assets/config/engine_config.json";
+
+	//		//auto exePath = getExecutableDirectory(); // custom function
+	//		//return exePath / "assets" / "config" / "engine_config.json";
+	//		}();
+	//	return path;
+	//}
+	std::filesystem::path Settings::getDefaultPath() noexcept
 	{
-		static const std::filesystem::path path = [] {
-
-			return "../assets/config/engine_config.json";
-
-			//auto exePath = getExecutableDirectory(); // custom function
-			//return exePath / "assets" / "config" / "engine_config.json";
-			}();
-		return path;
+		//static const std::filesystem::path path = [] { return "../assets/"; }();
+		return "../assets/settings/settings.json";
 	}
 }
