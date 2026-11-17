@@ -26,13 +26,15 @@
       "id": "title",
       "components": {
         "ui_layout": {
-          "anchor_min": {
-            "x": 0.0,
-            "y": 0.0
-          },
-          "anchor_max": {
-            "x": 0.0,
-            "y": 0.0
+          "anchor": {
+            "min": {
+              "x": 0.5,
+              "y": 0.0
+            },
+            "max": {
+              "x": 0.5,
+              "y": 0.0
+            }
           }
         },
         "ui": {},
@@ -40,6 +42,7 @@
           "text_id": "title_text",
           "font": "JackPirate_PERSONAL_USE_ONLY",
           "size": 100,
+          "alignment": "left",
           "color": {
             "r": 8,
             "g": 8,
