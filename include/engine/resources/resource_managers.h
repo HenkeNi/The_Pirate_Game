@@ -26,8 +26,13 @@ namespace cursed_engine
 
 		void update(uint64_t currentFrame, float deltaTime); // rename? handle offloading...
 
+		[[nodiscard]] inline const AudioManager& getAudioManager() const noexcept { return m_audioManager; }
 		[[nodiscard]] inline AudioManager& getAudioManager() noexcept { return m_audioManager; }
+
+		[[nodiscard]] inline const FontManager& getFontManager() const noexcept { return m_fontManager; }
 		[[nodiscard]] inline FontManager& getFontManager() noexcept { return m_fontManager; }
+		
+		[[nodiscard]] inline const TextureManager& getTextureManager() const noexcept { return m_textureManager; }
 		[[nodiscard]] inline TextureManager& getTextureManager() noexcept { return m_textureManager; }
 
 	private:

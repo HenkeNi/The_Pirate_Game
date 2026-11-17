@@ -50,6 +50,11 @@ namespace cursed_engine
 		m_backend.endFrame();
 	}
 
+	RenderAPI Graphics::getRenderAPI() noexcept
+	{
+		return RenderAPI{ &m_backend };
+	}
+
 	const TextureCreator* Graphics::getTextureCreator() const noexcept
 	{
 		return m_backend.getTextureCreator();
@@ -58,5 +63,10 @@ namespace cursed_engine
 	const TextCreator* Graphics::getTextCreator() const noexcept
 	{
 		return m_backend.getTextCreator();
+	}
+
+	const RenderBackend& Graphics::getRenderBackend() const noexcept
+	{
+		return m_backend;
 	}
 }

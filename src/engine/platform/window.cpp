@@ -69,7 +69,7 @@ namespace cursed_engine
 		}
 	}
 
-	void* Window::getNativeHandle() const noexcept
+	SDL_Window* Window::getNativeHandle() const noexcept
 	{
 		return m_window;
 	}

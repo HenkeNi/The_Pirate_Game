@@ -23,7 +23,7 @@ void SceneManager::init(const ce::EngineContext& context, SceneRegistry registry
 		context.rendering.rendererAPI,
 		context.resources,
 		//context.resources.audioManager,
-		context.audio.audioController
+		context.audio.controller
 	};
 
 	ce::ComponentInitContext componentInitContext = ce::createComponentInitContext(context);

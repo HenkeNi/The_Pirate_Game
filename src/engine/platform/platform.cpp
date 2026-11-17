@@ -12,7 +12,7 @@
 namespace cursed_engine
 {
 	Platform::Platform(EventBus& eventBus)
-		: m_window{}, m_cursor{}, m_inputHandler{ eventBus }, m_eventBus{ eventBus }, m_shouldExit{ false }
+		: m_window{}, m_cursor{}, m_inputHandler{ eventBus }, m_eventBus{ eventBus }, m_nextCallbackHandle{ 1 }, m_shouldExit{ false }
 	{
 	}
 
@@ -120,9 +120,30 @@ namespace cursed_engine
 			default:
 				m_window.processEvent(event);
 				m_inputHandler.processInput(event);
+
+				std::for_each(m_callbacks.begin(), m_callbacks.end(), 
+					[&](const CallbackEntry& entry) { entry.callback(event); });
+			
 				break;
 			}
 		}
+	}
+
+	CallbackHandle Platform::addCallback(NativeEventCallback callback)
+	{
+		CallbackHandle handle = m_nextCallbackHandle++;
+		m_callbacks.emplace_back(handle, std::move(callback));
+	
+		return handle;
+	}
+
+	void Platform::removeCallback(CallbackHandle handle)
+	{
+		std::erase_if(m_callbacks,
+			[&](const CallbackEntry& entry)
+			{
+				return handle == entry.handle;
+			});
 	}
 
 	bool Platform::exitRequested() const noexcept

@@ -667,6 +667,23 @@ namespace cursed_engine
 					}
 				}
 
+				TextAlignment alignment;
+				if (value.hasMember("alignment"))
+				{
+					std::string alignmentValue = value["alignment"].asString();
+					if (alignmentValue == "left")
+					{
+						alignment = TextAlignment::Left;
+					}
+					else if (alignmentValue == "right")
+					{
+						alignment = TextAlignment::Right;
+					}
+					else if (alignmentValue == "center")
+					{
+						alignment = TextAlignment::Center;
+					}
+				}
 
 				// style.. 
 				//int size;
@@ -718,7 +735,7 @@ namespace cursed_engine
 						pivot.y = value["pivot"]["y"].asFloat();
 					}
 
-					handle.attachComponent<TextComponent>(std::move(text), pivot); // Only if suceesful??
+					handle.attachComponent<TextComponent>(std::move(text), pivot, alignment); // Only if suceesful??
 					//handle.attachComponent<TextComponent>(textId, fontHandle, std::move(text), pivot, textColor); // Only if suceesful??
 				}
 				else

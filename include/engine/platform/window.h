@@ -54,7 +54,7 @@ namespace cursed_engine
 		void processEvent(const SDL_Event& event);
 
 		// ==================== Getters ====================
-		[[nodiscard]] void* getNativeHandle() const noexcept;
+		[[nodiscard]] SDL_Window* getNativeHandle() const noexcept;
 		[[nodiscard]] inline const State& getState() const noexcept { return m_state; }
 
 		// ==================== Setters ====================

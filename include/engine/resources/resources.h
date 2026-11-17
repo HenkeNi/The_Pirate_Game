@@ -2,6 +2,7 @@
 #include "engine/resources/audio/audio_manager.h"
 #include "engine/resources/font/font_manager.h"
 #include "engine/resources/texture/texture_manager.h"
+#include <cassert>
 
 namespace cursed_engine
 {
@@ -18,7 +19,7 @@ namespace cursed_engine
 		// ==================== Resource insertion ====================,
 		template <typename T, typename... Args>
 		ResourceHandle<T> insert(std::unique_ptr<T> resource, Args&&... descriptorArgs);
-		
+
 		// ==================== Handle acquisition ====================
 		template <typename T, typename U>
 		[[nodiscard]] ResourceHandle<T> getHandle(const U& descriptor);
@@ -34,8 +35,8 @@ namespace cursed_engine
 		[[nodiscard]] const T& get(ResourceHandle<T> handle) const;
 
 		template <typename T>
-		[[nodiscard]] const T* tryGet(ResourceHandle<T> handle) const;	
-		 	
+		[[nodiscard]] const T* tryGet(ResourceHandle<T> handle) const;
+
 		template <typename T>
 		[[nodiscard]] const T& operator[](ResourceHandle<T> handle) const;
 
@@ -48,7 +49,7 @@ namespace cursed_engine
 
 		template <typename T>
 		[[nodiscard]] bool isValid(ResourceHandle<T> handle) const noexcept;
-		
+
 	private:
 		template <typename T>
 		friend struct ResourceManagerTraits;
@@ -63,11 +64,13 @@ namespace cursed_engine
 	{
 		static const TextureManager* getManager(const Resources* resources) noexcept
 		{
+			assert(resources->m_textureManager && "TextureManager is nullptr!");
 			return resources->m_textureManager;
 		}
-		
+
 		static TextureManager* getManager(Resources* resources) noexcept
 		{
+			assert(resources->m_textureManager && "TextureManager is nullptr!");
 			return resources->m_textureManager;
 		}
 	};
@@ -77,11 +80,13 @@ namespace cursed_engine
 	{
 		static const AudioManager* getManager(const Resources* resources)
 		{
+			assert(resources->m_audioManager && "AudioManager is nullptr!");
 			return resources->m_audioManager;
 		}
 
 		static AudioManager* getManager(Resources* resources)
 		{
+			assert(resources->m_audioManager && "AudioManager is nullptr!");
 			return resources->m_audioManager;
 		}
 	};
@@ -91,11 +96,13 @@ namespace cursed_engine
 	{
 		static const FontManager* getManager(const Resources* resources)
 		{
+			assert(resources->m_fontManager && "FontManager is nullptr!");
 			return resources->m_fontManager;
 		}
 
 		static FontManager* getManager(Resources* resources)
 		{
+			assert(resources->m_fontManager && "FontManager is nullptr!");
 			return resources->m_fontManager;
 		}
 	};
@@ -106,6 +113,8 @@ namespace cursed_engine
 	ResourceHandle<T> Resources::insert(std::unique_ptr<T> resource, Args&&... descriptorArgs)
 	{
 		auto* manager = ResourceManagerTraits<T>::getManager(this);
+		assert(manager != nullptr && "Invalid manager");
+
 		return manager->insert(std::move(resource), std::forward<Args>(descriptorArgs)...);
 	}
 
@@ -113,6 +122,8 @@ namespace cursed_engine
 	ResourceHandle<T> Resources::getHandle(const U& descriptor)
 	{
 		auto* manager = ResourceManagerTraits<T>::getManager(this);
+		assert(manager != nullptr && "Invalid manager");
+
 		return manager->getHandle(descriptor);
 	}
 
@@ -120,6 +131,8 @@ namespace cursed_engine
 	ResourceHandle<T> Resources::getHandleById(const std::string& id, Args&&... args)
 	{
 		auto* manager = ResourceManagerTraits<T>::getManager(this);
+		assert(manager != nullptr && "Invalid manager");
+
 		return manager->getHandleById(id, std::forward<Args>(args)...);
 	}
 
@@ -127,6 +140,8 @@ namespace cursed_engine
 	ResourceHandle<T> Resources::findHandle(const U& descriptor) const
 	{
 		const auto* manager = ResourceManagerTraits<T>::getManager(this);
+		assert(manager != nullptr && "Invalid manager");
+
 		return manager->findHandle(descriptor);
 	}
 
@@ -134,6 +149,8 @@ namespace cursed_engine
 	const T& Resources::get(ResourceHandle<T> handle) const
 	{
 		const auto* manager = ResourceManagerTraits<T>::getManager(this);
+		assert(manager != nullptr && "Invalid manager");
+
 		return manager->get(handle);
 	}
 
@@ -141,6 +158,8 @@ namespace cursed_engine
 	const T* Resources::tryGet(ResourceHandle<T> handle) const
 	{
 		const auto* manager = ResourceManagerTraits<T>::getManager(this);
+		assert(manager != nullptr && "Invalid manager");
+
 		return manager->tryGet(handle);
 	}
 
@@ -148,6 +167,8 @@ namespace cursed_engine
 	const T& Resources::operator[](ResourceHandle<T> handle) const
 	{
 		const auto* manager = ResourceManagerTraits<T>::getManager(this);
+		assert(manager != nullptr && "Invalid manager");
+
 		return manager[handle];
 	}
 
@@ -155,6 +176,8 @@ namespace cursed_engine
 	void Resources::clear()
 	{
 		auto* manager = ResourceManagerTraits<T>::getManager(this);
+		assert(manager != nullptr && "Invalid manager");
+
 		manager->clear();
 	}
 
@@ -162,13 +185,17 @@ namespace cursed_engine
 	bool Resources::contains(const U& descriptor) const noexcept
 	{
 		const auto* manager = ResourceManagerTraits<T>::getManager(this);
+		assert(manager != nullptr && "Invalid manager");
+
 		return manager->contains(descriptor);
 	}
 
 	template <typename T>
-	bool Resources::isValid(ResourceHandle<T> handle) const noexcept 
+	bool Resources::isValid(ResourceHandle<T> handle) const noexcept
 	{
 		const auto* manager = ResourceManagerTraits<T>::getManager(this);
+		assert(manager != nullptr && "Invalid manager");
+
 		return manager->isValid(handle);
 	}
 

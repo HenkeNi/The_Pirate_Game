@@ -1,7 +1,6 @@
 #pragma once
-#include "engine/rendering/render_api.h"
+#include "engine/rendering/render_api.h" // remove?
 #include "engine/rendering/render_backend.h"
-#include "engine/rendering/render_pipeline.h"
 
 namespace cursed_engine
 {
@@ -38,18 +37,17 @@ namespace cursed_engine
 		void endFrame();
 
 		// Primary access
-		[[nodiscard]] inline RenderAPI getRenderAPI() noexcept { return RenderAPI{ &m_backend }; } // move to cpp - remove include
-		[[nodiscard]] inline RenderPipeline& getRenderPipeline() noexcept { return m_renderPipeline; }
+		[[nodiscard]] RenderAPI getRenderAPI() noexcept;
 
 		[[nodiscard]] const TextureCreator* getTextureCreator() const noexcept;
 		[[nodiscard]] const TextCreator* getTextCreator() const noexcept;
 
 		// Optional: Low-level access (use sparingly)
+		[[nodiscard]] const RenderBackend& getRenderBackend() const noexcept;
 		//[[nodiscard]] inline RenderBackend& getBackend() noexcept { return *m_renderer; }
 
 	private:
 		RenderBackend m_backend;
-		RenderPipeline m_renderPipeline;
 
 		//RenderCapabilities m_capabilities;
 		// RenderGraph?

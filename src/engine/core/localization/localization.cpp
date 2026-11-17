@@ -16,16 +16,19 @@ namespace cursed_engine
 		auto it = m_languageToPath.find(language);
 		if (it == m_languageToPath.end())
 		{
-			Logger::logError("Failed to load " + language + ": unrecognized language!");
+			Logger::logError("Couldn't find " + language + ". Unrecognized language!");
 			return false;
 		}
 
 		bool success = loadLanguage(it->second);
-		if (success)
+		if (!success)
 		{
-			m_currentLanguage = language;
-			onLanguageChanged();
+			Logger::logError("Failed to load language!");
+			return false;
 		}
+
+		m_currentLanguage = language;
+		onLanguageChanged();
 
 		Logger::logInfo(std::format("{} ~ Language selected: \'{}\'", log_format::INDENT, language));
 		return success;
@@ -64,7 +67,7 @@ namespace cursed_engine
 		}
 
 		m_translations.clear(); // or create empty map and then swap?
-		
+
 		for (const auto& textValue : jsonDocument["texts"].asArray())
 		{
 			textValue.forEachProperty([&](const char* id, JsonValue value)
@@ -75,6 +78,8 @@ namespace cursed_engine
 					m_translations.insert({ id, value.asString() });
 				});
 		}
+
+		return true;
 	}
 
 	void Localization::onLanguageChanged()

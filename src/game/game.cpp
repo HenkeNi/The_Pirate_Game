@@ -51,7 +51,7 @@
 //#include <engine/rendering/render_pipeline.h>
 //#include "game/rendering/render_passes.h"
 
-using namespace cursed_engine; // move to precompiled header...
+using namespace cursed_engine; // move to precompiled header... or use namespace ce = cursed_engine;
 
 
 Game::Game()
@@ -118,7 +118,7 @@ void Game::setupSystems(const ce::EngineContext& ctx)
 	systemManager->emplace<UISystem>(ctx.platform.input, *ctx.eventBus, ctx.actionRegistry); // OR Accept action registry (and event bus) by pointer?
 	systemManager->emplace<UILayoutSystem>();
 	systemManager->emplace<TextSystem>(ctx.rendering.textCreator/*, context.resources.textFactory*/, ctx.localization);
-	systemManager->emplace<AudioSystem>(ctx.audio.audioController, ctx.resources, ctx.eventBus); // FIX eventbus ptr
+	systemManager->emplace<AudioSystem>(ctx.audio.controller, ctx.resources, ctx.eventBus); // FIX eventbus ptr
 	systemManager->emplace<PlayerControllerSystem>();
 	//systemManager->emplace<MovementSystem>();
 	systemManager->emplace<InputSystem>(ctx.platform.input);

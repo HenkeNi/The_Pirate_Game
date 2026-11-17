@@ -48,6 +48,7 @@ namespace cursed_engine
 		bool setVSync(bool enable);
 
 		[[nodiscard]] const RenderStatistics* getStatistics() const noexcept;
+		[[nodiscard]] SDL_Renderer* getNativeRenderer() const noexcept;
 
 		[[nodiscard]] const TextureCreator* getTextureCreator() const noexcept;
 		[[nodiscard]] const TextCreator* getTextCreator() const noexcept;

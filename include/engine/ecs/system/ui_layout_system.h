@@ -3,6 +3,7 @@
 
 namespace cursed_engine
 {
+	class ECSRegistry;
 	class Settings;
 
 	// Does ui system run after and use screen rect? or before and calculate correct pos?
@@ -11,5 +12,9 @@ namespace cursed_engine
 	public:
 		UILayoutSystem();
 		void update(SystemUpdateContext& context) override;
+
+	private:
+		void updateUIElements(ECSRegistry& registry);
+		void updateText(ECSRegistry& registry);
 	};
 }

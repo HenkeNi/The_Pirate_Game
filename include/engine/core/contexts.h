@@ -23,7 +23,7 @@ namespace cursed_engine
 		struct RenderingServices
 		{
 			RenderAPI rendererAPI;
-			class RenderPipeline* renderPipeline;
+			//class RenderPipeline* renderPipeline;
 			const class TextCreator* textCreator{};
 		} rendering;
 
@@ -31,13 +31,6 @@ namespace cursed_engine
 		{
 			class AssetManager* assetManager{};
 		} assets;
-
-		//struct ResourceServices
-		//{
-		//	AudioManager* audioManager{};
-		//	FontManager* fontManager{};
-		//	TextureManager* textureManager{};
-		//} resources;
 
 		struct ECSServices
 		{
@@ -54,7 +47,7 @@ namespace cursed_engine
 
 		struct AudioServices
 		{
-			AudioController audioController{};
+			AudioController controller{};
 		} audio;
 
 		Resources resources;

@@ -266,6 +266,11 @@ namespace cursed_engine
 		return &m_statistics;
 	}
 
+	SDL_Renderer* RenderBackend::getNativeRenderer() const noexcept
+	{
+		return m_renderer;
+	}
+
 	const TextureCreator* RenderBackend::getTextureCreator() const noexcept
 	{
 		return &m_resourceCreators.textureCreator;

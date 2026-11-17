@@ -18,6 +18,8 @@
 #include "engine/platform/platform.h"
 #include "engine/resources/resource_managers.h"
 
+#include "engine/ui/user_interface.h"
+
 #include "engine/utils/frame_timer.h"
 
 #include <cassert>
@@ -110,8 +112,9 @@ namespace cursed_engine
 		Network network;
 		AssetManager assets;  // AssetRegistry? => Assets (or AssetStore?)
 		ECS ecs;
-		Localization localization;
+		Localization localization; 
 		ActionRegistry actionRegistry;
+		UserInterface ui;
 
 		std::uint64_t frameCount{}; // put in frame timer?
 		Application& application;
@@ -205,10 +208,17 @@ namespace cursed_engine
 			return false;
 		}
 
+		UserInterface& ui = m_impl->ui;
+		if (!ui.init({ platform, graphics.getRenderBackend() }))
+		{
+			Logger::logError(errorMessage);
+			return false;
+		}
+
 		m_impl->application.onCreated(ctx);
 
 		Localization& localization = m_impl->localization;
-		if (!localization.setLanguage(settings.getLocalizationSettings().language))
+		if (!localization.setLanguage(settings.getLocalizationSettings().language)) // return result instead?
 		{
 			Logger::logError(errorMessage);
 			return false;
@@ -229,6 +239,7 @@ namespace cursed_engine
 
 		impl.application.onDestroyed();
 		impl.ecs.shutdown();
+		impl.ui.shutdown();
 		impl.resources.shutdown();
 		// impl.assets.shutdown();
 		impl.assets.unloadAll();
@@ -288,13 +299,18 @@ namespace cursed_engine
 			impl.resources.update(impl.frameCount, deltaTime);
 
 			impl.graphics.beginFrame();
+			impl.ui.beginFrame(); // here?
 			impl.application.onRender(RenderContext{}); // DONT PASS rendering api and pipeline?
+			impl.ui.show();
+
+
 
 			// Update ecs systems here?
 			//m_impl->systemManager.update(deltaTime); // After application update?
 
 			//Logger::logInfo("[Engine] - End frame..");
 
+			impl.ui.endFrame();
 			impl.graphics.endFrame();
 			//impl.platform.endFrame();
 			++impl.frameCount;
@@ -312,17 +328,11 @@ namespace cursed_engine
 			},
 			EngineContext::RenderingServices {
 				impl.graphics.getRenderAPI(),
-				&impl.graphics.getRenderPipeline(),
 				impl.graphics.getTextCreator()
 			},
 			EngineContext::AssetServices{
 				&impl.assets
 			},
-			/*EngineContext::ResourceServices{
-				&impl.resources.getAudioManager(),
-				&impl.resources.getFontManager(),
-				&impl.resources.getTextureManager(),
-			},*/
 			EngineContext::ECSServices{
 				&impl.ecs.getEntityFactory(),
 				&impl.ecs.getComponentRegistry(),

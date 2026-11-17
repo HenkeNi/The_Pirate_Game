@@ -96,8 +96,8 @@ namespace cursed_engine
 
 	void ScreenSpaceRenderSystem::renderDebug(ECSRegistry& registry)
 	{
-		auto view = registry.view<WorldTransformComponent, BoundingBoxComponent, UIComponent>();
-		view.forEach([&](Entity entity, WorldTransformComponent& transformComponent, BoundingBoxComponent& boundingBoxComponent, const UIComponent&)
+		auto view = registry.view<UITransformComponent, BoundingBoxComponent>();
+		view.forEach([&](Entity entity, UITransformComponent& transformComponent, BoundingBoxComponent& boundingBoxComponent)
 			{
 				Color color = Color::green;
 
@@ -143,21 +143,21 @@ namespace cursed_engine
 
 	void ScreenSpaceRenderSystem::renderText(ECSRegistry& registry)
 	{
-		auto view = registry.view<WorldTransformComponent, TextComponent, UIComponent>();
+		auto view = registry.view<UITransformComponent, TextComponent>();
 
 		//// TODO; check if possible to have one argument const ref and one argument just ref...
-		view.forEach([&](const WorldTransformComponent& transformComponent, TextComponent& textComponent, const UIComponent&)
+		view.forEach([&](const UITransformComponent& transformComponent, TextComponent& textComponent)
 			{
 				if (!textComponent.text)
 				{
-					// Log error!?					
+					// Log error!?		
 					return;
 				}
 
 				Text& text = *textComponent.text;
 
 				FVec2 position = transformComponent.position;
-				const FVec2 scaledSize = (FVec2)text.getSize() * transformComponent.scale;
+				const FVec2 scaledSize = (FVec2)text.getSize() * transformComponent.size;
 
 				position -= textComponent.pivot * scaledSize;
 

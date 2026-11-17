@@ -3,11 +3,17 @@
 #include "engine/platform/input_handler.h"
 #include "engine/platform/window.h"
 #include <filesystem>
+#include <functional>
+
+union SDL_Event;
 
 namespace cursed_engine
 {
 	struct EngineConfig;
 	class EventBus;
+
+	using NativeEventCallback = std::function<void(const SDL_Event&)>;
+	using CallbackHandle = uint32_t;
 
 	struct PlatformArgs
 	{
@@ -18,7 +24,7 @@ namespace cursed_engine
 		const char* version;
 		const char* identifier;
 	};
-
+	
 	class Platform final
 	{
 	public:
@@ -39,6 +45,9 @@ namespace cursed_engine
 		
 		void processEvents();
 
+		CallbackHandle addCallback(NativeEventCallback callback);
+		void removeCallback(CallbackHandle handle);
+
 		[[nodiscard]] bool exitRequested() const noexcept;
 		[[nodiscard]] Window& getWindow() noexcept;
 
@@ -46,11 +55,20 @@ namespace cursed_engine
 		[[nodiscard]] InputHandler& getInputHandler() noexcept;
 
 	private:
+		struct CallbackEntry
+		{
+			CallbackHandle handle;
+			NativeEventCallback callback;
+		};
+
 		Window m_window;
 		Cursor m_cursor;
 
 		InputHandler m_inputHandler;
 		EventBus& m_eventBus;
+
+		std::vector<CallbackEntry> m_callbacks;
+		CallbackHandle m_nextCallbackHandle;
 
 		bool m_shouldExit;
 	};
